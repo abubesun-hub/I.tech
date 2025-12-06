@@ -29,19 +29,55 @@
   if (vtt) vtt.textContent = get(totalKey).toString();
   if (ct) ct.textContent = get(contactsKey).toString();
 
-  // نموذج التواصل: يحاكي الإرسال ويزيد عداد الاتصالات
+  // نموذج التواصل: إرسال حقيقي باستخدام Formspree
   const form = document.getElementById('contactForm');
   const status = document.getElementById('formStatus');
   if (form) {
-    form.addEventListener('submit', (e) => {
+    form.addEventListener('submit', async (e) => {
       e.preventDefault();
       const fd = new FormData(form);
       const name = fd.get('name');
-      inc(contactsKey);
-      if (status) {
-        status.textContent = 'تم إرسال رسالتك بنجاح. شكراً يا ' + name + '!';
+      
+      // إذا لم يقم المستخدم بتحديث الرابط، نظهر رسالة تنبيه
+      if (form.action.includes('YOUR_FORM_ID')) {
+        if (status) status.textContent = 'عذراً، يجب إعداد خدمة البريد أولاً (Formspree).';
+        status.style.color = 'red';
+        return;
       }
-      form.reset();
+
+      if (status) {
+        status.textContent = 'جاري الإرسال...';
+        status.style.color = 'var(--text-muted)';
+      }
+
+      try {
+        const response = await fetch(form.action, {
+          method: form.method,
+          body: fd,
+          headers: {
+            'Accept': 'application/json'
+          }
+        });
+
+        if (response.ok) {
+          inc(contactsKey);
+          if (status) {
+            status.textContent = 'تم إرسال رسالتك بنجاح. شكراً يا ' + name + '!';
+            status.style.color = 'green';
+          }
+          form.reset();
+        } else {
+          if (status) {
+            status.textContent = 'حدث خطأ أثناء الإرسال. يرجى المحاولة لاحقاً.';
+            status.style.color = 'red';
+          }
+        }
+      } catch (error) {
+        if (status) {
+          status.textContent = 'حدث خطأ في الاتصال.';
+          status.style.color = 'red';
+        }
+      }
     });
   }
 
