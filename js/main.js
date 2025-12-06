@@ -44,4 +44,39 @@
       form.reset();
     });
   }
+
+  // --- تحسينات إضافية ---
+
+  // 1. زر الصعود للأعلى
+  const btnTop = document.createElement('button');
+  btnTop.className = 'back-to-top';
+  btnTop.innerHTML = '↑';
+  btnTop.setAttribute('aria-label', 'العودة للأعلى');
+  document.body.appendChild(btnTop);
+
+  window.addEventListener('scroll', () => {
+    if (window.scrollY > 300) btnTop.classList.add('show');
+    else btnTop.classList.remove('show');
+  });
+
+  btnTop.addEventListener('click', () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+
+  // 2. أنيميشن الظهور عند التمرير (Scroll Reveal)
+  // إضافة كلاس reveal للعناصر الرئيسية تلقائياً
+  const sections = document.querySelectorAll('section, .card, .hero-content, .hero-image');
+  sections.forEach(sec => sec.classList.add('reveal'));
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('active');
+        observer.unobserve(entry.target); // تشغيل مرة واحدة فقط
+      }
+    });
+  }, { threshold: 0.15 });
+
+  sections.forEach(sec => observer.observe(sec));
+
 })();
