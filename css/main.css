@@ -1,0 +1,107 @@
+/* أساسيات التصميم: عربي RTL + نيومورفيك + تجاوب */
+:root {
+  --bg: #edf2f7;
+  --surface: #f5f7fb;
+  --text: #1a202c;
+  --muted: #4a5568;
+  --primary: #f97316; /* برتقالي قريب للوغو */
+  --shadow-light: #ffffff;
+  --shadow-dark: #cbd5e1;
+  --radius: 16px;
+}
+
+html { direction: rtl; }
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: 'Cairo', system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+
+/* شريط التنقل */
+.nav {
+  position: sticky; top: 0; z-index: 10;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 20px; margin: 16px; border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: 8px 8px 16px var(--shadow-dark), -8px -8px 16px var(--shadow-light);
+}
+.brand { display: flex; align-items: center; gap: 12px; }
+.brand .logo-circle { width: 96px; height: 96px; border-radius: 50%; background: var(--surface); display: flex; align-items: center; justify-content: center;
+  box-shadow: 12px 12px 24px var(--shadow-dark), -12px -12px 24px var(--shadow-light);
+}
+.brand img { width: 76px; height: 76px; object-fit: contain; background: transparent; mix-blend-mode: multiply; }
+.brand .names { display: flex; flex-direction: column; line-height: 1.1; }
+.brand .names .ar { font-weight: 700; font-size: 60px; }
+.brand .names .en { font-size: 32px; color: var(--muted); letter-spacing: 1px; }
+.menu { display: flex; gap: 12px; align-items: center; }
+.menu a {
+  padding: 8px 14px; border-radius: 999px; text-decoration: none; color: var(--text);
+  background: var(--surface);
+  box-shadow: 4px 4px 8px var(--shadow-dark), -4px -4px 8px var(--shadow-light);
+}
+.menu a.active { outline: 2px solid #e2e8f0; }
+.menu a.pill { color: white; background: linear-gradient(145deg, #ea580c, var(--primary)); box-shadow: none; }
+.burger { display: none; }
+
+/* حاوية عامة */
+.container { max-width: 1120px; margin: 0 auto; padding: 16px; }
+
+/* البطاقات والنيومورفيك */
+.card {
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 20px; margin: 16px;
+  box-shadow: 10px 10px 20px var(--shadow-dark), -10px -10px 20px var(--shadow-light);
+}
+
+.hero h1 { margin-top: 0; font-size: 28px; }
+.hero p { color: var(--muted); }
+.tagline { display: none; }
+.actions { display: flex; gap: 12px; flex-wrap: wrap; }
+
+/* الأزرار */
+.btn { display: inline-block; padding: 10px 16px; border-radius: 999px; text-decoration: none; color: var(--text);
+  background: var(--surface);
+  box-shadow: 6px 6px 12px var(--shadow-dark), -6px -6px 12px var(--shadow-light);
+}
+.btn.primary { color: white; background: linear-gradient(145deg, #ea580c, var(--primary)); box-shadow: none; }
+.btn.link { background: transparent; box-shadow: none; color: var(--primary); text-decoration: underline; }
+
+/* الشبكة */
+.grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+.grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+
+/* النموذج */
+.form label { display: block; margin-bottom: 12px; }
+input, textarea {
+  width: 100%; padding: 12px 14px; border: none; border-radius: 12px; background: var(--surface);
+  box-shadow: inset 6px 6px 12px var(--shadow-dark), inset -6px -6px 12px var(--shadow-light);
+  color: var(--text);
+}
+.status { color: var(--muted); margin-top: 10px; }
+
+/* إحصائيات */
+.stat .label { color: var(--muted); }
+.stat .value { font-size: 24px; font-weight: 700; }
+
+/* التذييل */
+.footer {
+  margin: 16px; padding: 16px; text-align: center; border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: 8px 8px 16px var(--shadow-dark), -8px -8px 16px var(--shadow-light);
+}
+.footer .social { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-bottom: 8px; }
+.footer .social a { display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 12px; background: var(--surface); box-shadow: 6px 6px 12px var(--shadow-dark), -6px -6px 12px var(--shadow-light); color: var(--text); }
+.footer .social a svg { width: 22px; height: 22px; }
+.footer .phones { display: none; }
+/* Footer social bar remains visible on Contact page */
+.footer .contact-icons { display: flex; gap: 10px; justify-content: center; }
+
+/* تجاوب الموبايل */
+@media (max-width: 768px) {
+  .grid-3 { grid-template-columns: 1fr; }
+  .menu { display: none; }
+  .burger { display: block; border: none; background: transparent; font-size: 22px; }
+}
