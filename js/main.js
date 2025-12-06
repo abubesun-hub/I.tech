@@ -4,9 +4,9 @@
   const menu = document.querySelector('.menu');
   if (burger && menu) {
     burger.addEventListener('click', () => {
-      const open = menu.style.display === 'flex';
-      menu.style.display = open ? 'none' : 'flex';
-      burger.setAttribute('aria-expanded', (!open).toString());
+      menu.classList.toggle('open');
+      const open = menu.classList.contains('open');
+      burger.setAttribute('aria-expanded', open.toString());
     });
   }
 

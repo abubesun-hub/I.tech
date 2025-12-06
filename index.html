@@ -12,7 +12,7 @@
   <link rel="stylesheet" href="./css/main.css" />
   <link rel="icon" type="image/png" href="./assets/images/I-Tech logo.png" />
 </head>
-<body>
+<body class="page-home">
   <header class="nav">
     <div class="brand">
       <div class="logo-circle">
@@ -28,7 +28,6 @@
       <a href="about.html">من نحن</a>
       <a href="services.html">الخدمات</a>
       <a href="contact.html">تواصل معنا</a>
-      <a href="dashboard.html" class="pill">لوحة التحكم</a>
     </nav>
     <button class="burger" aria-label="فتح القائمة" aria-expanded="false">☰</button>
   </header>
@@ -37,16 +36,22 @@
 
   <main class="container">
     <section class="hero card">
-      <h1>شريككم التقني والعلمي الموثوق</h1>
-      <p>الحلول التقنية والعلمية في مكان واحد! باقة متكاملة من الخدمات لدعم الأفراد، الطلاب، والشركات.</p>
-      <div class="actions">
-        <a class="btn primary" href="#services">استعراض الخدمات</a>
-        <a class="btn" href="contact.html">تواصل مباشر</a>
+      <div class="hero-content">
+        <h1>شريككم التقني والعلمي الموثوق</h1>
+        <p>الحلول التقنية والعلمية في مكان واحد! باقة متكاملة من الخدمات لدعم الأفراد، الطلاب، والشركات.</p>
+        <div class="actions">
+          <a class="btn primary" href="#services">استعراض الخدمات</a>
+          <a class="btn" href="contact.html">تواصل مباشر</a>
+        </div>
+      </div>
+      <div class="hero-image">
+        <img src="./assets/images/hero.jpg" alt="تكنولوجيا حديثة" loading="lazy" />
       </div>
     </section>
 
     <section id="services" class="grid-3">
       <article class="card">
+        <img src="./assets/images/software.jpg" alt="تطوير برمجيات" class="card-img" loading="lazy" />
         <h2>تطوير الحلول البرمجية (جديد)</h2>
         <ul>
           <li>تطوير برمجيات وتطبيقات مخصصة (Desktop/Web)</li>
@@ -57,6 +62,7 @@
         <a class="btn link" href="services.html#software">تفاصيل أكثر</a>
       </article>
       <article class="card">
+        <img src="./assets/images/hardware.jpg" alt="صيانة ودعم فني" class="card-img" loading="lazy" />
         <h2>الخدمات التقنية (الصيانة والدعم)</h2>
         <ul>
           <li>صيانة فورية للابتوبات والكمبيوترات</li>
@@ -66,6 +72,7 @@
         <a class="btn link" href="services.html#tech">تفاصيل أكثر</a>
       </article>
       <article class="card">
+        <img src="./assets/images/academic.jpg" alt="خدمات أكاديمية" class="card-img" loading="lazy" />
         <h2>الخدمات العلمية والأكاديمية</h2>
         <ul>
           <li>خدمات طلابية وبحثية: تحليل إحصائي، تنسيق أبحاث</li>
