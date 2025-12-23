@@ -1,0 +1,7 @@
+Deployment successfully updated.
+Version 1 on 22 Dec 2025, 10:20
+Deployment ID
+AKfycbyIKhhsyqlrmE2PTvml0tZo2yz9RmsDCcCIC47QiUfsDSx2DxKafd3jMid-XdBWZseu
+Web app
+URL
+https://script.google.com/macros/s/AKfycbyIKhhsyqlrmE2PTvml0tZo2yz9RmsDCcCIC47QiUfsDSx2DxKafd3jMid-XdBWZseu/exec
