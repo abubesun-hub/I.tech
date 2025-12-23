@@ -22,7 +22,23 @@
   </header>
 
   <main class="container">
-    <section class="card">
+    <!-- بوابة تسجيل الدخول البسيطة -->
+    <section class="card" id="adminGate" style="max-width:640px;display:none;">
+      <h1>دخول الإدارة</h1>
+      <p class="under-construction">هذه الحماية أمام الجمهور فقط ولا تُعد حماية حقيقية لأنها تعمل في المتصفح. يُنصح باستخدام مفتاح السكربت عند النشر.</p>
+      <div class="form">
+        <label>اسم المستخدم</label>
+        <input id="gateUser" placeholder="User"/>
+        <label>كلمة المرور</label>
+        <input id="gatePass" type="password" placeholder="Password"/>
+        <div class="actions">
+          <button class="btn primary" id="gateLogin">دخول</button>
+        </div>
+        <div id="gateStatus" style="margin-top:10px;color:var(--text-muted);"></div>
+      </div>
+    </section>
+
+    <section class="card" id="adminArea">
       <h1>إضافة مناقصة جديدة (مولّد JSON/CSV)</h1>
       <p class="under-construction">هذه أداة مساعدة لإنتاج سجل جديد بصيغة JSON أو سطر CSV لضمّه إلى ملف البيانات. لا تحفظ إلى الخادم تلقائيًا بدون Backend.</p>
       <div class="grid-2">
@@ -99,6 +115,40 @@
 
   <script>
   window.addEventListener('DOMContentLoaded', function(){
+    // حارس دخول بسيط (عميل فقط)
+    (function(){
+      const okUser = 'Abubesun';
+      const okPass = 'Ahmed1985';
+      const gate = document.getElementById('adminGate');
+      const area = document.getElementById('adminArea');
+      const status = document.getElementById('gateStatus');
+      const params = new URLSearchParams(location.search);
+      const qUser = params.get('user');
+      const qPass = params.get('pass');
+
+      function showGate(){ gate.style.display = 'block'; area.style.display = 'none'; }
+      function showArea(){ gate.style.display = 'none'; area.style.display = 'block'; }
+      function isAuthed(){ try { return localStorage.getItem('itech_admin_auth') === 'ok'; } catch { return false; } }
+      function setAuthed(){ try { localStorage.setItem('itech_admin_auth','ok'); } catch {} }
+
+      if (qUser === okUser && qPass === okPass) { setAuthed(); showArea(); }
+      else if (isAuthed()) { showArea(); }
+      else { showGate(); }
+
+      const btn = document.getElementById('gateLogin');
+      if (btn) btn.addEventListener('click', function(){
+        const u = (document.getElementById('gateUser').value||'').trim();
+        const p = (document.getElementById('gatePass').value||'').trim();
+        if (u === okUser && p === okPass) {
+          setAuthed();
+          showArea();
+          if (status) { status.textContent = 'تم الدخول ✔'; status.style.color = 'green'; }
+        } else {
+          if (status) { status.textContent = 'بيانات غير صحيحة'; status.style.color = 'red'; }
+        }
+      });
+    })();
+
     const $ = (id)=>document.getElementById(id);
     // تهيئة الحقول من LocalStorage إن وُجد
     try {
