@@ -1,11 +1,53 @@
 // تفعيل قائمة الموبايل + مؤشرات بسيطة + إحصائيات محلية
 // إعداد مصدر بيانات المناقصات (بدّل حسب الحاجة)
 window.ITECH_TENDERS_CONFIG = window.ITECH_TENDERS_CONFIG || {
-  sourceType: 'json', // 'json' | 'csv' | 'api'
+  sourceType: 'csv', // 'json' | 'csv' | 'api' | 'gsheet'
   jsonUrl: './assets/data/tenders.json',
-  csvUrl: './assets/data/tenders.csv',
-  apiUrl: '' // مثال: 'https://api.example.com/tenders'
+  csvUrl: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vT3FdZOxfx0uJQB2wHXz04iEESh4y74XIzsrwbkhnF9jXVVfzfcQ0t5HDJSWp7zie2RpijYoOYtJ6jI/pub?output=csv',
+  apiUrl: '', // مثال: 'https://script.google.com/macros/s/XXXXX/exec?action=list'
+  apiMode: 'fetch', // 'fetch' أو 'jsonp' (للتغلب على CORS مع Apps Script)
+  // إعداد Google Sheet: بدّل sheetId باسم الجدول لديك، واسم الورقة إن لزم
+  googleSheet: {
+    sheetId: '', // مثال: 1AbCDeFGhIjKlmNoPqRsTuVwXyZ
+    sheetName: 'Tenders', // اسم الورقة التي تحتوي الأعمدة
+    gid: '0' // اختياري، للروابط بصيغة export
+  }
 };
+// السماح بالتهيئة عبر LocalStorage بدون تعديل الكود
+try {
+  const lsUrl = localStorage.getItem('itech_api_url');
+  const lsMode = localStorage.getItem('itech_api_mode');
+  const lsSrc = localStorage.getItem('itech_source_type');
+  const lsGId = localStorage.getItem('itech_gsheet_id');
+  const lsGName = localStorage.getItem('itech_gsheet_name');
+  const lsCsv = localStorage.getItem('itech_csv_url');
+  const lsJson = localStorage.getItem('itech_json_url');
+  if (lsUrl) window.ITECH_TENDERS_CONFIG.apiUrl = lsUrl;
+  if (lsMode) window.ITECH_TENDERS_CONFIG.apiMode = lsMode;
+  if (lsSrc) window.ITECH_TENDERS_CONFIG.sourceType = lsSrc;
+  if (lsGId) window.ITECH_TENDERS_CONFIG.googleSheet.sheetId = lsGId;
+  if (lsGName) window.ITECH_TENDERS_CONFIG.googleSheet.sheetName = lsGName;
+  if (lsCsv) window.ITECH_TENDERS_CONFIG.csvUrl = lsCsv;
+  if (lsJson) window.ITECH_TENDERS_CONFIG.jsonUrl = lsJson;
+} catch {}
+// السماح بالتهيئة عبر بارامترات الرابط بدون تعديل الكود
+try {
+  const params = new URLSearchParams(location.search);
+  const src = params.get('src');
+  const csv = params.get('csv');
+  const json = params.get('json');
+  const api = params.get('api');
+  const apiMode = params.get('apiMode');
+  const gsheetId = params.get('gsheetId');
+  const gsheetName = params.get('gsheetName');
+  if (src) window.ITECH_TENDERS_CONFIG.sourceType = src;
+  if (csv) window.ITECH_TENDERS_CONFIG.csvUrl = csv;
+  if (json) window.ITECH_TENDERS_CONFIG.jsonUrl = json;
+  if (api) window.ITECH_TENDERS_CONFIG.apiUrl = api;
+  if (apiMode) window.ITECH_TENDERS_CONFIG.apiMode = apiMode;
+  if (gsheetId) window.ITECH_TENDERS_CONFIG.googleSheet.sheetId = gsheetId;
+  if (gsheetName) window.ITECH_TENDERS_CONFIG.googleSheet.sheetName = gsheetName;
+} catch {}
 (function(){
   const burger = document.querySelector('.burger');
   const menu = document.querySelector('.menu');
@@ -168,6 +210,19 @@ window.ITECH_TENDERS_CONFIG = window.ITECH_TENDERS_CONFIG || {
 })();
 
 // --- Shared helpers for tenders data (used by multiple pages) ---
+function normalizeDate(str) {
+  const s = (str||'').trim();
+  if (!s) return s;
+  // إذا كانت الصيغة dd/mm/yyyy أو dd-mm-yyyy → نحولها إلى yyyy-mm-dd
+  const m = s.match(/^([0-3]?\d)[\/-]([0-1]?\d)[\/-](\d{4})$/);
+  if (m) {
+    const d = m[1].padStart(2,'0');
+    const mo = m[2].padStart(2,'0');
+    const y = m[3];
+    return `${y}-${mo}-${d}`;
+  }
+  return s; // نفترض أنها ISO أو مفهومة من المتصفح
+}
 function csvToJson(text) {
   const lines = text.split(/\r?\n/).filter(l => l.trim() !== '');
   if (!lines.length) return [];
@@ -187,6 +242,24 @@ function csvToJson(text) {
     headers.forEach((h, idx) => obj[h] = (cols[idx] || '').trim());
     rows.push(obj);
   }
+  function parseFiles(s) {
+    const str = s || '';
+    if (!str) return [];
+    return str.split(';').map(part => {
+      const [label, url] = part.split('|');
+      return { label: (label||'ملف').trim(), url: (url||'').trim() };
+    }).filter(f => f.url);
+  }
+  function parseContact(obj) {
+    const cp = obj.contactPhone, ce = obj.contactEmail;
+    if (cp || ce) return { phone: (cp||'').trim(), email: (ce||'').trim() };
+    const c = obj.contact || '';
+    if (!c) return undefined;
+    const parts = c.includes('|') ? c.split('|') : c.split(';');
+    const phone = (parts[0]||'').trim();
+    const email = (parts[1]||'').trim();
+    return (phone || email) ? { phone, email } : undefined;
+  }
   return rows.map(obj => ({
     id: obj.id,
     title: obj.title,
@@ -194,19 +267,88 @@ function csvToJson(text) {
     category: obj.category,
     city: obj.city,
     adNumber: obj.adNumber,
-    deadline: obj.deadline,
-    postedDate: obj.postedDate,
+    deadline: normalizeDate(obj.deadline),
+    postedDate: normalizeDate(obj.postedDate),
     status: obj.status,
     link: obj.link,
     description: obj.description,
-    documentPrice: parseInt(obj.documentPrice || '0', 10),
+    documentPrice: (obj.documentPrice ? parseInt(obj.documentPrice, 10) : (obj.documentPric ? parseInt(obj.documentPric, 10) : undefined)),
     currency: obj.currency || 'IQD',
     pickupLocation: obj.pickupLocation,
     submissionPlace: obj.submissionPlace,
     submissionRequirements: (obj.submissionRequirements || '').split(';').map(s => s.trim()).filter(Boolean),
     notes: obj.notes,
-    contact: { phone: obj.contactPhone, email: obj.contactEmail }
+    files: parseFiles(obj.files),
+    contact: parseContact(obj)
   }));
+}
+
+// --- Google Sheet (GViz) إلى JSON قياسي ---
+async function fetchGoogleSheetGViz(sheetId, sheetName) {
+  if (!sheetId) return [];
+  const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?sheet=${encodeURIComponent(sheetName||'')}`;
+  const res = await fetch(url);
+  const txt = await res.text();
+  const jsonStr = txt.replace(/^.*setResponse\(/, '').replace(/\);\s*$/, '');
+  let payload;
+  try { payload = JSON.parse(jsonStr); } catch { return []; }
+  const table = (payload && payload.table) ? payload.table : null;
+  if (!table || !Array.isArray(table.rows)) return [];
+  const headers = (table.cols||[]).map(c => (c && (c.label||c.id||'')).trim());
+  const rows = table.rows.map(r => {
+    const obj = {};
+    headers.forEach((h, idx) => {
+      const cell = (r.c||[])[idx];
+      const v = cell && (cell.v!=null ? cell.v : cell.f);
+      obj[h] = (v==null ? '' : v);
+    });
+    return obj;
+  });
+  // تطبيع الأعمدة وفق الحقول المقترحة
+  return rows.map(o => {
+    const reqs = String(o.submissionRequirements||'').split(';').map(s=>s.trim()).filter(Boolean);
+    const filesStr = String(o.files||'').trim();
+    const files = filesStr ? filesStr.split(';').map(s=>{
+      const [label, url] = s.split('|');
+      return { label: (label||'ملف').trim(), url: (url||'').trim() };
+    }).filter(f=>f.url) : [];
+    const contactStr = String(o.contact||'');
+    const [phone, email] = contactStr.includes('|') ? contactStr.split('|') : contactStr.split(';');
+    return {
+      id: String(o.id||'').trim(),
+      title: String(o.title||'').trim(),
+      entity: String(o.entity||'').trim() || undefined,
+      category: String(o.category||'').trim() || undefined,
+      city: String(o.city||'').trim() || undefined,
+      adNumber: String(o.adNumber||'').trim() || undefined,
+      deadline: normalizeDate(String(o.deadline||'').trim()) || undefined,
+      postedDate: normalizeDate(String(o.postedDate||'').trim()) || undefined,
+      status: String(o.status||'').trim() || undefined,
+      link: String(o.link||'').trim() || undefined,
+      description: String(o.description||'').trim() || undefined,
+      documentPrice: (o.documentPrice!=null && o.documentPrice!=='') ? parseInt(String(o.documentPrice),10) : undefined,
+      currency: String(o.currency||'IQD').trim(),
+      pickupLocation: String(o.pickupLocation||'').trim() || undefined,
+      submissionPlace: String(o.submissionPlace||'').trim() || undefined,
+      submissionRequirements: reqs,
+      notes: String(o.notes||'').trim() || undefined,
+      files,
+      contact: (phone||email) ? { phone: (phone||'').trim(), email: (email||'').trim() } : undefined
+    };
+  });
+}
+
+// Helpers لتطبيع استجابة الـ API ودعم إضافة action تلقائياً
+function normalizeApiResponse(resp) {
+  if (Array.isArray(resp)) return resp;
+  if (resp && Array.isArray(resp.data)) return resp.data;
+  if (resp && resp.ok && Array.isArray(resp.data)) return resp.data;
+  return [];
+}
+
+function ensureActionParam(url) {
+  if (!url) return url;
+  return /[?&]action=/.test(url) ? url : (url + (url.includes('?') ? '&' : '?') + 'action=list');
 }
 
 async function loadData() {
@@ -219,16 +361,53 @@ async function loadData() {
       return cache.data;
     }
 
-    if (cfg.sourceType === 'api' && cfg.apiUrl) {
-      const r = await fetch(cfg.apiUrl);
-      const j = await r.json();
-      localStorage.setItem(cacheKey, JSON.stringify({ ts: Date.now(), data: j }));
-      return j;
-    }
+      if (cfg.sourceType === 'api' && cfg.apiUrl) {
+        const baseUrl = ensureActionParam(cfg.apiUrl);
+        if (cfg.apiMode === 'jsonp') {
+          // تحميل عبر JSONP: يتطلب أن يدعم الـ API بارامتر callback
+          const cbName = '__itech_jsonp_cb_' + Math.random().toString(36).slice(2);
+          const url = baseUrl + (baseUrl.includes('?') ? '&' : '?') + 'callback=' + cbName;
+          const payload = await new Promise((resolve, reject) => {
+            const s = document.createElement('script');
+            s.src = url; s.async = true;
+            window[cbName] = function(p){ try { resolve(p); } finally { delete window[cbName]; document.body.removeChild(s); } };
+            s.onerror = () => { delete window[cbName]; reject(new Error('JSONP failed')); };
+            document.body.appendChild(s);
+          });
+          const data = normalizeApiResponse(payload);
+          localStorage.setItem(cacheKey, JSON.stringify({ ts: Date.now(), data }));
+          return data;
+        } else {
+          const r = await fetch(baseUrl);
+          const j = await r.json();
+          const data = normalizeApiResponse(j);
+          localStorage.setItem(cacheKey, JSON.stringify({ ts: Date.now(), data }));
+          return data;
+        }
+      }
     if (cfg.sourceType === 'csv' && cfg.csvUrl) {
       const r = await fetch(cfg.csvUrl);
       const t = await r.text();
       const j = csvToJson(t);
+      if (!Array.isArray(j) || j.length === 0) {
+        // في حال كان الجدول فارغًا أو غير منشور، نرجع للـ JSON المحلي
+        const r2 = await fetch(cfg.jsonUrl || './assets/data/tenders.json');
+        const j2 = await r2.json();
+        localStorage.setItem(cacheKey, JSON.stringify({ ts: Date.now(), data: j2 }));
+        return j2;
+      }
+      localStorage.setItem(cacheKey, JSON.stringify({ ts: Date.now(), data: j }));
+      return j;
+    }
+    // Google Sheet (GViz)
+    if (cfg.sourceType === 'gsheet' && cfg.googleSheet && cfg.googleSheet.sheetId) {
+      const j = await fetchGoogleSheetGViz(cfg.googleSheet.sheetId, cfg.googleSheet.sheetName);
+      if (!Array.isArray(j) || j.length === 0) {
+        const r2 = await fetch(cfg.jsonUrl || './assets/data/tenders.json');
+        const j2 = await r2.json();
+        localStorage.setItem(cacheKey, JSON.stringify({ ts: Date.now(), data: j2 }));
+        return j2;
+      }
       localStorage.setItem(cacheKey, JSON.stringify({ ts: Date.now(), data: j }));
       return j;
     }
@@ -295,17 +474,24 @@ async function loadData() {
     items.forEach(t => {
       const card = document.createElement('div');
       card.className = 'card tender-card reveal';
-      const dleft = daysLeft(t.deadline);
-      const deadlineBadge = dleft < 0 ? '<span class="badge expired">منتهي</span>' : `<span class="badge deadline">متبقٍ ${dleft} يوم</span>`;
+      const dleft = t.deadline ? daysLeft(t.deadline) : NaN;
+      const deadlineBadge = isNaN(dleft) ? '' : (dleft < 0 ? '<span class="badge expired">منتهي</span>' : `<span class="badge deadline">متبقٍ ${dleft} يوم</span>`);
       const favs = getFavs();
       const isFav = favs.includes(t.id);
+      const metaParts = [];
+      if (t.entity) metaParts.push('الجهة: ' + t.entity);
+      if (t.category) metaParts.push('التصنيف: ' + t.category);
+      if (t.city) metaParts.push('المدينة: ' + t.city);
+      if (t.deadline) metaParts.push('الموعد النهائي: ' + formatDate(t.deadline));
+      if (t.adNumber) metaParts.push('رقم الإعلان: ' + t.adNumber);
+      const metaStr = metaParts.join(' · ');
       card.innerHTML = `
         <div style="display:flex;justify-content:space-between;align-items:center;">
           ${deadlineBadge}
           <button class="star-btn ${isFav ? 'active' : ''}" aria-label="إضافة إلى المفضلة" data-id="${t.id}">★</button>
         </div>
         <div class="title">${t.title}</div>
-        <div class="meta">الجهة: ${t.entity} · التصنيف: ${t.category} · المدينة: ${t.city} · الموعد النهائي: ${formatDate(t.deadline)} · رقم الإعلان: ${t.adNumber}</div>
+        ${metaStr ? `<div class="meta">${metaStr}</div>` : ''}
         <div class="actions" style="margin-top:12px;">
           <a class="btn link" href="tender.html?id=${encodeURIComponent(t.id)}">عرض التفاصيل</a>
         </div>
@@ -398,26 +584,26 @@ async function loadData() {
         container.innerHTML = '<p class="under-construction">لم يتم العثور على المناقصة المطلوبة.</p>';
         return;
       }
-      const dleft = daysLeft(item.deadline);
-      const deadlineBadge = dleft < 0 ? '<span class="badge expired">منتهي</span>' : `<span class="badge deadline">متبقٍ ${dleft} يوم</span>`;
+      const dleft = item.deadline ? daysLeft(item.deadline) : NaN;
+      const deadlineBadge = isNaN(dleft) ? '' : (dleft < 0 ? '<span class="badge expired">منتهي</span>' : `<span class="badge deadline">متبقٍ ${dleft} يوم</span>`);
       const priceBadge = (item.documentPrice!=null) ? `<span class="badge" style="background:#fff7ed;border:1px solid #fed7aa;color:var(--primary)">سعر الكراس: ${item.documentPrice} ${item.currency||'IQD'}</span>` : '';
       const files = Array.isArray(item.files) && item.files.length ? (`<div class="files-list">${item.files.map(f=>`<a class="btn" href="${f.url}" target="_blank" rel="noopener">${f.label||'ملف'}</a>`).join(' ')}</div>`) : '';
       const reqs = Array.isArray(item.submissionRequirements) && item.submissionRequirements.length ? (`<ul class="details-list">${item.submissionRequirements.map(r=>`<li>${r}</li>`).join('')}</ul>`) : '';
       const contact = item.contact ? `<div><strong>الاتصال:</strong> ${[item.contact.phone,item.contact.email].filter(Boolean).join(' · ')}</div>` : '';
+      const metaItems = [];
+      if (item.entity) metaItems.push(`<div><strong>الجهة:</strong> ${item.entity}</div>`);
+      if (item.category) metaItems.push(`<div><strong>التصنيف:</strong> ${item.category}</div>`);
+      if (item.city) metaItems.push(`<div><strong>المدينة:</strong> ${item.city}</div>`);
+      if (item.adNumber) metaItems.push(`<div><strong>رقم الإعلان:</strong> ${item.adNumber}</div>`);
+      if (item.postedDate) metaItems.push(`<div><strong>نشر في:</strong> ${formatDate(item.postedDate)}</div>`);
+      if (item.deadline) metaItems.push(`<div><strong>الموعد النهائي:</strong> ${formatDate(item.deadline)} ${deadlineBadge}</div>`);
+      if (item.pickupLocation) metaItems.push(`<div><strong>مكان استلام الكراس:</strong> ${item.pickupLocation}</div>`);
+      if (item.submissionPlace) metaItems.push(`<div><strong>مكان التقديم:</strong> ${item.submissionPlace}</div>`);
+      if (contact) metaItems.push(contact);
       container.innerHTML = `
         <h1>${item.title}</h1>
-        <div class="meta-grid">
-          <div><strong>الجهة:</strong> ${item.entity}</div>
-          <div><strong>التصنيف:</strong> ${item.category}</div>
-          <div><strong>المدينة:</strong> ${item.city}</div>
-          <div><strong>رقم الإعلان:</strong> ${item.adNumber}</div>
-          <div><strong>نشر في:</strong> ${formatDate(item.postedDate)}</div>
-          <div><strong>الموعد النهائي:</strong> ${formatDate(item.deadline)} ${deadlineBadge}</div>
-          <div><strong>مكان استلام الكراس:</strong> ${item.pickupLocation||'-'}</div>
-          <div><strong>مكان التقديم:</strong> ${item.submissionPlace||'-'}</div>
-          ${contact}
-        </div>
-        <p class="tender-desc">${item.description||''}</p>
+        ${metaItems.length ? `<div class="meta-grid">${metaItems.join('')}</div>` : ''}
+        ${item.description ? `<p class="tender-desc">${item.description}</p>` : ''}
         ${priceBadge}
         ${reqs ? `<h2>شروط ومتطلبات التقديم</h2>${reqs}` : ''}
         ${files}

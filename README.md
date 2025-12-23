@@ -24,6 +24,36 @@ Start-Process "http://localhost:8080/index.html"
 - JSON محلي: الافتراضي من `assets/data/tenders.json`.
 - CSV محلي: من `assets/data/tenders.csv`.
 - API خارجي: رابط REST يعيد JSON بنفس البنية.
+  
+### ربط Google Sheet عبر Web App (موصى به)
+- استخدم السكربت الجاهز في: [assets/apps-script/Code.gs](assets/apps-script/Code.gs)
+	1. انسخ المحتوى إلى مشروع Google Apps Script جديد.
+	2. حدّد `SHEET_ID`, `SHEET_NAME`, ويمكن ضبط `SECRET_KEY` اختياريًا.
+	3. من Deploy → New deployment → Web App:
+		 - Execute the app as: Me
+		 - Who has access: Anyone
+		 - انسخ رابط الويب-آب (يُنتهي بـ `/exec`).
+- للوصول للبيانات (list) عبر JSONP: أضف `?action=list&key=SECRET` إن استخدمت مفتاحًا.
+- لإضافة صف (append) عبر JSONP: مرّر الأعمدة كـ Query Params مع `action=append` و`callback=...` كما تفعل صفحة الإدارة.
+
+### تفعيل المصدر من المتصفح دون تعديل الكود
+- افتح صفحة الإدارة [tender-admin.html](tender-admin.html) وأدخل رابط الـ Web App ومفتاحك (اختياري)، ثم اضغط "تفعيل كمصدر للموقع".
+- أو عبر الرابط مباشرة:
+	- مثال: `tenders.html?src=api&apiMode=jsonp&api=https://script.google.com/macros/s/XXXXX/exec?action=list&key=SECRET`
+## إضافة إعلان جديد
+
+هناك ثلاث طرق:
+
+- تعديل JSON يدويًا: افتح [assets/data/tenders.json](assets/data/tenders.json) وأضف عنصرًا جديدًا بنفس الحقول.
+- تعديل CSV يدويًا: أضف سطرًا جديدًا في [assets/data/tenders.csv](assets/data/tenders.csv) وفق الأعمدة.
+- استخدام صفحة مولّد: افتح [tender-admin.html](tender-admin.html)، املأ الحقول ثم استخدم الأزرار:
+	- "توليد JSON/CSV" لاستعراض المخرجات.
+	- "تنزيل ملف JSON مدمج" لإنزال نسخة تحتوي السجل الجديد مدموجًا مع البيانات الحالية (استبدل بها الملف الأصلي).
+	- "تنزيل سطر CSV" لإضافته إلى ملف CSV.
+	- "نشر إلى Google Sheet" لإرسال السجل إلى الجدول عبر Web App (JSONP)، يتطلب ضبط رابط ومفتاح اختياري.
+	- "تفعيل كمصدر للموقع" لحفظ رابط القراءة في LocalStorage، وسيستخدمه [tenders.html](tenders.html) تلقائيًا.
+
+بعد التحديث، يمكنك ضبط المصدر من `js/main.js` عبر `window.ITECH_TENDERS_CONFIG.sourceType` إلى `json` أو `csv` أو `api`.
 
 تبديل المصدر يتم من أعلى ملف `js/main.js` عبر الكائن التالي:
 
@@ -43,6 +73,12 @@ window.ITECH_TENDERS_CONFIG = {
 ملاحظات:
 - في وضع CSV يتم تحويل عمود `submissionRequirements` إلى مصفوفة باستخدام الفاصل `;`.
 - عند فشل جلب المصدر، يحدث رجوع تلقائي إلى JSON المحلي.
+- يدعم الكود التواريخ بصيغة `dd/mm/yyyy` ويحوّلها تلقائيًا إلى `yyyy-mm-dd`.
+
+## الأمان والوصول الخاص
+- صفحة الإدارة غير مرتبطة في التصفح؛ يمكن فتحها عبر رابط مباشر: `/tender-admin.html`.
+- استخدم `SECRET_KEY` في سكربت Google Apps Script لحماية عمليات الإضافة؛ أي طلب بدون المفتاح سيرفض.
+- يمكن أيضًا إضافة بارامتر `key=SECRET` في رابط الإدارة، وسيُمرّر تلقائيًا عند النشر.
 
 ## القادم
 - ربط نموذج التواصل بواجهة خلفية (Node/Express) وتخزين الإحصائيات في قاعدة بيانات.

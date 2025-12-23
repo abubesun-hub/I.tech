@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>إضافة مناقصة | I.TECH</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap" rel="preload" as="style" onload="this.rel='stylesheet'">
+  <noscript><link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet"></noscript>
+  <link rel="stylesheet" href="./css/main.css" />
+</head>
+<body class="page-controll">
+  <header class="nav">
+    <div class="brand">
+      <div class="logo-circle"><img src="./assets/images/I-Tech logo.png" alt="I.TECH"/></div>
+      <div class="names"><div class="ar">ايتك</div><div class="en">I.TECH</div></div>
+    </div>
+    <nav class="menu" aria-label="التنقل">
+      <a href="index.html">الرئيسية</a>
+      <a href="tenders.html">مناقصات العراق</a>
+    </nav>
+    <button class="burger" aria-label="فتح القائمة" aria-expanded="false">☰</button>
+  </header>
+
+  <main class="container">
+    <section class="card">
+      <h1>إضافة مناقصة جديدة (مولّد JSON/CSV)</h1>
+      <p class="under-construction">هذه أداة مساعدة لإنتاج سجل جديد بصيغة JSON أو سطر CSV لضمّه إلى ملف البيانات. لا تحفظ إلى الخادم تلقائيًا بدون Backend.</p>
+      <div class="grid-2">
+        <div>
+          <div class="form">
+            <label>رقم المناقصة (id)</label>
+            <input id="f_id" placeholder="مثال: 2025-006"/>
+            <label>العنوان</label>
+            <input id="f_title"/>
+            <label>الجهة</label>
+            <input id="f_entity"/>
+            <label>التصنيف</label>
+            <select id="f_category">
+              <option>حكومية</option>
+              <option>شركات</option>
+              <option>جامعات</option>
+              <option>منظمات</option>
+            </select>
+            <label>المدينة</label>
+            <input id="f_city"/>
+            <label>رقم الإعلان</label>
+            <input id="f_adNumber"/>
+            <label>تاريخ النشر</label>
+            <input id="f_postedDate" type="date"/>
+            <label>الموعد النهائي</label>
+            <input id="f_deadline" type="date"/>
+            <label>الحالة</label>
+            <input id="f_status" placeholder="مفتوح"/>
+            <label>رابط المصدر</label>
+            <input id="f_link" placeholder="#"/>
+            <label>الوصف</label>
+            <textarea id="f_description" rows="4"></textarea>
+            <label>سعر الكراس</label>
+            <input id="f_documentPrice" type="number"/>
+            <label>العملة</label>
+            <input id="f_currency" value="IQD"/>
+            <label>مكان استلام الكراس</label>
+            <input id="f_pickupLocation"/>
+            <label>مكان التقديم</label>
+            <input id="f_submissionPlace"/>
+            <label>متطلبات التقديم (افصل بـ ;)</label>
+            <textarea id="f_requirements" rows="3" placeholder="هوية الضريبة; كتاب عدم ممانعة"></textarea>
+            <label>ملاحظات</label>
+            <textarea id="f_notes" rows="2"></textarea>
+            <label>هاتف الاتصال</label>
+            <input id="f_phone"/>
+            <label>البريد الإلكتروني</label>
+            <input id="f_email"/>
+            <label>رابط Web App (Google Apps Script)</label>
+            <input id="f_webapp" placeholder="https://script.google.com/macros/s/XXXXX/exec"/>
+            <label>مفتاح سري (اختياري، إن ضبطته في السكربت)</label>
+            <input id="f_secret" placeholder="YOUR_SECRET_KEY"/>
+            <div class="actions">
+              <button class="btn primary" id="btnGenerate">توليد JSON/CSV</button>
+              <button class="btn" id="btnDownloadJson">تنزيل ملف JSON مدمج</button>
+              <button class="btn" id="btnDownloadCsv">تنزيل سطر CSV</button>
+              <button class="btn" id="btnPublishGoogle">نشر إلى Google Sheet</button>
+              <button class="btn" id="btnUseAsSource">تفعيل كمصدر للموقع</button>
+              <button class="btn" id="btnTestList">اختبار جلب القائمة</button>
+            </div>
+            <div id="publishStatus" style="margin-top:10px;color:var(--text-muted);"></div>
+          </div>
+        </div>
+        <div>
+          <h2>المخرجات</h2>
+          <label>JSON</label>
+          <textarea id="outJson" rows="14" readonly style="font-family:monospace"></textarea>
+          <label>CSV</label>
+          <textarea id="outCsv" rows="4" readonly style="font-family:monospace"></textarea>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+  window.addEventListener('DOMContentLoaded', function(){
+    const $ = (id)=>document.getElementById(id);
+    // تهيئة الحقول من LocalStorage إن وُجد
+    try {
+      const lu = localStorage.getItem('itech_api_url');
+      if (lu) {
+        const baseOnly = lu.split('?')[0];
+        $('#f_webapp').value = baseOnly;
+      }
+    } catch {}
+    function buildItem(){
+      const reqs = ($('#f_requirements').value||'').split(';').map(s=>s.trim()).filter(Boolean);
+      return {
+        id: $('#f_id').value || ('TMP-' + Date.now()),
+        title: $('#f_title').value,
+        entity: $('#f_entity').value,
+        category: $('#f_category').value,
+        city: $('#f_city').value,
+        adNumber: $('#f_adNumber').value,
+        deadline: $('#f_deadline').value,
+        postedDate: $('#f_postedDate').value,
+        status: $('#f_status').value || 'مفتوح',
+        link: $('#f_link').value || '#',
+        description: $('#f_description').value,
+        documentPrice: parseInt($('#f_documentPrice').value||'0',10),
+        currency: $('#f_currency').value || 'IQD',
+        pickupLocation: $('#f_pickupLocation').value,
+        submissionPlace: $('#f_submissionPlace').value,
+        submissionRequirements: reqs,
+        notes: $('#f_notes').value,
+        files: [],
+        contact: { phone: $('#f_phone').value, email: $('#f_email').value }
+      };
+    }
+    function toCsv(o){
+      function esc(s){ s = (s==null?'':String(s)); if (/[,"]/.test(s)) return '"'+s.replace(/"/g,'""')+'"'; return s; }
+      const reqs = (o.submissionRequirements||[]).join('; ');
+      const cols = [o.id,o.title,o.entity,o.category,o.city,o.adNumber,o.deadline,o.postedDate,o.status,o.link,o.description,o.documentPrice,o.currency,o.pickupLocation,o.submissionPlace,reqs,o.notes,(o.contact||{}).phone,(o.contact||{}).email].map(esc);
+      return cols.join(',');
+    }
+    async function loadExisting(){
+      try { const r = await fetch('./assets/data/tenders.json'); return await r.json(); } catch { return []; }
+    }
+    function download(name, text){
+      const blob = new Blob([text], {type:'application/json'});
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob); a.download = name; a.click(); URL.revokeObjectURL(a.href);
+    }
+    const elGenerate = $('#btnGenerate');
+    if (elGenerate) elGenerate.addEventListener('click', ()=>{
+      const item = buildItem();
+      $('#outJson').value = JSON.stringify(item, null, 2);
+      $('#outCsv').value = toCsv(item);
+    });
+    const elDownJson = $('#btnDownloadJson');
+    if (elDownJson) elDownJson.addEventListener('click', async ()=>{
+      const item = buildItem();
+      const arr = await loadExisting();
+      arr.push(item);
+      download('tenders-merged.json', JSON.stringify(arr, null, 2));
+    });
+    const elDownCsv = $('#btnDownloadCsv');
+    if (elDownCsv) elDownCsv.addEventListener('click', ()=>{
+      const item = buildItem();
+      const header = 'id,title,entity,category,city,adNumber,deadline,postedDate,status,link,description,documentPrice,currency,pickupLocation,submissionPlace,submissionRequirements,notes,contactPhone,contactEmail\n';
+      const line = toCsv(item);
+      const blob = new Blob([header+line+'\n'], {type:'text/csv'});
+      const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'tender-new.csv'; a.click(); URL.revokeObjectURL(a.href);
+    });
+
+    // نشر إلى Google Apps Script Web App عبر JSONP (GET)
+    const elPublish = $('#btnPublishGoogle');
+    if (elPublish) elPublish.addEventListener('click', ()=>{
+      const base = $('#f_webapp').value.trim();
+      if (!base) { alert('يرجى إدخال رابط الويب-آب'); return; }
+      const secret = ($('#f_secret').value||'').trim();
+      $('#publishStatus').textContent = 'جاري النشر عبر JSONP...';
+      $('#publishStatus').style.color = 'var(--text-muted)';
+      const item = buildItem();
+      const params = new URLSearchParams({
+        action: 'append',
+        id: item.id, title: item.title, entity: item.entity, category: item.category, city: item.city,
+        adNumber: item.adNumber, deadline: item.deadline, postedDate: item.postedDate, status: item.status,
+        link: item.link, description: item.description, documentPrice: String(item.documentPrice||0), currency: item.currency||'IQD',
+        pickupLocation: item.pickupLocation||'', submissionPlace: item.submissionPlace||'', submissionRequirements: (item.submissionRequirements||[]).join('; '),
+        notes: item.notes||'', contactPhone: (item.contact||{}).phone||'', contactEmail: (item.contact||{}).email||''
+      });
+      if (secret) params.append('key', secret);
+      const cb = '__itech_publish_cb_' + Math.random().toString(36).slice(2);
+      const url = base + (base.includes('?')?'&':'?') + params.toString() + '&callback=' + cb;
+      const s = document.createElement('script'); s.src = url; s.async = true;
+      const to = setTimeout(()=>{ try { delete window[cb]; document.body.removeChild(s); } catch {}; $('#publishStatus').textContent = 'انتهت المهلة دون استجابة. تحقق من رابط Web App والصلاحيات.'; $('#publishStatus').style.color = 'red'; }, 12000);
+      window[cb] = function(resp){
+        clearTimeout(to);
+        if (resp && resp.ok) { $('#publishStatus').textContent = 'تم النشر إلى الجدول ✔'; $('#publishStatus').style.color = 'green'; }
+        else { $('#publishStatus').textContent = 'تعذر النشر: ' + (resp && resp.error ? resp.error : 'خطأ غير معروف'); $('#publishStatus').style.color = 'red'; }
+        try { delete window[cb]; document.body.removeChild(s); } catch {}
+      };
+      s.onerror = function(){ clearTimeout(to); $('#publishStatus').textContent = 'فشل تحميل JSONP (تحقق من الرابط/الشبكة)'; $('#publishStatus').style.color = 'red'; try { delete window[cb]; document.body.removeChild(s); } catch {} };
+      document.body.appendChild(s);
+    });
+
+    // حفظ رابط الـ Web App كمصدر للموقع عبر LocalStorage
+    const elUseSource = $('#btnUseAsSource');
+    if (elUseSource) elUseSource.addEventListener('click', ()=>{
+      const base = $('#f_webapp').value.trim();
+      if (!base) { alert('يرجى إدخال رابط الويب-آب'); return; }
+      const secret = ($('#f_secret').value||'').trim();
+      const listUrl = base + (base.includes('?') ? '&' : '?') + 'action=list' + (secret ? ('&key='+encodeURIComponent(secret)) : '');
+      try {
+        localStorage.setItem('itech_source_type','api');
+        localStorage.setItem('itech_api_mode','jsonp');
+        localStorage.setItem('itech_api_url', listUrl);
+        localStorage.removeItem('itech_tenders_cache');
+        alert('تم التفعيل كمصدر للموقع. افتح صفحة المناقصات لإعادة التحميل.');
+      } catch (e) {
+        alert('تعذر الحفظ في LocalStorage. حاول من المتصفح مباشرة أو أرسل لي الرابط لأضبطه في الكود.');
+      }
+    });
+
+    // اختبار جلب القائمة عبر JSONP
+    const elTest = $('#btnTestList');
+    if (elTest) elTest.addEventListener('click', ()=>{
+      const base = $('#f_webapp').value.trim();
+      if (!base) { alert('يرجى إدخال رابط الويب-آب'); return; }
+      const secret = ($('#f_secret').value||'').trim();
+      $('#publishStatus').textContent = 'اتصال تجريبي: list...';
+      $('#publishStatus').style.color = 'var(--text-muted)';
+      const params = new URLSearchParams({ action: 'list' });
+      if (secret) params.append('key', secret);
+      const cb = '__itech_list_cb_' + Math.random().toString(36).slice(2);
+      const url = base + (base.includes('?')?'&':'?') + params.toString() + '&callback=' + cb;
+      const s = document.createElement('script'); s.src = url; s.async = true;
+      const to = setTimeout(()=>{ try { delete window[cb]; document.body.removeChild(s); } catch {}; $('#publishStatus').textContent = 'انتهت المهلة دون استجابة. تحقق من رابط Web App.'; $('#publishStatus').style.color = 'red'; }, 10000);
+      window[cb] = function(resp){
+        clearTimeout(to);
+        const count = (resp && Array.isArray(resp.data)) ? resp.data.length : (Array.isArray(resp) ? resp.length : 0);
+        $('#publishStatus').textContent = 'نجح الاتصال: العناصر = ' + count;
+        $('#publishStatus').style.color = 'green';
+        try { delete window[cb]; document.body.removeChild(s); } catch {}
+      };
+      s.onerror = function(){ clearTimeout(to); $('#publishStatus').textContent = 'فشل JSONP في اختبار القائمة'; $('#publishStatus').style.color = 'red'; try { delete window[cb]; document.body.removeChild(s); } catch {} };
+      document.body.appendChild(s);
+    });
+
+    const status = document.getElementById('publishStatus');
+    if (status) { status.textContent = 'الصفحة جاهزة. يمكنك الاختبار أو النشر الآن.'; status.style.color = 'green'; }
+  });
+  </script>
+</body>
+</html>
