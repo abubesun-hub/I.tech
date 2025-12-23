@@ -36,10 +36,16 @@ Start-Process "http://localhost:8080/index.html"
 - للوصول للبيانات (list) عبر JSONP: أضف `?action=list&key=SECRET` إن استخدمت مفتاحًا.
 - لإضافة صف (append) عبر JSONP: مرّر الأعمدة كـ Query Params مع `action=append` و`callback=...` كما تفعل صفحة الإدارة.
 
+#### تسجيل دخول آمن (Token)
+- السكربت يدعم `action=login` ويعيد `token` موقّعًا (HMAC) صالحًا لمدة ساعتين.
+- صفحة الإدارة تطلب هذا `token` تلقائيًا عند إدخال المستخدم `Abubesun` وكلمة المرور `Ahmed1985` مع ضبط رابط الـ Web App.
+- جميع عمليات القراءة/الإضافة تتطلب إما `token` أو `key` عند تفعيل `SECRET_KEY`.
+
 ### تفعيل المصدر من المتصفح دون تعديل الكود
 - افتح صفحة الإدارة [tender-admin.html](tender-admin.html) وأدخل رابط الـ Web App ومفتاحك (اختياري)، ثم اضغط "تفعيل كمصدر للموقع".
 - أو عبر الرابط مباشرة:
-	- مثال: `tenders.html?src=api&apiMode=jsonp&api=https://script.google.com/macros/s/XXXXX/exec?action=list&key=SECRET`
+	- مثال عام مع مفتاح: `tenders.html?src=api&apiMode=jsonp&api=https://script.google.com/macros/s/XXXXX/exec?action=list&key=SECRET`
+	- مثال مع رمز دخول: `tenders.html?src=api&apiMode=jsonp&api=https://script.google.com/macros/s/XXXXX/exec?action=list&token=YOUR_TOKEN`
 ## إضافة إعلان جديد
 
 هناك ثلاث طرق:
@@ -51,7 +57,7 @@ Start-Process "http://localhost:8080/index.html"
 	- "تنزيل ملف JSON مدمج" لإنزال نسخة تحتوي السجل الجديد مدموجًا مع البيانات الحالية (استبدل بها الملف الأصلي).
 	- "تنزيل سطر CSV" لإضافته إلى ملف CSV.
 	- "نشر إلى Google Sheet" لإرسال السجل إلى الجدول عبر Web App (JSONP)، يتطلب ضبط رابط ومفتاح اختياري.
-	- "تفعيل كمصدر للموقع" لحفظ رابط القراءة في LocalStorage، وسيستخدمه [tenders.html](tenders.html) تلقائيًا.
+	- "تفعيل كمصدر للموقع" لحفظ رابط القراءة في LocalStorage، وسيستخدمه [tenders.html](tenders.html) تلقائيًا. إذا كانت جلسة الدخول صالحة سيُحفظ `token` ضمن الرابط.
 
 بعد التحديث، يمكنك ضبط المصدر من `js/main.js` عبر `window.ITECH_TENDERS_CONFIG.sourceType` إلى `json` أو `csv` أو `api`.
 
@@ -78,7 +84,7 @@ window.ITECH_TENDERS_CONFIG = {
 ## الأمان والوصول الخاص
 - صفحة الإدارة غير مرتبطة في التصفح؛ يمكن فتحها عبر رابط مباشر: `/tender-admin.html`.
 - استخدم `SECRET_KEY` في سكربت Google Apps Script لحماية عمليات الإضافة؛ أي طلب بدون المفتاح سيرفض.
-- يمكن أيضًا إضافة بارامتر `key=SECRET` في رابط الإدارة، وسيُمرّر تلقائيًا عند النشر.
+- يدعم السكربت رمز دخول `token` عبر تسجيل الدخول؛ تحتفظ الصفحة به محليًا وتضيفه تلقائيًا للطلبات.
 
 ## القادم
 - ربط نموذج التواصل بواجهة خلفية (Node/Express) وتخزين الإحصائيات في قاعدة بيانات.
