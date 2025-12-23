@@ -141,6 +141,7 @@
         const p = (document.getElementById('gatePass').value||'').trim();
         if (u === okUser && p === okPass) {
           setAuthed();
+          try { __itech_login_webapp(u, p); } catch {}
           showArea();
           if (status) { status.textContent = 'تم الدخول ✔'; status.style.color = 'green'; }
         } else {
@@ -148,6 +149,26 @@
         }
       });
     })();
+
+    // محاولة تسجيل الدخول إلى Web App للحصول على token (إن وُجد رابط)
+    function __itech_login_webapp(u, p){
+      try {
+        const inp = document.getElementById('f_webapp');
+        const base = (inp && inp.value) ? inp.value.trim() : '';
+        if (!base) return;
+        const cb = '__itech_login_cb_' + Math.random().toString(36).slice(2);
+        const url = base + (base.includes('?')?'&':'?') + 'action=login&user=' + encodeURIComponent(u) + '&pass=' + encodeURIComponent(p) + '&callback=' + cb;
+        const s = document.createElement('script'); s.src = url; s.async = true;
+        window[cb] = function(resp){
+          try {
+            if (resp && resp.ok && resp.token) localStorage.setItem('itech_admin_token', resp.token);
+            delete window[cb]; document.body.removeChild(s);
+          } catch {}
+        };
+        s.onerror = function(){ try { delete window[cb]; document.body.removeChild(s); } catch {} };
+        document.body.appendChild(s);
+      } catch {}
+    }
 
     const $ = (id)=>document.getElementById(id);
     // تهيئة الحقول من LocalStorage إن وُجد
@@ -235,7 +256,8 @@
         pickupLocation: item.pickupLocation||'', submissionPlace: item.submissionPlace||'', submissionRequirements: (item.submissionRequirements||[]).join('; '),
         notes: item.notes||'', contactPhone: (item.contact||{}).phone||'', contactEmail: (item.contact||{}).email||''
       });
-      if (secret) params.append('key', secret);
+      const savedToken = (localStorage.getItem('itech_admin_token')||'');
+      if (savedToken) params.append('token', savedToken); else if (secret) params.append('key', secret);
       const cb = '__itech_publish_cb_' + Math.random().toString(36).slice(2);
       const url = base + (base.includes('?')?'&':'?') + params.toString() + '&callback=' + cb;
       const s = document.createElement('script'); s.src = url; s.async = true;
@@ -256,7 +278,8 @@
       const base = $('#f_webapp').value.trim();
       if (!base) { alert('يرجى إدخال رابط الويب-آب'); return; }
       const secret = ($('#f_secret').value||'').trim();
-      const listUrl = base + (base.includes('?') ? '&' : '?') + 'action=list' + (secret ? ('&key='+encodeURIComponent(secret)) : '');
+      const savedToken = (localStorage.getItem('itech_admin_token')||'');
+      const listUrl = base + (base.includes('?') ? '&' : '?') + 'action=list' + (savedToken ? ('&token='+encodeURIComponent(savedToken)) : (secret ? ('&key='+encodeURIComponent(secret)) : ''));
       try {
         localStorage.setItem('itech_source_type','api');
         localStorage.setItem('itech_api_mode','jsonp');
@@ -277,7 +300,8 @@
       $('#publishStatus').textContent = 'اتصال تجريبي: list...';
       $('#publishStatus').style.color = 'var(--text-muted)';
       const params = new URLSearchParams({ action: 'list' });
-      if (secret) params.append('key', secret);
+      const savedToken = (localStorage.getItem('itech_admin_token')||'');
+      if (savedToken) params.append('token', savedToken); else if (secret) params.append('key', secret);
       const cb = '__itech_list_cb_' + Math.random().toString(36).slice(2);
       const url = base + (base.includes('?')?'&':'?') + params.toString() + '&callback=' + cb;
       const s = document.createElement('script'); s.src = url; s.async = true;

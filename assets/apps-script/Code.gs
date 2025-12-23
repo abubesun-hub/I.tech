@@ -3,6 +3,9 @@
 const SHEET_ID = 'PUT_YOUR_SHEET_ID';
 const SHEET_NAME = 'Tenders'; // or the name of your sheet tab
 const SECRET_KEY = 'YOUR_SECRET_KEY'; // optional; set '' to disable
+// Basic login user (server-side check). Replace as needed.
+const ADMIN_USER = 'Abubesun';
+const ADMIN_PASS = 'Ahmed1985';
 
 function getSheet() {
   return SpreadsheetApp.openById(SHEET_ID).getSheetByName(SHEET_NAME);
@@ -27,6 +30,39 @@ function readHeaders(sh) {
   return headers;
 }
 
+// --- Token helpers (HMAC-SHA256 signed, web-safe base64) ---
+function signToken(user) {
+  var expMs = (new Date()).getTime() + 2 * 60 * 60 * 1000; // 2 hours
+  var payload = JSON.stringify({ u: user, exp: expMs });
+  var sigBytes = Utilities.computeHmacSha256Signature(payload, SECRET_KEY || 'NO_SECRET');
+  var sig = Utilities.base64EncodeWebSafe(sigBytes);
+  var pay = Utilities.base64EncodeWebSafe(payload);
+  return pay + '.' + sig;
+}
+
+function verifyToken(tok) {
+  try {
+    if (!tok) return false;
+    var parts = String(tok).split('.');
+    if (parts.length !== 2) return false;
+    var payloadStr = Utilities.newBlob(Utilities.base64DecodeWebSafe(parts[0])).getDataAsString();
+    var expSigBytes = Utilities.computeHmacSha256Signature(payloadStr, SECRET_KEY || 'NO_SECRET');
+    var expSig = Utilities.base64EncodeWebSafe(expSigBytes);
+    if (expSig !== parts[1]) return false;
+    var obj = JSON.parse(payloadStr);
+    if (!obj || !obj.exp || !obj.u) return false;
+    if ((new Date()).getTime() > obj.exp) return false;
+    return true;
+  } catch (e) { return false; }
+}
+
+function hasAccess(e) {
+  if (!SECRET_KEY) return true; // if no secret configured, allow
+  var p = e && e.parameter || {};
+  if (p.key && String(p.key) === SECRET_KEY) return true;
+  return verifyToken(p.token);
+}
+
 function asOutput(obj, e) {
   var cb = e && e.parameter && e.parameter.callback ? String(e.parameter.callback) : '';
   var text = JSON.stringify(obj);
@@ -38,10 +74,18 @@ function asOutput(obj, e) {
     .setMimeType(ContentService.MimeType.JSON);
 }
 
-function handleAppend(e) {
-  if (SECRET_KEY && String(e.parameter.key || '') !== SECRET_KEY) {
-    return { ok: false, error: 'invalid_key' };
+function handleLogin(e) {
+  var u = e && e.parameter && e.parameter.user ? String(e.parameter.user) : '';
+  var p = e && e.parameter && e.parameter.pass ? String(e.parameter.pass) : '';
+  if (u === ADMIN_USER && p === ADMIN_PASS) {
+    var token = signToken(u);
+    return { ok: true, token: token, user: u, expiresIn: 2 * 60 * 60 }; // seconds
   }
+  return { ok: false, error: 'bad_credentials' };
+}
+
+function handleAppend(e) {
+  if (!hasAccess(e)) return { ok: false, error: 'unauthorized' };
   var sh = getSheet();
   var headers = readHeaders(sh);
   var row = headers.map(function (h) {
@@ -56,6 +100,7 @@ function handleAppend(e) {
 }
 
 function handleList(e) {
+  if (!hasAccess(e)) return { ok: false, error: 'unauthorized' };
   var sh = getSheet();
   var lastRow = sh.getLastRow();
   var headers = readHeaders(sh);
@@ -83,7 +128,9 @@ function handleList(e) {
 function doGet(e) {
   try {
     var action = (e && e.parameter && e.parameter.action) ? String(e.parameter.action).toLowerCase() : 'list';
-    var resp = (action === 'append') ? handleAppend(e) : handleList(e);
+    var resp = (action === 'append') ? handleAppend(e)
+             : (action === 'login') ? handleLogin(e)
+             : handleList(e);
     return asOutput(resp, e);
   } catch (err) {
     return asOutput({ ok: false, error: String(err) }, e);
