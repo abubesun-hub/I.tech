@@ -170,6 +170,23 @@
     }
 
     const $ = (id)=>document.getElementById(id);
+    // يبني رابط Web App صحيح حتى لو أدخلت Deployment ID فقط
+    function resolveWebAppBase(){
+      const el = $('#f_webapp');
+      let raw = el && el.value ? el.value.trim() : '';
+      if (!raw) return '';
+      const looksLikeId = /^[A-Za-z0-9_-]{30,}$/; // شكل شائع لمعرف نشر GAS
+      let base = raw;
+      if (looksLikeId.test(raw)) {
+        base = 'https://script.google.com/macros/s/' + raw + '/exec';
+      }
+      // لو كان رابط GAS بلا /exec، أضِفها
+      if (/^https?:\/\/script\.google\.com\/macros\/s\//.test(base) && !/\/exec(\?|$)/.test(base)) {
+        base = base.replace(/\/?$/, '/exec');
+      }
+      try { if (el) el.value = base; } catch {}
+      return base;
+    }
     // تهيئة الحقول من LocalStorage إن وُجد
     try {
       const lu = localStorage.getItem('itech_api_url');
@@ -241,7 +258,7 @@
     // نشر إلى Google Apps Script Web App عبر JSONP (GET)
     const elPublish = $('#btnPublishGoogle');
     if (elPublish) elPublish.addEventListener('click', ()=>{
-      const base = $('#f_webapp').value.trim();
+      const base = resolveWebAppBase();
       if (!base) { alert('يرجى إدخال رابط الويب-آب'); return; }
       const secret = ($('#f_secret').value||'').trim();
       $('#publishStatus').textContent = 'جاري النشر عبر JSONP...';
@@ -274,7 +291,7 @@
     // حفظ رابط الـ Web App كمصدر للموقع عبر LocalStorage
     const elUseSource = $('#btnUseAsSource');
     if (elUseSource) elUseSource.addEventListener('click', ()=>{
-      const base = $('#f_webapp').value.trim();
+      const base = resolveWebAppBase();
       if (!base) { alert('يرجى إدخال رابط الويب-آب'); return; }
       const secret = ($('#f_secret').value||'').trim();
       const savedToken = (localStorage.getItem('itech_admin_token')||'');
@@ -293,7 +310,7 @@
     // اختبار جلب القائمة عبر JSONP
     const elTest = $('#btnTestList');
     if (elTest) elTest.addEventListener('click', ()=>{
-      const base = $('#f_webapp').value.trim();
+      const base = resolveWebAppBase();
       if (!base) { alert('يرجى إدخال رابط الويب-آب'); return; }
       const secret = ($('#f_secret').value||'').trim();
       $('#publishStatus').textContent = 'اتصال تجريبي: list...';
