@@ -176,6 +176,7 @@
       let raw = el && el.value ? el.value.trim() : '';
       if (!raw) return '';
       const looksLikeId = /^[A-Za-z0-9_-]{30,}$/; // شكل شائع لمعرف نشر GAS
+      const maybeSheetId = /^[A-Za-z0-9_-]{40,}$/; // قد يكون معرف Google Sheet
       let base = raw;
       if (looksLikeId.test(raw)) {
         base = 'https://script.google.com/macros/s/' + raw + '/exec';
@@ -185,6 +186,14 @@
         base = base.replace(/\/?$/, '/exec');
       }
       try { if (el) el.value = base; } catch {}
+      // تحذير إن كان يبدو أنه SHEET_ID وليس Web App
+      try {
+        const status = $('#publishStatus');
+        if (status && maybeSheetId.test(raw) && !/^https?:\/\/script\.google\.com\//.test(raw)) {
+          status.textContent = 'تحقق من الرابط: قد تكون أدخلت SHEET_ID. المطلوب رابط Web App من Apps Script ينتهي بـ /exec.';
+          status.style.color = 'orange';
+        }
+      } catch {}
       return base;
     }
     // تهيئة الحقول من LocalStorage إن وُجد
@@ -277,11 +286,23 @@
       const cb = '__itech_publish_cb_' + Math.random().toString(36).slice(2);
       const url = base + (base.includes('?')?'&':'?') + params.toString() + '&callback=' + cb;
       const s = document.createElement('script'); s.src = url; s.async = true;
+      // عرض رابط الطلب للمساعدة في التشخيص
+      try {
+        const status = $('#publishStatus');
+        if (status) {
+          status.innerHTML = 'جاري النشر عبر JSONP... <a href="'+url+'" target="_blank" rel="noopener">فتح الطلب</a>';
+        }
+      } catch {}
       const to = setTimeout(()=>{ try { delete window[cb]; document.body.removeChild(s); } catch {}; $('#publishStatus').textContent = 'انتهت المهلة دون استجابة. تحقق من رابط Web App والصلاحيات.'; $('#publishStatus').style.color = 'red'; }, 12000);
       window[cb] = function(resp){
         clearTimeout(to);
         if (resp && resp.ok) { $('#publishStatus').textContent = 'تم النشر إلى الجدول ✔'; $('#publishStatus').style.color = 'green'; }
-        else { $('#publishStatus').textContent = 'تعذر النشر: ' + (resp && resp.error ? resp.error : 'خطأ غير معروف'); $('#publishStatus').style.color = 'red'; }
+        else {
+          const err = (resp && resp.error) ? String(resp.error) : 'unknown';
+          const msg = (err === 'unauthorized') ? 'تعذر النشر: غير مخوّل. تأكد من SECRET_KEY في السكربت أو ادخل المفتاح/التوكن الصحيح، وكذلك إعداد "Who has access" في نشر الويب-آب.' : ('تعذر النشر: ' + err);
+          $('#publishStatus').textContent = msg;
+          $('#publishStatus').style.color = 'red';
+        }
         try { delete window[cb]; document.body.removeChild(s); } catch {}
       };
       s.onerror = function(){ clearTimeout(to); $('#publishStatus').textContent = 'فشل تحميل JSONP (تحقق من الرابط/الشبكة)'; $('#publishStatus').style.color = 'red'; try { delete window[cb]; document.body.removeChild(s); } catch {} };
@@ -321,6 +342,10 @@
       const cb = '__itech_list_cb_' + Math.random().toString(36).slice(2);
       const url = base + (base.includes('?')?'&':'?') + params.toString() + '&callback=' + cb;
       const s = document.createElement('script'); s.src = url; s.async = true;
+      try {
+        const status = $('#publishStatus');
+        if (status) status.innerHTML = 'اتصال تجريبي: <a href="'+url+'" target="_blank" rel="noopener">فتح الطلب</a>';
+      } catch {}
       const to = setTimeout(()=>{ try { delete window[cb]; document.body.removeChild(s); } catch {}; $('#publishStatus').textContent = 'انتهت المهلة دون استجابة. تحقق من رابط Web App.'; $('#publishStatus').style.color = 'red'; }, 10000);
       window[cb] = function(resp){
         clearTimeout(to);
