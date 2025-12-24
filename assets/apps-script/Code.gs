@@ -1,8 +1,8 @@
 // I.TECH — Google Apps Script Web App for Tenders
 // Fill these constants, then deploy as a Web App (execute as you, accessible to anyone).
-const SHEET_ID = 'PUT_YOUR_SHEET_ID';
+const SHEET_ID = '1BQHnfvDajpaewzDFf6AAlrSFcReXyIyaSTf3xETqT4M';
 const SHEET_NAME = 'Tenders'; // or the name of your sheet tab
-const SECRET_KEY = 'YOUR_SECRET_KEY'; // optional; set '' to disable
+const SECRET_KEY = '1985'; // optional; set '' to disable
 // Basic login user (server-side check). Replace as needed.
 const ADMIN_USER = 'Abubesun';
 const ADMIN_PASS = 'Ahmed1985';
