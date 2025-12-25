@@ -34,7 +34,7 @@
     <section class="card tenders-hero">
       <div class="intro">
         <h1>مناقصات العراق</h1>
-        <p class="under-construction">هذه الصفحة قيد الإنشاء، ونجهز منصة سهلة للبحث والتصفية عن أحدث المناقصات في العراق.</p>
+        <p>تعرض الصفحة المناقصات مباشرة من ملف JSON ضمن الموقع. أضف مناقصة عبر صفحة الإدارة فتظهر هنا فور تحديث الملف.</p>
         <div class="tenders-search">
           <input id="tenderSearch" type="text" placeholder="ابحث عن مناقصة (جهة، عنوان، مدينة)" />
           <button id="searchBtn" class="btn">بحث</button>
@@ -57,15 +57,12 @@
           <button class="chip" data-filter="منظمات">منظمات</button>
         </div>
       </div>
-      <div>
-        <span class="badge">قريبًا إطلاق النسخة الأولى</span>
-      </div>
     </section>
 
     <section class="card">
       <h2>قائمة المناقصات</h2>
       <div class="tenders-list" id="tendersList"></div>
-      <p class="under-construction">البيانات الحالية تجريبية من ملف JSON محلي، وسيتم ربط مصدر رسمي لاحقًا.</p>
+      <p class="muted">المصدر: assets/data/tenders.json — التحديث فوري بعد النشر من صفحة الإدارة.</p>
       <div class="actions">
         <a class="btn" href="index.html">العودة إلى الرئيسية</a>
       </div>
