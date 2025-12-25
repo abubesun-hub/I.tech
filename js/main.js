@@ -1,17 +1,12 @@
 // تفعيل قائمة الموبايل + مؤشرات بسيطة + إحصائيات محلية
 // إعداد مصدر بيانات المناقصات (بدّل حسب الحاجة)
 window.ITECH_TENDERS_CONFIG = window.ITECH_TENDERS_CONFIG || {
-  sourceType: 'csv', // 'json' | 'csv' | 'api' | 'gsheet'
+  sourceType: 'json', // المصدر الافتراضي: ملف JSON داخل الموقع
   jsonUrl: './assets/data/tenders.json',
-  csvUrl: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vT3FdZOxfx0uJQB2wHXz04iEESh4y74XIzsrwbkhnF9jXVVfzfcQ0t5HDJSWp7zie2RpijYoOYtJ6jI/pub?output=csv',
-  apiUrl: '', // مثال: 'https://script.google.com/macros/s/XXXXX/exec?action=list'
-  apiMode: 'fetch', // 'fetch' أو 'jsonp' (للتغلب على CORS مع Apps Script)
-  // إعداد Google Sheet: بدّل sheetId باسم الجدول لديك، واسم الورقة إن لزم
-  googleSheet: {
-    sheetId: '', // مثال: 1AbCDeFGhIjKlmNoPqRsTuVwXyZ
-    sheetName: 'Tenders', // اسم الورقة التي تحتوي الأعمدة
-    gid: '0' // اختياري، للروابط بصيغة export
-  }
+  csvUrl: '',
+  apiUrl: '',
+  apiMode: 'fetch',
+  googleSheet: { sheetId: '', sheetName: 'Tenders', gid: '0' }
 };
 // السماح بالتهيئة عبر LocalStorage بدون تعديل الكود
 try {

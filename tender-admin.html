@@ -38,8 +38,8 @@
     </section>
 
     <section class="card" id="adminArea">
-      <h1>إضافة مناقصة جديدة (مولّد JSON/CSV)</h1>
-      <p class="under-construction">هذه أداة مساعدة لإنتاج سجل جديد بصيغة JSON أو سطر CSV لضمّه إلى ملف البيانات. لا تحفظ إلى الخادم تلقائيًا بدون Backend.</p>
+      <h1>إضافة مناقصة جديدة</h1>
+      <p class="under-construction">أدخل بيانات المناقصة ثم اضغط "نشر" ليتم حفظها مباشرة في ملف JSON داخل مستودع GitHub للموقع، وظهورها فورًا في صفحة "مناقصات العراق".</p>
       <div class="grid-2">
         <div>
           <div class="form">
@@ -86,23 +86,11 @@
             <input id="f_phone"/>
             <label>البريد الإلكتروني</label>
             <input id="f_email"/>
-            <label>رابط Web App (Google Apps Script)</label>
-            <input id="f_webapp" placeholder="https://script.google.com/macros/s/XXXXX/exec"/>
-            <label>مفتاح سري (اختياري، إن ضبطته في السكربت)</label>
-            <input id="f_secret" placeholder="YOUR_SECRET_KEY"/>
-            <div class="actions">
-              <button class="btn primary" id="btnGenerate">توليد JSON/CSV</button>
-              <button class="btn" id="btnDownloadJson">تنزيل ملف JSON مدمج</button>
-              <button class="btn" id="btnDownloadCsv">تنزيل سطر CSV</button>
-              <button class="btn" id="btnPublishGoogle">نشر إلى Google Sheet</button>
-              <button class="btn" id="btnUseAsSource">تفعيل كمصدر للموقع</button>
-              <button class="btn" id="btnTestList">اختبار جلب القائمة</button>
-            </div>
             <div id="publishStatus" style="margin-top:10px;color:var(--text-muted);"></div>
 
             <hr style="margin:18px 0; opacity:.3;">
-            <h2 style="margin:6px 0 10px;">نشر مباشر على GitHub Pages (بدون Backend)</h2>
-            <p class="muted">هذه الطريقة تُجري تعديلًا مباشرًا على الملف <strong>assets/data/tenders.json</strong> داخل مستودع GitHub عبر واجهة GitHub API. تتطلب رمز وصول شخصي (PAT) مع صلاحية <strong>contents:write</strong> لهذا المستودع. لا تشارك الرمز علنًا.</p>
+            <h2 style="margin:6px 0 10px;">النشر إلى GitHub (JSON)</h2>
+            <p class="muted">سيتم تحديث الملف <strong>assets/data/tenders.json</strong> مباشرة عبر GitHub API. تحتاج رمز وصول شخصي (PAT) بصلاحية <strong>contents:write</strong> على المستودع.</p>
             <div class="form">
               <label>GitHub Owner</label>
               <input id="gh_owner" placeholder="مثال: abubesun-hub"/>
@@ -121,18 +109,12 @@
                 </label>
               </div>
               <div class="actions" style="margin-top:12px;">
-                <button class="btn primary" id="btnPublishGithub">نشر مباشر على صفحة المناقصات (GitHub)</button>
+                <button class="btn primary" id="btnPublishGithub">نشر</button>
               </div>
             </div>
           </div>
         </div>
-        <div>
-          <h2>المخرجات</h2>
-          <label>JSON</label>
-          <textarea id="outJson" rows="14" readonly style="font-family:monospace"></textarea>
-          <label>CSV</label>
-          <textarea id="outCsv" rows="4" readonly style="font-family:monospace"></textarea>
-        </div>
+        <div></div>
       </div>
     </section>
   </main>
