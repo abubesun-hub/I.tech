@@ -39,6 +39,7 @@ try {
   const apiMode = params.get('apiMode');
   const gsheetId = params.get('gsheetId');
   const gsheetName = params.get('gsheetName');
+  const nocache = params.get('nocache');
   if (src) window.ITECH_TENDERS_CONFIG.sourceType = src;
   if (csv) window.ITECH_TENDERS_CONFIG.csvUrl = csv;
   if (json) window.ITECH_TENDERS_CONFIG.jsonUrl = json;
@@ -46,6 +47,7 @@ try {
   if (apiMode) window.ITECH_TENDERS_CONFIG.apiMode = apiMode;
   if (gsheetId) window.ITECH_TENDERS_CONFIG.googleSheet.sheetId = gsheetId;
   if (gsheetName) window.ITECH_TENDERS_CONFIG.googleSheet.sheetName = gsheetName;
+  if (nocache === '1') { try { localStorage.removeItem('itech_tenders_cache'); } catch {} }
 } catch {}
 (function(){
   const burger = document.querySelector('.burger');

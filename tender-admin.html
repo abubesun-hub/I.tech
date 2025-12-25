@@ -99,7 +99,13 @@
             </div>
           </div>
         </div>
-        <div></div>
+        <div>
+          <h2>المناقصات المعلنة</h2>
+          <div class="actions" style="margin-bottom:8px;">
+            <button class="btn" id="btnRefreshList">تحديث القائمة</button>
+          </div>
+          <div id="adminList" class="card" style="padding:12px;"></div>
+        </div>
       </div>
     </section>
   </main>
@@ -141,8 +147,11 @@
     function utf8ToBase64(str){
       try { return btoa(unescape(encodeURIComponent(str))); } catch(e){ return btoa(str); }
     }
+    function encodePathSegments(p){
+      try { return (p||'').split('/').map(encodeURIComponent).join('/'); } catch { return p; }
+    }
     async function githubGetFileSha(owner, repo, branch, path, token){
-      const url = `https://api.github.com/repos/${owner}/${repo}/contents/${encodeURIComponent(path)}?ref=${encodeURIComponent(branch)}`;
+      const url = `https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/contents/${encodePathSegments(path)}?ref=${encodeURIComponent(branch)}`;
       const r = await fetch(url, { headers: { 'Accept':'application/vnd.github+json', 'Authorization': token ? `Bearer ${token}` : '' } });
       if (r.status === 404) return null; // file not found
       if (!r.ok) throw new Error('GitHub API (get sha) failed: '+r.status);
@@ -150,7 +159,7 @@
       return j && j.sha ? j.sha : null;
     }
     async function githubPutFile(owner, repo, branch, path, contentBase64, message, shaOrNull, token){
-      const url = `https://api.github.com/repos/${owner}/${repo}/contents/${encodeURIComponent(path)}`;
+      const url = `https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/contents/${encodePathSegments(path)}`;
       const body = { message, content: contentBase64, branch };
       if (shaOrNull) body.sha = shaOrNull;
       const r = await fetch(url, { method:'PUT', headers: { 'Accept':'application/vnd.github+json', 'Content-Type':'application/json', 'Authorization': token ? `Bearer ${token}` : '' }, body: JSON.stringify(body) });
@@ -219,8 +228,20 @@
         setStatus('رفع التحديث عبر GitHub API (قد يستغرق ثواني)...', 'var(--text-muted)');
         const res = await githubPutFile(owner, repo, branch, path, utf8ToBase64(newJson), `Add tender ${item.id}`, sha, token);
         setStatus('تم النشر بنجاح إلى GitHub ✔ — قد يستغرق تفعيل GitHub Pages دقيقة.', 'green');
+        try { localStorage.removeItem('itech_tenders_cache'); } catch {}
+        alert('تم النشر بنجاح ✔');
+        // تفريغ الحقول لإضافة مناقصة جديدة
+        try {
+          const ids = ['f_id','f_title','f_entity','f_city','f_adNumber','f_deadline','f_postedDate','f_status','f_link','f_description','f_documentPrice','f_currency','f_pickupLocation','f_submissionPlace','f_requirements','f_notes','f_phone','f_email'];
+          ids.forEach(i => { const el = document.getElementById(i); if (el) el.value = ''; });
+          const cat = document.getElementById('f_category'); if (cat) cat.selectedIndex = 0;
+        } catch {}
+        // إعادة تحميل الجدول أسفل الصفحة
+        try { await renderAdminList(); } catch {}
       } catch (e){
-        setStatus('فشل النشر إلى GitHub: ' + (e && e.message ? e.message : String(e)), 'red');
+        const msg = 'فشل النشر إلى GitHub: ' + (e && e.message ? e.message : String(e));
+        setStatus(msg, 'red');
+        alert(msg);
       } finally {
         elPublishGh.disabled = false;
       }
@@ -228,6 +249,86 @@
 
     const status = document.getElementById('publishStatus');
     if (status) { status.textContent = 'جاهز للنشر عبر GitHub API. أدخل إعدادات GitHub ثم اضغط نشر.'; status.style.color = 'green'; }
+
+    // قسم إدارة العناصر (قائمة مع تحرير/حذف)
+    async function renderAdminList(){
+      const owner = ($('#gh_owner').value||'').trim();
+      const repo = ($('#gh_repo').value||'').trim();
+      const branch = ($('#gh_branch').value||'main').trim();
+      const path = ($('#gh_path').value||'assets/data/tenders.json').trim();
+      const token = ($('#gh_token').value||'').trim();
+      const wrap = document.getElementById('adminList');
+      if (!wrap || !owner || !repo || !branch || !path) return;
+      wrap.innerHTML = '<div class="muted">جلب القائمة...</div>';
+      try {
+        const arr = await fetchCurrentTendersRaw(owner, repo, branch, path);
+        if (!Array.isArray(arr) || arr.length === 0) { wrap.innerHTML = '<div class="muted">لا توجد عناصر حالياً.</div>'; return; }
+        const table = document.createElement('table');
+        table.className = 'table';
+        table.style.width = '100%';
+        table.innerHTML = '<thead><tr><th>رقم</th><th>العنوان</th><th>التصنيف</th><th>مدينة</th><th>إجراءات</th></tr></thead><tbody></tbody>';
+        const tbody = table.querySelector('tbody');
+        arr.forEach(item => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `<td>${item.id||''}</td><td>${item.title||''}</td><td>${item.category||''}</td><td>${item.city||''}</td><td><button class="btn" data-act="edit">تحرير</button> <button class="btn" data-act="del">حذف</button></td>`;
+          tr.querySelector('[data-act="edit"]').addEventListener('click', () => {
+            try {
+              $('#f_id').value = item.id||'';
+              $('#f_title').value = item.title||'';
+              $('#f_entity').value = item.entity||'';
+              $('#f_category').value = item.category||'حكومية';
+              $('#f_city').value = item.city||'';
+              $('#f_adNumber').value = item.adNumber||'';
+              $('#f_deadline').value = item.deadline||'';
+              $('#f_postedDate').value = item.postedDate||'';
+              $('#f_status').value = item.status||'مفتوح';
+              $('#f_link').value = item.link||'';
+              $('#f_description').value = item.description||'';
+              $('#f_documentPrice').value = item.documentPrice!=null ? String(item.documentPrice) : '';
+              $('#f_currency').value = item.currency||'IQD';
+              $('#f_pickupLocation').value = item.pickupLocation||'';
+              $('#f_submissionPlace').value = item.submissionPlace||'';
+              $('#f_requirements').value = Array.isArray(item.submissionRequirements) ? item.submissionRequirements.join('; ') : '';
+              $('#f_notes').value = item.notes||'';
+              $('#f_phone').value = item.contact && item.contact.phone || '';
+              $('#f_email').value = item.contact && item.contact.email || '';
+              alert('تم تحميل البيانات في النموذج. عدّل ثم اضغط نشر.');
+            } catch {}
+          });
+          tr.querySelector('[data-act="del"]').addEventListener('click', async () => {
+            if (!confirm('تأكيد الحذف؟ سيتم تحديث الملف على GitHub.')) return;
+            try {
+              const list = await fetchCurrentTendersRaw(owner, repo, branch, path);
+              const next = Array.isArray(list) ? list.filter(x => String(x.id||'') !== String(item.id||'')) : [];
+              const newJson = JSON.stringify(next, null, 2) + '\n';
+              const sha = await githubGetFileSha(owner, repo, branch, path, token);
+              await githubPutFile(owner, repo, branch, path, utf8ToBase64(newJson), `Delete tender ${item.id}`, sha, token);
+              try { localStorage.removeItem('itech_tenders_cache'); } catch {}
+              alert('تم حذف المناقصة ✔');
+              await renderAdminList();
+            } catch (e) {
+              alert('فشل الحذف: ' + (e && e.message ? e.message : String(e)));
+            }
+          });
+          tbody.appendChild(tr);
+        });
+        wrap.innerHTML = '';
+        wrap.appendChild(table);
+      } catch (e) {
+        wrap.innerHTML = '<div class="muted">تعذر جلب القائمة: '+(e && e.message ? e.message : String(e))+'</div>';
+      }
+    }
+
+    // زر تحديث القائمة إن وُجد
+    const btnRefresh = document.getElementById('btnRefreshList');
+    if (btnRefresh) btnRefresh.addEventListener('click', renderAdminList);
+    // محاولة أولية لعرض القائمة عند فتح الصفحة إذا كانت إعدادات GitHub مكتملة
+    try {
+      const owner = ($('#gh_owner').value||'').trim();
+      const repo = ($('#gh_repo').value||'').trim();
+      const path = ($('#gh_path').value||'').trim();
+      if (owner && repo && path) renderAdminList();
+    } catch {}
   }
   if (document.readyState === 'loading') {
     window.addEventListener('DOMContentLoaded', initAdminPage);
