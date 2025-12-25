@@ -103,6 +103,7 @@
           <h2>المناقصات المعلنة</h2>
           <div class="actions" style="margin-bottom:8px;">
             <button class="btn" id="btnRefreshList">تحديث القائمة</button>
+            <button class="btn" id="btnClearTendersCache">مسح كاش المناقصات</button>
           </div>
           <div id="adminList" class="card" style="padding:12px;"></div>
         </div>
@@ -227,9 +228,11 @@
         const sha = await githubGetFileSha(owner, repo, branch, path, token);
         setStatus('رفع التحديث عبر GitHub API (قد يستغرق ثواني)...', 'var(--text-muted)');
         const res = await githubPutFile(owner, repo, branch, path, utf8ToBase64(newJson), `Add tender ${item.id}`, sha, token);
-        setStatus('تم النشر بنجاح إلى GitHub ✔ — قد يستغرق تفعيل GitHub Pages دقيقة.', 'green');
+        const commitUrl = (res && res.commit && res.commit.html_url) ? res.commit.html_url : '';
+        const fileUrl = (res && res.content && res.content.html_url) ? res.content.html_url : '';
+        setStatus('تم النشر بنجاح إلى GitHub ✔ — قد يستغرق تفعيل GitHub Pages دقيقة.' + (commitUrl ? ` (\u0625\u0636\u063a\u0637 \u0644\u0644\u0645\u0639\u0627\u064a\u0646\u0629: ${commitUrl})` : ''), 'green');
         try { localStorage.removeItem('itech_tenders_cache'); } catch {}
-        alert('تم النشر بنجاح ✔');
+        alert('تم النشر بنجاح ✔' + (commitUrl ? '\nعرض الـ Commit: ' + commitUrl : ''));
         // تفريغ الحقول لإضافة مناقصة جديدة
         try {
           const ids = ['f_id','f_title','f_entity','f_city','f_adNumber','f_deadline','f_postedDate','f_status','f_link','f_description','f_documentPrice','f_currency','f_pickupLocation','f_submissionPlace','f_requirements','f_notes','f_phone','f_email'];
@@ -322,6 +325,9 @@
     // زر تحديث القائمة إن وُجد
     const btnRefresh = document.getElementById('btnRefreshList');
     if (btnRefresh) btnRefresh.addEventListener('click', renderAdminList);
+    // زر لمسح كاش المناقصات للعرض الفوري في صفحة المناقصات
+    const cacheBtn = document.getElementById('btnClearTendersCache');
+    if (cacheBtn) cacheBtn.addEventListener('click', () => { try { localStorage.removeItem('itech_tenders_cache'); alert('تم مسح الكاش ✔ افتح صفحة المناقصات بـ ?nocache=1 لقراءة أحدث نسخة.'); } catch {} });
     // محاولة أولية لعرض القائمة عند فتح الصفحة إذا كانت إعدادات GitHub مكتملة
     try {
       const owner = ($('#gh_owner').value||'').trim();
