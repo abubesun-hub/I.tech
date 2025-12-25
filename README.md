@@ -48,7 +48,7 @@ Start-Process "http://localhost:8080/index.html"
 	- مثال مع رمز دخول: `tenders.html?src=api&apiMode=jsonp&api=https://script.google.com/macros/s/XXXXX/exec?action=list&token=YOUR_TOKEN`
 ## إضافة إعلان جديد
 
-هناك ثلاث طرق:
+هناك عدة طرق:
 
 - تعديل JSON يدويًا: افتح [assets/data/tenders.json](assets/data/tenders.json) وأضف عنصرًا جديدًا بنفس الحقول.
 - تعديل CSV يدويًا: أضف سطرًا جديدًا في [assets/data/tenders.csv](assets/data/tenders.csv) وفق الأعمدة.
@@ -58,6 +58,14 @@ Start-Process "http://localhost:8080/index.html"
 	- "تنزيل سطر CSV" لإضافته إلى ملف CSV.
 	- "نشر إلى Google Sheet" لإرسال السجل إلى الجدول عبر Web App (JSONP)، يتطلب ضبط رابط ومفتاح اختياري.
 	- "تفعيل كمصدر للموقع" لحفظ رابط القراءة في LocalStorage، وسيستخدمه [tenders.html](tenders.html) تلقائيًا. إذا كانت جلسة الدخول صالحة سيُحفظ `token` ضمن الرابط.
+	- "نشر مباشر على صفحة المناقصات (GitHub)": يحدّث الملف [assets/data/tenders.json](assets/data/tenders.json) في مستودع GitHub عبر GitHub API دون الحاجة لBackend.
+
+### النشر المباشر إلى GitHub (بدون Backend)
+- من [tender-admin.html](tender-admin.html) املأ حقول GitHub: `Owner`, `Repo`, `Branch` (main)، و`Path` (افتراضي: `assets/data/tenders.json`).
+- أنشئ Personal Access Token (يفضّل Fine-grained) بصلاحية "Contents: Read and write" على المستودع الهدف فقط.
+- الصق الرمز في الحقل ثم اضغط "نشر مباشر على صفحة المناقصات (GitHub)".
+- سيقوم السكربت بجلب الملف الحالي، دمج السجل الجديد، ثم إنشاء Commit. قد يستغرق تحديث GitHub Pages دقيقة تقريبًا.
+- ملاحظة أمنية: لا تشارك الرمز علنًا. خيار "حفظ الرمز" يخزّنه في LocalStorage على هذا المتصفح فقط.
 
 بعد التحديث، يمكنك ضبط المصدر من `js/main.js` عبر `window.ITECH_TENDERS_CONFIG.sourceType` إلى `json` أو `csv` أو `api`.
 
