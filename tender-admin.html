@@ -99,6 +99,31 @@
               <button class="btn" id="btnTestList">اختبار جلب القائمة</button>
             </div>
             <div id="publishStatus" style="margin-top:10px;color:var(--text-muted);"></div>
+
+            <hr style="margin:18px 0; opacity:.3;">
+            <h2 style="margin:6px 0 10px;">نشر مباشر على GitHub Pages (بدون Backend)</h2>
+            <p class="muted">هذه الطريقة تُجري تعديلًا مباشرًا على الملف <strong>assets/data/tenders.json</strong> داخل مستودع GitHub عبر واجهة GitHub API. تتطلب رمز وصول شخصي (PAT) مع صلاحية <strong>contents:write</strong> لهذا المستودع. لا تشارك الرمز علنًا.</p>
+            <div class="form">
+              <label>GitHub Owner</label>
+              <input id="gh_owner" placeholder="مثال: abubesun-hub"/>
+              <label>GitHub Repo</label>
+              <input id="gh_repo" placeholder="مثال: I.tech"/>
+              <label>Branch</label>
+              <input id="gh_branch" value="main"/>
+              <label>Path داخل المستودع</label>
+              <input id="gh_path" value="assets/data/tenders.json"/>
+              <label>GitHub Token (PAT)</label>
+              <input id="gh_token" type="password" placeholder="ghp_xxx أو fine-grained token"/>
+              <div style="display:flex;align-items:center;gap:10px;margin-top:8px;">
+                <label style="display:flex;align-items:center;gap:6px;">
+                  <input type="checkbox" id="gh_remember_token"/>
+                  حفظ الرمز محليًا على هذا المتصفح (اختياري)
+                </label>
+              </div>
+              <div class="actions" style="margin-top:12px;">
+                <button class="btn primary" id="btnPublishGithub">نشر مباشر على صفحة المناقصات (GitHub)</button>
+              </div>
+            </div>
           </div>
         </div>
         <div>
@@ -262,6 +287,91 @@
       const line = toCsv(item);
       const blob = new Blob([header+line+'\n'], {type:'text/csv'});
       const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'tender-new.csv'; a.click(); URL.revokeObjectURL(a.href);
+    });
+
+    // ---- النشر المباشر إلى GitHub (تعديل الملف داخل المستودع) ----
+    // Helpers
+    function utf8ToBase64(str){
+      try { return btoa(unescape(encodeURIComponent(str))); } catch(e){ return btoa(str); }
+    }
+    async function githubGetFileSha(owner, repo, branch, path, token){
+      const url = `https://api.github.com/repos/${owner}/${repo}/contents/${encodeURIComponent(path)}?ref=${encodeURIComponent(branch)}`;
+      const r = await fetch(url, { headers: { 'Accept':'application/vnd.github+json', 'Authorization': token ? `Bearer ${token}` : '' } });
+      if (r.status === 404) return null; // file not found
+      if (!r.ok) throw new Error('GitHub API (get sha) failed: '+r.status);
+      const j = await r.json();
+      return j && j.sha ? j.sha : null;
+    }
+    async function githubPutFile(owner, repo, branch, path, contentBase64, message, shaOrNull, token){
+      const url = `https://api.github.com/repos/${owner}/${repo}/contents/${encodeURIComponent(path)}`;
+      const body = { message, content: contentBase64, branch };
+      if (shaOrNull) body.sha = shaOrNull;
+      const r = await fetch(url, { method:'PUT', headers: { 'Accept':'application/vnd.github+json', 'Content-Type':'application/json', 'Authorization': token ? `Bearer ${token}` : '' }, body: JSON.stringify(body) });
+      if (!r.ok) {
+        const t = await r.text().catch(()=> '');
+        throw new Error('GitHub API (put file) failed: '+r.status+' '+t);
+      }
+      return await r.json();
+    }
+    async function fetchCurrentTendersRaw(owner, repo, branch, path){
+      const rawUrl = `https://raw.githubusercontent.com/${owner}/${repo}/${encodeURIComponent(branch)}/${path}`;
+      const r = await fetch(rawUrl);
+      if (r.status === 404) return [];
+      if (!r.ok) throw new Error('Fetch raw failed: '+r.status);
+      try { return await r.json(); } catch { return []; }
+    }
+
+    // Prefill from LocalStorage
+    try {
+      const owner = localStorage.getItem('itech_gh_owner'); if (owner) $('#gh_owner').value = owner;
+      const repo = localStorage.getItem('itech_gh_repo'); if (repo) $('#gh_repo').value = repo;
+      const branch = localStorage.getItem('itech_gh_branch'); if (branch) $('#gh_branch').value = branch;
+      const path = localStorage.getItem('itech_gh_path'); if (path) $('#gh_path').value = path;
+      const savedTok = localStorage.getItem('itech_gh_token'); if (savedTok) { $('#gh_token').value = savedTok; $('#gh_remember_token').checked = true; }
+    } catch {}
+
+    const elPublishGh = $('#btnPublishGithub');
+    if (elPublishGh) elPublishGh.addEventListener('click', async ()=>{
+      const statusEl = $('#publishStatus');
+      function setStatus(msg, color){ if (statusEl) { statusEl.textContent = msg; statusEl.style.color = color || 'var(--text-muted)'; } }
+      try {
+        const owner = ($('#gh_owner').value||'').trim();
+        const repo = ($('#gh_repo').value||'').trim();
+        const branch = ($('#gh_branch').value||'main').trim();
+        const path = ($('#gh_path').value||'assets/data/tenders.json').trim();
+        const token = ($('#gh_token').value||'').trim();
+        if (!owner || !repo || !branch || !path || !token) { alert('أكمل حقول GitHub وادخل الرمز (PAT).'); return; }
+
+        // persist preferences
+        try {
+          localStorage.setItem('itech_gh_owner', owner);
+          localStorage.setItem('itech_gh_repo', repo);
+          localStorage.setItem('itech_gh_branch', branch);
+          localStorage.setItem('itech_gh_path', path);
+          const remember = $('#gh_remember_token').checked; if (remember) localStorage.setItem('itech_gh_token', token); else localStorage.removeItem('itech_gh_token');
+        } catch {}
+
+        setStatus('جلب الملف الحالي من GitHub...', 'var(--text-muted)');
+        const arr = await fetchCurrentTendersRaw(owner, repo, branch, path);
+        const item = buildItem();
+        // منع تكرار id إن وجد
+        const exists = Array.isArray(arr) && arr.some(x => String(x.id||'') === String(item.id||''));
+        if (exists) {
+          if (!confirm('يوجد عنصر بنفس رقم المناقصة. متابعة واستبدال القديم؟')) return;
+          for (let i=0;i<arr.length;i++){ if (String(arr[i].id||'') === String(item.id||'')) { arr[i] = item; break; } }
+        } else {
+          arr.push(item);
+        }
+
+        const newJson = JSON.stringify(arr, null, 2) + '\n';
+        setStatus('الحصول على SHA للملف من GitHub...', 'var(--text-muted)');
+        const sha = await githubGetFileSha(owner, repo, branch, path, token);
+        setStatus('رفع التحديث عبر GitHub API (قد يستغرق ثواني)...', 'var(--text-muted)');
+        const res = await githubPutFile(owner, repo, branch, path, utf8ToBase64(newJson), `Add tender ${item.id}`, sha, token);
+        setStatus('تم النشر بنجاح إلى GitHub ✔ — قد يستغرق تفعيل GitHub Pages دقيقة.', 'green');
+      } catch (e){
+        setStatus('فشل النشر إلى GitHub: ' + (e && e.message ? e.message : String(e)), 'red');
+      }
     });
 
     // نشر إلى Google Apps Script Web App عبر JSONP (GET)
