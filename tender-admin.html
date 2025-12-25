@@ -335,6 +335,9 @@
     if (elPublishGh) elPublishGh.addEventListener('click', async ()=>{
       const statusEl = $('#publishStatus');
       function setStatus(msg, color){ if (statusEl) { statusEl.textContent = msg; statusEl.style.color = color || 'var(--text-muted)'; } }
+      // visual feedback immediately
+      setStatus('بدء عملية النشر إلى GitHub...', 'var(--text-muted)');
+      elPublishGh.disabled = true;
       try {
         const owner = ($('#gh_owner').value||'').trim();
         const repo = ($('#gh_repo').value||'').trim();
@@ -372,6 +375,8 @@
         setStatus('تم النشر بنجاح إلى GitHub ✔ — قد يستغرق تفعيل GitHub Pages دقيقة.', 'green');
       } catch (e){
         setStatus('فشل النشر إلى GitHub: ' + (e && e.message ? e.message : String(e)), 'red');
+      } finally {
+        elPublishGh.disabled = false;
       }
     });
 
