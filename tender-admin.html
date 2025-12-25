@@ -138,7 +138,8 @@
   </main>
 
   <script>
-  window.addEventListener('DOMContentLoaded', function(){
+  // Ensure initialization runs whether DOMContentLoaded has fired or not
+  function initAdminPage(){
     // حارس دخول بسيط (عميل فقط)
     (function(){
       const okUser = 'Abubesun';
@@ -470,7 +471,13 @@
 
     const status = document.getElementById('publishStatus');
     if (status) { status.textContent = 'الصفحة جاهزة. يمكنك الاختبار أو النشر الآن.'; status.style.color = 'green'; }
-  });
+  }
+  if (document.readyState === 'loading') {
+    window.addEventListener('DOMContentLoaded', initAdminPage);
+  } else {
+    // DOM already loaded
+    initAdminPage();
+  }
   </script>
 </body>
 </html>
