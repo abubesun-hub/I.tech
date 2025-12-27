@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>إصلاح localStorage</title>
+  <style>
+    body { 
+      font-family: Arial, sans-serif; 
+      margin: 20px; 
+      background: #f5f5f5;
+      direction: rtl;
+    }
+    .container {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      max-width: 600px;
+      margin: 0 auto;
+    }
+    button {
+      background: #007bff;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 4px;
+      cursor: pointer;
+      margin: 10px;
+      font-size: 16px;
+    }
+    button:hover { background: #0056b3; }
+    .clear-btn { background: #dc3545; }
+    .clear-btn:hover { background: #c82333; }
+    .status {
+      padding: 15px;
+      border-radius: 4px;
+      margin: 10px 0;
+      font-weight: bold;
+    }
+    .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+    .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+    .info { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+    .data-display {
+      background: #f8f9fa;
+      border: 1px solid #dee2e6;
+      border-radius: 4px;
+      padding: 15px;
+      margin: 10px 0;
+      max-height: 300px;
+      overflow-y: auto;
+      font-family: monospace;
+      font-size: 12px;
+      white-space: pre-wrap;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>إصلاح بيانات localStorage</h1>
+    
+    <h3>حالة البيانات الحالية:</h3>
+    <div id="status"></div>
+    
+    <h3>الإجراءات المتاحة:</h3>
+    <button onclick="checkData()">فحص البيانات</button>
+    <button onclick="fixData()">إصلاح البيانات</button>
+    <button onclick="clearData()" class="clear-btn">مسح البيانات المعطوبة</button>
+    <button onclick="refreshPage()">تحديث الصفحة</button>
+    
+    <h3>محتوى localStorage:</h3>
+    <div id="dataDisplay" class="data-display">لم يتم فحص البيانات بعد</div>
+  </div>
+
+  <script>
+    const STORAGE_KEY = 'updated_tenders_data';
+    
+    function showStatus(message, type = 'info') {
+      document.getElementById('status').innerHTML = `<div class="status ${type}">${message}</div>`;
+    }
+    
+    function displayData(data, title = 'البيانات') {
+      document.getElementById('dataDisplay').textContent = `${title}:\n${JSON.stringify(data, null, 2)}`;
+    }
+    
+    function checkData() {
+      try {
+        const stored = localStorage.getItem(STORAGE_KEY);
+        if (!stored) {
+          showStatus('لا توجد بيانات في localStorage', 'info');
+          displayData(null, 'لا توجد بيانات');
+          return;
+        }
+        
+        const parsed = JSON.parse(stored);
+        displayData(parsed, 'البيانات الموجودة');
+        
+        if (Array.isArray(parsed)) {
+          showStatus(`✅ البيانات صحيحة - مصفوفة تحتوي على ${parsed.length} عنصر`, 'success');
+        } else if (parsed && Array.isArray(parsed.data)) {
+          showStatus(`✅ البيانات صحيحة - كائن يحتوي على ${parsed.data.length} مناقصة`, 'success');
+        } else {
+          showStatus('❌ البيانات معطوبة - ليست مصفوفة أو كائن صحيح', 'error');
+        }
+      } catch (error) {
+        showStatus('❌ خطأ في قراءة البيانات: ' + error.message, 'error');
+        displayData(error.message, 'خطأ');
+      }
+    }
+    
+    async function fixData() {
+      try {
+        const stored = localStorage.getItem(STORAGE_KEY);
+        if (!stored) {
+          showStatus('لا توجد بيانات لإصلاحها', 'info');
+          return;
+        }
+        
+        const parsed = JSON.parse(stored);
+        
+        if (Array.isArray(parsed)) {
+          showStatus('البيانات سليمة ولا تحتاج إصلاح', 'success');
+          return;
+        }
+        
+        if (parsed && Array.isArray(parsed.data)) {
+          showStatus('البيانات سليمة ولا تحتاج إصلاح', 'success');
+          return;
+        }
+        
+        // محاولة تحميل البيانات الأصلية
+        const response = await fetch('./assets/data/tenders.json');
+        const originalData = await response.json();
+        
+        // حفظ البيانات بالشكل الصحيح
+        localStorage.setItem(STORAGE_KEY, JSON.stringify({
+          data: originalData,
+          lastUpdate: new Date().toISOString(),
+          version: Date.now(),
+          source: 'restored_from_original'
+        }));
+        
+        showStatus('✅ تم إصلاح البيانات من الملف الأصلي', 'success');
+        checkData();
+        
+      } catch (error) {
+        showStatus('❌ فشل في إصلاح البيانات: ' + error.message, 'error');
+      }
+    }
+    
+    function clearData() {
+      if (confirm('هل أنت متأكد من مسح جميع البيانات؟')) {
+        localStorage.removeItem(STORAGE_KEY);
+        showStatus('🗑️ تم مسح البيانات من localStorage', 'info');
+        displayData(null, 'تم مسح البيانات');
+      }
+    }
+    
+    function refreshPage() {
+      window.location.href = 'tenders-new.html';
+    }
+    
+    // فحص البيانات عند التحميل
+    window.addEventListener('load', checkData);
+  </script>
+</body>
+</html>

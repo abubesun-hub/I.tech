@@ -487,8 +487,20 @@
         const updatedData = localStorage.getItem('updated_tenders_data');
         if (updatedData) {
           try {
-            data = JSON.parse(updatedData);
-            console.log('تم تحميل البيانات المحدثة من localStorage:', data);
+            const parsedData = JSON.parse(updatedData);
+            // التحقق من نوع البيانات المحفوظة
+            if (Array.isArray(parsedData)) {
+              // البيانات محفوظة مباشرة كمصفوفة
+              data = parsedData;
+              console.log('تم تحميل البيانات المحدثة من localStorage (مصفوفة مباشرة):', data.length, 'مناقصة');
+            } else if (parsedData && Array.isArray(parsedData.data)) {
+              // البيانات محفوظة في كائن مع خاصية data
+              data = parsedData.data;
+              console.log('تم تحميل البيانات المحدثة من localStorage (كائن):', data.length, 'مناقصة');
+            } else {
+              console.warn('البيانات في localStorage لا تحتوي على مصفوفة، سيتم حذفها وتحميل البيانات الأصلية');
+              localStorage.removeItem('updated_tenders_data');
+            }
           } catch (e) {
             console.warn('فشل في قراءة البيانات من localStorage، سيتم تحميل البيانات الأصلية');
             localStorage.removeItem('updated_tenders_data');
@@ -531,6 +543,34 @@
         
       } catch (error) {
         console.error('خطأ في تحميل المناقصات:', error);
+        
+        // في حالة خطأ البيانات، جرب مسح localStorage والمحاولة مرة أخرى
+        if (error.message.includes('ليست مصفوفة') && localStorage.getItem('updated_tenders_data')) {
+          console.log('محاولة إصلاح البيانات بمسح localStorage...');
+          localStorage.removeItem('updated_tenders_data');
+          
+          // إعادة محاولة التحميل بدون localStorage
+          try {
+            const timestamp = new Date().getTime();
+            const response = await fetch(`./assets/data/tenders.json?v=${timestamp}`);
+            const originalData = await response.json();
+            
+            if (Array.isArray(originalData)) {
+              allTenders = originalData;
+              filteredTenders = [...allTenders];
+              setupFilters();
+              sortTenders();
+              updateStats();
+              renderTenders();
+              
+              showStatus('تم إصلاح المشكلة وتحميل البيانات الأصلية', 'success');
+              return;
+            }
+          } catch (retryError) {
+            console.error('فشل في إعادة المحاولة:', retryError);
+          }
+        }
+        
         showError(`فشل في تحميل المناقصات: ${error.message}`);
       }
     }
@@ -646,13 +686,36 @@
 
     // عرض خطأ
     function showError(message) {
+      const isDataIssue = message.includes('ليست مصفوفة') || message.includes('localStorage');
       container.innerHTML = `
         <div class="error">
           <h3>خطأ في التحميل</h3>
           <p>${message}</p>
-          <button onclick="loadTenders()" class="btn-secondary">إعادة المحاولة</button>
+          <div style="margin-top: 15px;">
+            <button onclick="loadTenders()" class="btn-secondary">إعادة المحاولة</button>
+            ${isDataIssue ? '<button onclick="window.open(\'fix-storage.html\', \'_blank\')" class="btn-primary" style="margin-right: 10px;">إصلاح البيانات</button>' : ''}
+          </div>
         </div>
       `;
+    }
+
+    // عرض رسالة الحالة
+    function showStatus(message, type = 'info') {
+      const statusClass = type === 'success' ? 'tender-item' : 'error';
+      container.innerHTML = `
+        <div class="${statusClass}" style="text-align: center; background: ${type === 'success' ? '#d4edda' : '#f8d7da'}; color: ${type === 'success' ? '#155724' : '#721c24'};">
+          <h3>${type === 'success' ? '✅ تم بنجاح' : '⚠️ تنبيه'}</h3>
+          <p>${message}</p>
+          <button onclick="loadTenders()" class="btn-primary">متابعة</button>
+        </div>
+      `;
+      
+      // إخفاء الرسالة تلقائياً بعد 3 ثوان
+      if (type === 'success') {
+        setTimeout(() => {
+          loadTenders();
+        }, 3000);
+      }
     }
 
     // البحث
