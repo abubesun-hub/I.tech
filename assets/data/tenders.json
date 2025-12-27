@@ -163,5 +163,31 @@
       "phone": "+964-774-0000005",
       "email": "it@public.gov.iq"
     }
+  },
+  {
+    "id": "2025-02",
+    "title": "توريد لاب توب عدد10",
+    "entity": "ايتك الانبار",
+    "category": "شركات",
+    "city": "الرمادي",
+    "adNumber": "CMP-TN-2025-001",
+    "deadline": "2026-01-08",
+    "postedDate": "2025-12-27",
+    "status": "مفتوح",
+    "link": "#",
+    "description": "توريد لاب توب حسب جدول الموصفات ضمن اوراق المناقصة ",
+    "documentPrice": 0,
+    "currency": "IQD",
+    "pickupLocation": "مكتب ايتك",
+    "submissionPlace": "مكتب ايتك",
+    "submissionRequirements": [
+      "مكتب ايتك"
+    ],
+    "notes": "مكتب ايتك",
+    "files": [],
+    "contact": {
+      "phone": "07817823680",
+      "email": "itechanbar@gmail.com"
+    }
   }
 ]
