@@ -285,7 +285,11 @@
       wrap.innerHTML = '<div class="muted">جلب القائمة...</div>';
       try {
         const arr = await fetchCurrentTendersRaw(owner, repo, branch, path);
-        if (!Array.isArray(arr) || arr.length === 0) { wrap.innerHTML = '<div class="muted">لا توجد عناصر حالياً.</div>'; return; }
+        const rawUrl = `https://raw.githubusercontent.com/${owner}/${repo}/${encodeURIComponent(branch)}/${path}`;
+        if (!Array.isArray(arr) || arr.length === 0) {
+          wrap.innerHTML = '<div class="muted">لا توجد عناصر حالياً. تحقق من المسار داخل المستودع — غالباً: <strong>assets/data/tenders.json</strong>.<br>رابط التحقق المباشر: <a href="'+rawUrl+'" target="_blank" rel="noopener">'+rawUrl+'</a></div>';
+          return;
+        }
         const table = document.createElement('table');
         table.className = 'table';
         table.style.width = '100%';
