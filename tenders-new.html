@@ -7,6 +7,23 @@
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="./css/main.css" />
   <style>
+    .theme-toggle {
+      background: none;
+      border: none;
+      font-size: 20px;
+      cursor: pointer;
+      padding: 8px;
+      border-radius: 50%;
+      transition: background-color 0.3s ease;
+      margin-left: 10px;
+    }
+    .theme-toggle:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+    [data-theme="dark"] .theme-toggle:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
+    
     .tender-item {
       background: white;
       border: 1px solid #ddd;
@@ -126,10 +143,10 @@
     <nav class="menu">
       <a href="index.html">الرئيسية</a>
       <a href="tenders-new.html" class="active">مناقصات العراق</a>
-      <a href="add-tender.html">إضافة مناقصة</a>
       <a href="about.html">من نحن</a>
       <a href="contact.html">تواصل معنا</a>
     </nav>
+    <button class="theme-toggle" onclick="toggleTheme()" title="تبديل الوضع">🌙</button>
     <button class="burger" aria-label="فتح القائمة">☰</button>
   </header>
 
@@ -155,7 +172,6 @@
       </div>
       
       <div class="actions" style="margin-top: 30px;">
-        <a href="add-tender.html" class="btn-primary">إضافة مناقصة جديدة</a>
         <a href="index.html" class="btn-secondary">العودة إلى الرئيسية</a>
       </div>
     </section>
@@ -291,7 +307,7 @@
           <div style="text-align: center; padding: 40px; color: #7f8c8d;">
             <h3>لا توجد مناقصات مطابقة</h3>
             <p>جرب تغيير معايير البحث أو الفلتر</p>
-            <a href="add-tender.html" class="btn-primary">إضافة أول مناقصة</a>
+            <a href="controll.html" class="btn-primary">لوحة التحكم</a>
           </div>
         `;
         return;
@@ -393,8 +409,36 @@
     // فلتر "الكل"
     document.querySelector('[data-filter="all"]').addEventListener('click', () => setFilter('all'));
 
+    // وظائف الوضع الليلي
+    function toggleTheme() {
+      const currentTheme = document.documentElement.getAttribute('data-theme');
+      const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+      
+      document.documentElement.setAttribute('data-theme', newTheme);
+      localStorage.setItem('theme', newTheme);
+      
+      // تحديث أيقونة الزر
+      const themeBtn = document.querySelector('.theme-toggle');
+      if (themeBtn) {
+        themeBtn.textContent = newTheme === 'dark' ? '🌞' : '🌙';
+      }
+    }
+    
+    function initializeTheme() {
+      const savedTheme = localStorage.getItem('theme') || 'light';
+      document.documentElement.setAttribute('data-theme', savedTheme);
+      
+      const themeBtn = document.querySelector('.theme-toggle');
+      if (themeBtn) {
+        themeBtn.textContent = savedTheme === 'dark' ? '🌞' : '🌙';
+      }
+    }
+    
     // تحميل البيانات عند تحميل الصفحة
-    document.addEventListener('DOMContentLoaded', loadTenders);
+    document.addEventListener('DOMContentLoaded', () => {
+      initializeTheme();
+      loadTenders();
+    });
     
     // قائمة الموبايل
     const burger = document.querySelector('.burger');
