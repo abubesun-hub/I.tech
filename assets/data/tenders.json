@@ -22,9 +22,15 @@
     ],
     "notes": "ضمان مصرفي بنسبة 5% يسترجع بعد الإنجاز",
     "files": [
-      { "label": "ملف الشروط", "url": "#" }
+      {
+        "label": "ملف الشروط",
+        "url": "#"
+      }
     ],
-    "contact": { "phone": "+964-770-0000001", "email": "proc@uobaghdad.edu.iq" }
+    "contact": {
+      "phone": "+964-770-0000001",
+      "email": "proc@uobaghdad.edu.iq"
+    }
   },
   {
     "id": "2025-002",
@@ -48,8 +54,16 @@
       "كشف تجهيزات وفنيين"
     ],
     "notes": "الأولوية للشركات ذات الخبرة المثبتة",
-    "files": [ { "label": "نطاق العمل", "url": "#" } ],
-    "contact": { "phone": "+964-771-0000002", "email": "tenders@moc.gov.iq" }
+    "files": [
+      {
+        "label": "نطاق العمل",
+        "url": "#"
+      }
+    ],
+    "contact": {
+      "phone": "+964-771-0000002",
+      "email": "tenders@moc.gov.iq"
+    }
   },
   {
     "id": "2025-003",
@@ -73,8 +87,16 @@
       "خطة زمنية"
     ],
     "notes": "يفضل استخدام تقنيات حديثة مع قابلية التوسّع",
-    "files": [ { "label": "المواصفات", "url": "#" } ],
-    "contact": { "phone": "+964-772-0000003", "email": "rf-tech@example.com" }
+    "files": [
+      {
+        "label": "المواصفات",
+        "url": "#"
+      }
+    ],
+    "contact": {
+      "phone": "+964-772-0000003",
+      "email": "rf-tech@example.com"
+    }
   },
   {
     "id": "2025-004",
@@ -98,8 +120,16 @@
       "كفالة مصرفية"
     ],
     "notes": "تقييم جودة الأجهزة بنسبة 60% والسعر 40%",
-    "files": [ { "label": "قائمة التجهيزات", "url": "#" } ],
-    "contact": { "phone": "+964-773-0000004", "email": "ngo@example.org" }
+    "files": [
+      {
+        "label": "قائمة التجهيزات",
+        "url": "#"
+      }
+    ],
+    "contact": {
+      "phone": "+964-773-0000004",
+      "email": "ngo@example.org"
+    }
   },
   {
     "id": "2025-005",
@@ -123,7 +153,41 @@
       "خطة ترحيل البيانات"
     ],
     "notes": "تنفيذ على مراحل مع اختبارات قبول",
-    "files": [ { "label": "الوثائق الفنية", "url": "#" } ],
-    "contact": { "phone": "+964-774-0000005", "email": "it@public.gov.iq" }
+    "files": [
+      {
+        "label": "الوثائق الفنية",
+        "url": "#"
+      }
+    ],
+    "contact": {
+      "phone": "+964-774-0000005",
+      "email": "it@public.gov.iq"
+    }
+  },
+  {
+    "id": "01",
+    "title": "ty",
+    "entity": "ty",
+    "category": "شركات",
+    "city": "baghdad",
+    "adNumber": "01",
+    "deadline": "2025-12-31",
+    "postedDate": "2025-12-27",
+    "status": "مفتوح",
+    "link": "#",
+    "description": "ty",
+    "documentPrice": 25000,
+    "currency": "IQD",
+    "pickupLocation": "ty",
+    "submissionPlace": "ty",
+    "submissionRequirements": [
+      "ty"
+    ],
+    "notes": "ty",
+    "files": [],
+    "contact": {
+      "phone": "07817823680",
+      "email": "abubeu@gmail.com"
+    }
   }
 ]
