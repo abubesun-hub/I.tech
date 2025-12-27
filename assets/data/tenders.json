@@ -165,32 +165,6 @@
     }
   },
   {
-    "id": "01",
-    "title": "toy",
-    "entity": "ty",
-    "category": "شركات",
-    "city": "baghdad",
-    "adNumber": "01",
-    "deadline": "2025-12-31",
-    "postedDate": "2025-12-27",
-    "status": "مفتوح",
-    "link": "#",
-    "description": "ty",
-    "documentPrice": 25000,
-    "currency": "IQD",
-    "pickupLocation": "ty",
-    "submissionPlace": "ty",
-    "submissionRequirements": [
-      "ty"
-    ],
-    "notes": "ty",
-    "files": [],
-    "contact": {
-      "phone": "07817823680",
-      "email": "abubeu@gmail.com"
-    }
-  },
-  {
     "id": "2025-02",
     "title": "توريد ",
     "entity": "مدرسة",
