@@ -62,7 +62,12 @@
     <section class="card">
       <h2>قائمة المناقصات</h2>
       <div class="tenders-list" id="tendersList"></div>
-      <p class="muted">المصدر: assets/data/tenders.json أو البيانات المحلية — يمكن إضافة مناقصات جديدة من <a href="tender-admin-simple.html">صفحة الإضافة البسيطة</a></p>
+      <p class="muted">المصدر: assets/data/tenders.json أو البيانات المحلية — يمكن إضافة مناقصات جديدة من <a href="tender-admin-online.html">صفحة النشر الأونلاين</a></p>
+      <div style="margin: 10px 0;">
+        <button onclick="window.open('./assets/data/tenders.json', '_blank')" class="btn" style="font-size: 12px;">فحص ملف JSON</button>
+        <button onclick="localStorage.removeItem('itech_tenders_cache'); location.reload();" class="btn" style="font-size: 12px;">إعادة تحميل بدون كاش</button>
+        <button onclick="console.clear(); location.reload();" class="btn" style="font-size: 12px;">مسح Console وإعادة تحميل</button>
+      </div>
       <div class="actions">
         <a class="btn" href="index.html">العودة إلى الرئيسية</a>
       </div>

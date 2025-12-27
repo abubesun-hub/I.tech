@@ -213,11 +213,16 @@ function normalizeApiResponse(resp) {
 // لم يعد هناك API خارجي؛ نحمّل من ملف JSON فقط.
 
 async function loadData() {
+  console.log('🚀 بدء دالة loadData...');
+  
   const cfg = window.ITECH_TENDERS_CONFIG || {};
+  console.log('⚙️ إعدادات التحميل:', cfg);
   
   // تحديد مصدر البيانات (محلي، خارجي، أو افتراضي)
   const dataSourceType = localStorage.getItem('itech_data_source_type');
   const customJsonUrl = localStorage.getItem('itech_json_url');
+  
+  console.log('📍 مصدر البيانات:', { type: dataSourceType, customUrl: customJsonUrl });
   
   // 1. جرب تحميل البيانات المحلية أولاً إذا كانت متوفرة
   const localKey = 'itech_tenders_local';
@@ -226,34 +231,47 @@ async function loadData() {
     if (localData) {
       const parsed = JSON.parse(localData);
       if (Array.isArray(parsed) && parsed.length > 0) {
-        console.log('تم تحميل البيانات من التخزين المحلي');
+        console.log('✅ تم تحميل البيانات من التخزين المحلي، عدد العناصر:', parsed.length);
         return parsed;
       }
     }
+    console.log('ℹ️ لا توجد بيانات محلية أو البيانات المحلية فارغة');
   } catch (e) {
-    console.log('تعذر تحميل البيانات المحلية:', e);
+    console.warn('⚠️ تعذر تحميل البيانات المحلية:', e);
   }
   
   // 2. جرب تحميل البيانات مع الكاش
   try {
     const cacheKey = 'itech_tenders_cache';
     const ttlMs = 5 * 60 * 1000; // تقليل الكاش إلى 5 دقائق للبيانات الأونلاين
-    const cache = (() => { try { return JSON.parse(localStorage.getItem(cacheKey) || 'null'); } catch { return null; } })();
+    const cache = (() => { 
+      try { 
+        const cached = localStorage.getItem(cacheKey);
+        return cached ? JSON.parse(cached) : null;
+      } catch { 
+        return null; 
+      } 
+    })();
+    
     if (cache && (Date.now() - cache.ts < ttlMs) && Array.isArray(cache.data)) {
-      console.log('تم تحميل البيانات من الكاش');
+      console.log('📦 تم تحميل البيانات من الكاش، عدد العناصر:', cache.data.length);
+      console.log('⏰ تاريخ الكاش:', new Date(cache.ts).toLocaleString());
       return cache.data;
     }
     
     // تحديد الرابط المطلوب
     let url = customJsonUrl || cfg.jsonUrl || './assets/data/tenders.json';
+    console.log('🔗 رابط التحميل:', url);
     
     // إعداد headers خاصة لكل نوع
     const headers = {
-      'Accept': 'application/json'
+      'Accept': 'application/json',
+      'Cache-Control': 'no-cache'
     };
     
     // إضافة headers خاصة بـ JSONBin إذا لزم الأمر
     if (dataSourceType === 'jsonbin' && url.includes('jsonbin.io')) {
+      console.log('🔧 إعداد headers لـ JSONBin...');
       const apiKey = (() => {
         try {
           const settings = JSON.parse(localStorage.getItem('itech_jsonbin_settings') || '{}');
@@ -263,58 +281,90 @@ async function loadData() {
       
       if (apiKey) {
         headers['X-Master-Key'] = apiKey;
+        console.log('🔑 تم إضافة API Key لـ JSONBin');
+      } else {
+        console.warn('⚠️ لا يوجد API Key لـ JSONBin');
       }
     }
     
-    console.log('محاولة تحميل البيانات من:', url);
+    console.log('🌐 بدء الطلب إلى:', url);
+    console.log('📋 Headers:', headers);
+    
     const r = await fetch(url, { 
       cache: 'no-store',
       headers
     });
     
+    console.log('📡 حالة الاستجابة:', r.status, r.statusText);
+    console.log('📄 Content-Type:', r.headers.get('content-type'));
+    
     if (!r.ok) {
-      console.error('فشل في تحميل البيانات، رمز الحالة:', r.status);
-      throw new Error('fetch_failed_' + r.status);
+      console.error('❌ فشل في تحميل البيانات، رمز الحالة:', r.status);
+      const errorText = await r.text().catch(() => 'تعذر قراءة نص الخطأ');
+      console.error('📝 تفاصيل الخطأ:', errorText);
+      throw new Error(`HTTP ${r.status}: ${r.statusText}`);
     }
     
     let data;
     const jsonResponse = await r.json();
+    console.log('📊 الاستجابة الخام:', jsonResponse);
     
     // معالجة استجابة JSONBin
     if (dataSourceType === 'jsonbin' && jsonResponse.record) {
+      console.log('🔄 معالجة استجابة JSONBin...');
       data = jsonResponse.record;
     } else {
       data = jsonResponse;
     }
     
     if (!Array.isArray(data)) {
-      console.error('البيانات المستلمة ليست مصفوفة:', data);
-      throw new Error('Invalid data format');
+      console.error('❌ البيانات المستلمة ليست مصفوفة:', data);
+      console.error('🔍 نوع البيانات:', typeof data);
+      throw new Error('Invalid data format: expected array, got ' + typeof data);
     }
     
-    console.log('تم تحميل البيانات بنجاح، عدد المناقصات:', data.length);
-    localStorage.setItem(cacheKey, JSON.stringify({ ts: Date.now(), data }));
+    console.log('✅ تم تحميل البيانات بنجاح!');
+    console.log('📈 عدد المناقصات:', data.length);
+    console.log('📄 عينة من البيانات:', data.slice(0, 2));
+    
+    // حفظ في الكاش
+    try {
+      localStorage.setItem(cacheKey, JSON.stringify({ ts: Date.now(), data }));
+      console.log('💾 تم حفظ البيانات في الكاش');
+    } catch (cacheError) {
+      console.warn('⚠️ فشل حفظ الكاش:', cacheError);
+    }
+    
     return data;
     
   } catch (e) {
-    console.error('خطأ في تحميل البيانات:', e);
+    console.error('💥 خطأ في تحميل البيانات:', e);
+    console.error('📊 تفاصيل الخطأ:', e.stack);
     
     // محاولة أخيرة من الملف الافتراضي إذا فشل المصدر المخصص
     try {
-      console.log('محاولة تحميل من الملف الافتراضي...');
-      const r = await fetch('./assets/data/tenders.json', { 
+      console.log('🔄 محاولة تحميل من الملف الافتراضي...');
+      const fallbackUrl = './assets/data/tenders.json';
+      const r = await fetch(fallbackUrl, { 
         cache: 'no-store',
-        mode: 'same-origin'
+        mode: 'same-origin',
+        headers: {
+          'Accept': 'application/json'
+        }
       });
+      
+      console.log('📡 حالة المحاولة الأخيرة:', r.status);
+      
       if (!r.ok) {
-        console.error('فشل في المحاولة الأخيرة، رمز الحالة:', r.status);
+        console.error('❌ فشل في المحاولة الأخيرة، رمز الحالة:', r.status);
         return [];
       }
+      
       const data = await r.json();
-      console.log('تم تحميل البيانات في المحاولة الأخيرة، عدد المناقصات:', data.length);
-      return data;
+      console.log('✅ نجحت المحاولة الأخيرة، عدد المناقصات:', data.length);
+      return Array.isArray(data) ? data : [];
     } catch (finalError) {
-      console.error('فشل نهائي في تحميل البيانات:', finalError);
+      console.error('💥 فشل نهائي في تحميل البيانات:', finalError);
       return [];
     }
   }
@@ -365,15 +415,28 @@ async function loadData() {
   }
 
   function renderList(items) {
+    console.log('🎨 بدء عرض القائمة، عدد العناصر:', items ? items.length : 'null');
+    
     list.innerHTML = '';
     if (!items || items.length === 0) {
       const empty = document.createElement('div');
       empty.className = 'muted';
-      empty.textContent = 'لا توجد مناقصات مطابقة حالياً.';
+      empty.innerHTML = `
+        <div class="card" style="padding: 20px; text-align: center;">
+          <h3>لا توجد مناقصات مطابقة</h3>
+          <p>جرب تغيير معايير البحث أو الفلتر</p>
+          <button onclick="location.reload()" class="btn">تحديث الصفحة</button>
+        </div>
+      `;
       list.appendChild(empty);
+      console.log('📭 تم عرض رسالة "لا توجد مناقصات"');
       return;
     }
-    items.forEach(t => {
+    
+    console.log('📋 عرض المناقصات:');
+    items.forEach((t, index) => {
+      console.log(`📄 مناقصة ${index + 1}:`, { id: t.id, title: t.title, entity: t.entity });
+      
       const card = document.createElement('div');
       card.className = 'card tender-card reveal';
       const dleft = t.deadline ? daysLeft(t.deadline) : NaN;
@@ -387,12 +450,13 @@ async function loadData() {
       if (t.deadline) metaParts.push('الموعد النهائي: ' + formatDate(t.deadline));
       if (t.adNumber) metaParts.push('رقم الإعلان: ' + t.adNumber);
       const metaStr = metaParts.join(' · ');
+      
       card.innerHTML = `
         <div style="display:flex;justify-content:space-between;align-items:center;">
           ${deadlineBadge}
           <button class="star-btn ${isFav ? 'active' : ''}" aria-label="إضافة إلى المفضلة" data-id="${t.id}">★</button>
         </div>
-        <div class="title">${t.title}</div>
+        <div class="title">${t.title || 'بدون عنوان'}</div>
         ${metaStr ? `<div class="meta">${metaStr}</div>` : ''}
         <div class="actions" style="margin-top:12px;">
           <a class="btn link" href="tender.html?id=${encodeURIComponent(t.id)}">عرض التفاصيل</a>
@@ -408,24 +472,39 @@ async function loadData() {
       });
       list.appendChild(card);
     });
+    
+    console.log('✅ تم عرض جميع المناقصات بنجاح');
   }
 
   function applyFilter() {
     const q = searchInput ? (searchInput.value || '').trim() : '';
     const cat = state.activeCat;
     const sort = sortSelect ? (sortSelect.value || 'deadline-asc') : 'deadline-asc';
+    
+    console.log('🔍 تطبيق الفلتر:', { query: q, category: cat, sort });
+    console.log('📊 البيانات المتاحة:', state.data ? state.data.length : 'لا توجد');
+    
+    if (!Array.isArray(state.data) || state.data.length === 0) {
+      console.warn('⚠️ لا توجد بيانات للفلترة');
+      renderList([]);
+      return;
+    }
+    
     let items = state.data.filter(t => {
       const favs = getFavs();
       const isFav = favs.includes(t.id);
-      const matchesQ = q === '' || [t.title, t.entity, t.city, t.category, t.adNumber].some(v => (v || '').includes(q));
+      const matchesQ = q === '' || [t.title, t.entity, t.city, t.category, t.adNumber].some(v => (v || '').toLowerCase().includes(q.toLowerCase()));
       const matchesC = cat === 'all' || t.category === cat || (cat === 'favorites' && isFav);
       return matchesQ && matchesC;
     });
+    
+    console.log('🎯 عدد المناقصات بعد الفلتر:', items.length);
+    
     items.sort((a, b) => {
-      const da = new Date(a.deadline).getTime();
-      const db = new Date(b.deadline).getTime();
-      const pa = new Date(a.postedDate).getTime();
-      const pb = new Date(b.postedDate).getTime();
+      const da = new Date(a.deadline || '9999-12-31').getTime();
+      const db = new Date(b.deadline || '9999-12-31').getTime();
+      const pa = new Date(a.postedDate || '1900-01-01').getTime();
+      const pb = new Date(b.postedDate || '1900-01-01').getTime();
       switch (sort) {
         case 'deadline-desc': return db - da;
         case 'posted-desc': return pb - pa;
@@ -433,64 +512,105 @@ async function loadData() {
         default: return da - db; // deadline-asc
       }
     });
+    
+    console.log('📋 ترتيب البيانات:', sort);
+    console.log('📄 أول 3 مناقصات بعد الترتيب:', items.slice(0, 3).map(t => ({ id: t.id, title: t.title })));
+    
     const params = new URLSearchParams(location.search);
     if (q) params.set('q', q); else params.delete('q');
     if (cat && cat !== 'all') params.set('cat', cat); else params.delete('cat');
     if (sort) params.set('sort', sort); else params.delete('sort');
     const newUrl = location.pathname + (params.toString() ? ('?' + params.toString()) : '');
     history.replaceState(null, '', newUrl);
+    
+    console.log('🔗 تحديث URL:', newUrl);
+    
     renderList(items);
   }
 
   async function init() {
+    // إظهار رسالة تحميل
+    list.innerHTML = `
+      <div class="card" style="padding: 20px; text-align: center;">
+        <h3>جاري تحميل المناقصات...</h3>
+        <p>يرجى الانتظار</p>
+      </div>
+    `;
+    
     try {
-      console.log('بدء تحميل بيانات المناقصات...');
-      const data = await loadData();
-      console.log('تم تحميل البيانات:', data);
+      console.log('🔄 بدء تحميل بيانات المناقصات...');
+      console.log('🌐 الموقع الحالي:', location.href);
       
-      if (!Array.isArray(data) || data.length === 0) {
-        console.log('لا توجد بيانات أو البيانات فارغة');
+      const data = await loadData();
+      console.log('📊 تم تحميل البيانات:', data);
+      console.log('📈 نوع البيانات:', typeof data, 'هل هو مصفوفة:', Array.isArray(data));
+      console.log('📋 عدد العناصر:', Array.isArray(data) ? data.length : 'غير معروف');
+      
+      if (!Array.isArray(data)) {
+        console.error('❌ البيانات ليست مصفوفة:', data);
+        throw new Error('البيانات المستلمة ليست مصفوفة صحيحة');
+      }
+      
+      if (data.length === 0) {
+        console.warn('⚠️ المصفوفة فارغة - لا توجد مناقصات');
         list.innerHTML = `
           <div class="card" style="padding: 20px; text-align: center; border: 1px dashed #ddd;">
             <h3>لا توجد مناقصات حالياً</h3>
-            <p>البيانات قيد التحميل أو لم يتم إضافة مناقصات بعد.</p>
+            <p>لم يتم العثور على مناقصات في ملف البيانات.</p>
             <div style="margin: 15px 0;">
               <a href="tender-admin-online.html" class="btn primary">نشر مناقصة أونلاين</a>
               <a href="tender-admin-simple.html" class="btn">إضافة محلياً</a>
             </div>
             <p><a href="github-setup-guide.html">دليل الإعداد للنشر الأونلاين</a></p>
-            <p><small>للمطورين: تحقق من ملف assets/data/tenders.json أو console للتفاصيل</small></p>
+            <p><small>مسار البيانات: assets/data/tenders.json</small></p>
           </div>
         `;
         return;
       }
       
+      console.log('✅ البيانات صحيحة، بدء المعالجة...');
+      console.log('📄 عينة من البيانات:', data.slice(0, 2));
+      
       state.data = data;
       state.categories = new Set(state.data.map(d => d.category).filter(Boolean));
+      
+      console.log('🏷️ الفئات المتاحة:', Array.from(state.categories));
+      
       renderChips();
+      
       // restore state from URL
       const params = new URLSearchParams(location.search);
       const q0 = params.get('q') || '';
       const c0 = params.get('cat');
       const s0 = params.get('sort');
+      
+      console.log('🔗 معاملات URL:', { q: q0, cat: c0, sort: s0 });
+      
       if (q0 && searchInput) searchInput.value = q0;
       if (c0) state.activeCat = c0;
       if (s0 && sortSelect) sortSelect.value = s0;
+      
       applyFilter();
+      console.log('🎯 تم تطبيق الفلتر وعرض البيانات');
+      
     } catch (e) {
-      console.error('خطأ في تهيئة صفحة المناقصات:', e);
+      console.error('💥 خطأ في تهيئة صفحة المناقصات:', e);
+      console.error('📊 تفاصيل الخطأ:', e.stack);
+      
       list.innerHTML = `
         <div class="card" style="padding: 20px; text-align: center; border: 1px solid #ff6b6b; background: #ffe0e0;">
           <h3 style="color: #d63031;">خطأ في تحميل المناقصات</h3>
-          <p>تعذر تحميل بيانات المناقصات. يرجى:</p>
+          <p><strong>تفاصيل الخطأ:</strong> ${e.message}</p>
+          <p>يرجى:</p>
           <ul style="text-align: right; display: inline-block;">
+            <li>فتح Developer Tools (F12) ومراجعة Console</li>
+            <li>التأكد من وجود ملف assets/data/tenders.json</li>
             <li>التأكد من الاتصال بالإنترنت</li>
             <li>تحديث الصفحة</li>
-            <li>أو <a href="tender-admin-online.html">نشر مناقصات جديدة أونلاين</a></li>
-            <li>أو استخدام <a href="tender-admin-simple.html">الإضافة المحلية</a></li>
           </ul>
           <div style="margin: 15px 0;">
             <button onclick="location.reload()" class="btn primary">تحديث الصفحة</button>
+            <button onclick="window.open('./assets/data/tenders.json', '_blank')" class="btn">فتح ملف JSON</button>
             <a href="github-setup-guide.html" class="btn">دليل الإعداد</a>
           </div>
         </div>
