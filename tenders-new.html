@@ -91,21 +91,68 @@
       margin: 20px 0;
       text-align: center;
     }
-    .search-box {
+    .search-section {
+      background: #f8f9fa;
+      padding: 20px;
+      border-radius: 8px;
       margin-bottom: 20px;
     }
-    .search-box input {
-      width: 100%;
-      padding: 12px;
+    .search-row {
+      display: flex;
+      gap: 15px;
+      margin-bottom: 15px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .search-input-group {
+      flex: 1;
+      min-width: 300px;
+      display: flex;
+      background: white;
       border: 1px solid #ddd;
       border-radius: 6px;
+      overflow: hidden;
+    }
+    .search-input-group input {
+      flex: 1;
+      padding: 12px 15px;
+      border: none;
+      outline: none;
       font-size: 16px;
+      font-family: 'Cairo', sans-serif;
+    }
+    .search-btn {
+      background: #3498db;
+      color: white;
+      border: none;
+      padding: 12px 20px;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: 600;
+      transition: background 0.3s;
+    }
+    .search-btn:hover {
+      background: #2980b9;
+    }
+    .sort-dropdown {
+      padding: 12px 15px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      background: white;
+      font-size: 16px;
+      font-family: 'Cairo', sans-serif;
+      min-width: 180px;
     }
     .filters {
-      margin-bottom: 20px;
       display: flex;
       gap: 10px;
       flex-wrap: wrap;
+      align-items: center;
+    }
+    .filters-label {
+      font-weight: 600;
+      color: #2c3e50;
+      margin-left: 10px;
     }
     .filter-btn {
       padding: 8px 16px;
@@ -115,10 +162,27 @@
       border-radius: 20px;
       cursor: pointer;
       transition: all 0.2s;
+      font-size: 14px;
+      font-weight: 500;
     }
     .filter-btn.active {
       background: #3498db;
       color: white;
+    }
+    .filter-btn:hover {
+      background: #3498db;
+      color: white;
+    }
+    @media (max-width: 768px) {
+      .search-row {
+        flex-direction: column;
+      }
+      .search-input-group {
+        min-width: 100%;
+      }
+      .sort-dropdown {
+        width: 100%;
+      }
     }
     .stats {
       background: #f8f9fa;
@@ -159,12 +223,29 @@
         <span>جاري التحميل...</span>
       </div>
       
-      <div class="search-box">
-        <input type="text" id="searchInput" placeholder="البحث في المناقصات (العنوان، الجهة، المدينة)">
-      </div>
-      
-      <div class="filters" id="filters">
-        <button class="filter-btn active" data-filter="all">الكل</button>
+      <div class="search-section">
+        <div class="search-row">
+          <div class="search-input-group">
+            <input type="text" id="searchInput" placeholder="ابحث عن مناقصة (جهة، عنوان، مدينة)">
+            <button class="search-btn" onclick="performSearch()">بحث</button>
+          </div>
+          <select class="sort-dropdown" id="sortDropdown" onchange="applySorting()">
+            <option value="deadline">الأقرب للانتهاء</option>
+            <option value="newest">الأحدث</option>
+            <option value="oldest">الأقدم</option>
+            <option value="title">ترتيب أبجدي</option>
+          </select>
+        </div>
+        
+        <div class="filters">
+          <span class="filters-label">ترتيب:</span>
+          <button class="filter-btn active" data-filter="all" onclick="setFilter('all')">الكل</button>
+          <button class="filter-btn" data-filter="المنطقة" onclick="setFilter('المنطقة')">المنطقة</button>
+          <button class="filter-btn" data-filter="حكومية" onclick="setFilter('حكومية')">حكومية</button>
+          <button class="filter-btn" data-filter="خاصة" onclick="setFilter('خاصة')">خاصة</button>
+          <button class="filter-btn" data-filter="شركات" onclick="setFilter('شركات')">شركات</button>
+          <button class="filter-btn" data-filter="جامعات" onclick="setFilter('جامعات')">جامعات</button>
+        </div>
       </div>
       
       <div id="tendersContainer">
@@ -187,12 +268,121 @@
     let filteredTenders = [];
     let currentFilter = 'all';
     let searchQuery = '';
+    let currentSort = 'deadline';
 
     // العناصر
     const container = document.getElementById('tendersContainer');
     const searchInput = document.getElementById('searchInput');
-    const filtersContainer = document.getElementById('filters');
     const statsDiv = document.getElementById('stats');
+
+    // وظائف البحث والفلترة الجديدة
+    function performSearch() {
+      const searchValue = searchInput.value.trim();
+      searchQuery = searchValue;
+      console.log('البحث عن:', searchQuery);
+      applyFilters();
+    }
+
+    function applySorting() {
+      const sortDropdown = document.getElementById('sortDropdown');
+      currentSort = sortDropdown.value;
+      console.log('ترتيب حسب:', currentSort);
+      sortTenders();
+      renderTenders();
+    }
+
+    function sortTenders() {
+      filteredTenders.sort((a, b) => {
+        switch (currentSort) {
+          case 'deadline':
+            const dateA = new Date(a.deadline || '2099-12-31');
+            const dateB = new Date(b.deadline || '2099-12-31');
+            return dateA - dateB;
+          case 'newest':
+            const postedA = new Date(a.postedDate || a.publishDate || '1900-01-01');
+            const postedB = new Date(b.postedDate || b.publishDate || '1900-01-01');
+            return postedB - postedA;
+          case 'oldest':
+            const oldA = new Date(a.postedDate || a.publishDate || '2099-12-31');
+            const oldB = new Date(b.postedDate || b.publishDate || '2099-12-31');
+            return oldA - oldB;
+          case 'title':
+            return (a.title || '').localeCompare(b.title || '', 'ar');
+          default:
+            return 0;
+        }
+      });
+    }
+
+    function setFilter(filter) {
+      currentFilter = filter;
+      
+      // تحديث مظهر الأزرار
+      document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.classList.remove('active');
+      });
+      document.querySelector(`[data-filter="${filter}"]`).classList.add('active');
+      
+      console.log('فلتر حسب:', filter);
+      applyFilters();
+    }
+
+    // تطبيق الفلاتر والبحث
+    function applyFilters() {
+      filteredTenders = allTenders.filter(tender => {
+        // فلتر البحث
+        const matchesSearch = !searchQuery || 
+          (tender.title && tender.title.toLowerCase().includes(searchQuery.toLowerCase())) ||
+          (tender.entity && tender.entity.toLowerCase().includes(searchQuery.toLowerCase())) ||
+          (tender.city && tender.city.toLowerCase().includes(searchQuery.toLowerCase())) ||
+          (tender.description && tender.description.toLowerCase().includes(searchQuery.toLowerCase()));
+        
+        // فلتر الفئة
+        let matchesFilter = true;
+        if (currentFilter !== 'all') {
+          switch (currentFilter) {
+            case 'حكومية':
+              matchesFilter = tender.category === 'حكومية' || tender.type === 'حكومية' || (tender.entity && tender.entity.includes('وزارة'));
+              break;
+            case 'خاصة':
+              matchesFilter = tender.category === 'خاصة' || tender.type === 'خاصة';
+              break;
+            case 'شركات':
+              matchesFilter = tender.category === 'شركات' || tender.type === 'شركات' || (tender.entity && tender.entity.includes('شركة'));
+              break;
+            case 'جامعات':
+              matchesFilter = tender.category === 'جامعات' || tender.type === 'جامعات' || (tender.entity && (tender.entity.includes('جامعة') || tender.entity.includes('كلية')));
+              break;
+            case 'المنطقة':
+              // فلترة حسب المنطقة - يمكن تخصيصها لاحقاً
+              matchesFilter = true;
+              break;
+            default:
+              matchesFilter = true;
+          }
+        }
+        
+        return matchesSearch && matchesFilter;
+      });
+
+      console.log(`تطبيق الفلتر: ${filteredTenders.length} من ${allTenders.length}`);
+      sortTenders();
+      updateStats();
+      renderTenders();
+    }
+
+    // البحث عند الكتابة
+    searchInput.addEventListener('input', (e) => {
+      searchQuery = e.target.value.trim();
+      applyFilters();
+    });
+
+    // البحث عند الضغط على Enter
+    searchInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        performSearch();
+      }
+    });
 
     // تحميل البيانات
     async function loadTenders() {
@@ -226,6 +416,7 @@
         console.log(`تم تحميل ${allTenders.length} مناقصة بنجاح`);
         
         setupFilters();
+        sortTenders(); // تطبيق الترتيب الافتراضي
         updateStats();
         renderTenders();
         
@@ -235,55 +426,10 @@
       }
     }
 
-    // إعداد الفلاتر
+    // إعداد الفلاتر (تتم تلقائياً الآن)
     function setupFilters() {
-      const categories = [...new Set(allTenders.map(t => t.category).filter(Boolean))];
-      console.log('الفئات المتاحة:', categories);
-
-      filtersContainer.innerHTML = '<button class="filter-btn active" data-filter="all">الكل</button>';
-      
-      categories.forEach(category => {
-        const btn = document.createElement('button');
-        btn.className = 'filter-btn';
-        btn.setAttribute('data-filter', category);
-        btn.textContent = category;
-        btn.addEventListener('click', () => setFilter(category));
-        filtersContainer.appendChild(btn);
-      });
-    }
-
-    // تطبيق الفلتر
-    function setFilter(filter) {
-      currentFilter = filter;
-      
-      // تحديث مظهر الأزرار
-      document.querySelectorAll('.filter-btn').forEach(btn => {
-        btn.classList.remove('active');
-      });
-      document.querySelector(`[data-filter="${filter}"]`).classList.add('active');
-      
-      applyFilters();
-    }
-
-    // تطبيق الفلاتر والبحث
-    function applyFilters() {
-      filteredTenders = allTenders.filter(tender => {
-        // فلتر الفئة
-        const matchesFilter = currentFilter === 'all' || tender.category === currentFilter;
-        
-        // فلتر البحث
-        const matchesSearch = !searchQuery || 
-          (tender.title && tender.title.toLowerCase().includes(searchQuery.toLowerCase())) ||
-          (tender.entity && tender.entity.toLowerCase().includes(searchQuery.toLowerCase())) ||
-          (tender.city && tender.city.toLowerCase().includes(searchQuery.toLowerCase())) ||
-          (tender.description && tender.description.toLowerCase().includes(searchQuery.toLowerCase()));
-        
-        return matchesFilter && matchesSearch;
-      });
-
-      console.log(`تطبيق الفلتر: ${filteredTenders.length} من ${allTenders.length}`);
-      updateStats();
-      renderTenders();
+      // لا حاجة لإعداد إضافي - الفلاتر مُضافة في HTML مباشرة
+      console.log('الفلاتر جاهزة');
     }
 
     // تحديث الإحصائيات
