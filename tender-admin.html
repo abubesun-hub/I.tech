@@ -9,6 +9,16 @@
   <link rel="stylesheet" href="./css/main.css" />
 </head>
 <body class="page-controll">
+  <script>
+    (function(){
+      try {
+        const t = sessionStorage.getItem('itech_token');
+        if(!t){ location.href = 'controll.html'; }
+      } catch { /* إذا تعطلت الجلسة سنعيد المستخدم لصفحة الدخول */
+        location.href = 'controll.html';
+      }
+    })();
+  </script>
   <header class="nav">
     <div class="brand">
       <div class="logo-circle"><img src="./assets/images/I-Tech logo.png" alt="I.TECH"/></div>
@@ -17,6 +27,7 @@
     <nav class="menu" aria-label="التنقل">
       <a href="index.html">الرئيسية</a>
       <a href="tenders.html">مناقصات العراق</a>
+      <a href="#" id="btnLogout">تسجيل الخروج</a>
     </nav>
     <button class="burger" aria-label="فتح القائمة" aria-expanded="false">☰</button>
   </header>
@@ -114,6 +125,11 @@
   <script>
   // Ensure initialization runs whether DOMContentLoaded has fired or not
   function initAdminPage(){
+    // زر خروج بسيط يمسح الـ Token
+    try{
+      const lo = document.getElementById('btnLogout');
+      if (lo) lo.addEventListener('click', (e)=>{ e.preventDefault(); try{ sessionStorage.removeItem('itech_token'); } catch {} location.href = 'controll.html'; });
+    }catch{}
 
     const $ = (id)=>document.getElementById(id);
     // تهيئة بسيطة
