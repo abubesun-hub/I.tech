@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>مناقصات العراق | I.TECH</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./css/main.css" />
+  <style>
+    .tender-item {
+      background: white;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 15px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      transition: transform 0.2s;
+    }
+    .tender-item:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    }
+    .tender-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: #2c3e50;
+      margin-bottom: 10px;
+    }
+    .tender-meta {
+      font-size: 14px;
+      color: #7f8c8d;
+      margin-bottom: 8px;
+    }
+    .tender-description {
+      color: #34495e;
+      margin-bottom: 15px;
+      line-height: 1.5;
+    }
+    .tender-actions {
+      display: flex;
+      gap: 10px;
+    }
+    .btn-primary {
+      background: #3498db;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-block;
+    }
+    .btn-secondary {
+      background: #95a5a6;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-block;
+    }
+    .loading {
+      text-align: center;
+      padding: 40px;
+      font-size: 18px;
+      color: #7f8c8d;
+    }
+    .error {
+      background: #e74c3c;
+      color: white;
+      padding: 20px;
+      border-radius: 8px;
+      margin: 20px 0;
+      text-align: center;
+    }
+    .search-box {
+      margin-bottom: 20px;
+    }
+    .search-box input {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 16px;
+    }
+    .filters {
+      margin-bottom: 20px;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .filter-btn {
+      padding: 8px 16px;
+      border: 1px solid #3498db;
+      background: white;
+      color: #3498db;
+      border-radius: 20px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .filter-btn.active {
+      background: #3498db;
+      color: white;
+    }
+    .stats {
+      background: #f8f9fa;
+      padding: 15px;
+      border-radius: 6px;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body class="page-tenders">
+  <header class="nav">
+    <div class="brand">
+      <div class="logo-circle">
+        <img src="./assets/images/I-Tech logo.png" alt="شعار ايتك I.TECH" />
+      </div>
+      <div class="names">
+        <div class="ar">ايتك</div>
+        <div class="en">I.TECH</div>
+      </div>
+    </div>
+    <nav class="menu">
+      <a href="index.html">الرئيسية</a>
+      <a href="tenders-new.html" class="active">مناقصات العراق</a>
+      <a href="add-tender.html">إضافة مناقصة</a>
+      <a href="about.html">من نحن</a>
+      <a href="contact.html">تواصل معنا</a>
+    </nav>
+    <button class="burger" aria-label="فتح القائمة">☰</button>
+  </header>
+
+  <main class="container">
+    <section class="card">
+      <h1>مناقصات العراق</h1>
+      <p>جميع المناقصات الحكومية والخاصة في العراق</p>
+      
+      <div class="stats" id="stats">
+        <span>جاري التحميل...</span>
+      </div>
+      
+      <div class="search-box">
+        <input type="text" id="searchInput" placeholder="البحث في المناقصات (العنوان، الجهة، المدينة)">
+      </div>
+      
+      <div class="filters" id="filters">
+        <button class="filter-btn active" data-filter="all">الكل</button>
+      </div>
+      
+      <div id="tendersContainer">
+        <div class="loading">جاري تحميل المناقصات...</div>
+      </div>
+      
+      <div class="actions" style="margin-top: 30px;">
+        <a href="add-tender.html" class="btn-primary">إضافة مناقصة جديدة</a>
+        <a href="index.html" class="btn-secondary">العودة إلى الرئيسية</a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <small>© 2025 I.TECH - مناقصات العراق</small>
+  </footer>
+
+  <script>
+    // البيانات والحالة
+    let allTenders = [];
+    let filteredTenders = [];
+    let currentFilter = 'all';
+    let searchQuery = '';
+
+    // العناصر
+    const container = document.getElementById('tendersContainer');
+    const searchInput = document.getElementById('searchInput');
+    const filtersContainer = document.getElementById('filters');
+    const statsDiv = document.getElementById('stats');
+
+    // تحميل البيانات
+    async function loadTenders() {
+      try {
+        console.log('بدء تحميل المناقصات...');
+        
+        // إضافة معلومة زمنية لتجنب الكاش
+        const timestamp = new Date().getTime();
+        const response = await fetch(`./assets/data/tenders.json?v=${timestamp}`, {
+          method: 'GET',
+          headers: {
+            'Cache-Control': 'no-cache',
+            'Pragma': 'no-cache'
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        console.log('تم تحميل البيانات:', data);
+
+        if (!Array.isArray(data)) {
+          throw new Error('البيانات المستلمة ليست مصفوفة');
+        }
+
+        allTenders = data;
+        filteredTenders = [...allTenders];
+        
+        console.log(`تم تحميل ${allTenders.length} مناقصة بنجاح`);
+        
+        setupFilters();
+        updateStats();
+        renderTenders();
+        
+      } catch (error) {
+        console.error('خطأ في تحميل المناقصات:', error);
+        showError(`فشل في تحميل المناقصات: ${error.message}`);
+      }
+    }
+
+    // إعداد الفلاتر
+    function setupFilters() {
+      const categories = [...new Set(allTenders.map(t => t.category).filter(Boolean))];
+      console.log('الفئات المتاحة:', categories);
+
+      filtersContainer.innerHTML = '<button class="filter-btn active" data-filter="all">الكل</button>';
+      
+      categories.forEach(category => {
+        const btn = document.createElement('button');
+        btn.className = 'filter-btn';
+        btn.setAttribute('data-filter', category);
+        btn.textContent = category;
+        btn.addEventListener('click', () => setFilter(category));
+        filtersContainer.appendChild(btn);
+      });
+    }
+
+    // تطبيق الفلتر
+    function setFilter(filter) {
+      currentFilter = filter;
+      
+      // تحديث مظهر الأزرار
+      document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.classList.remove('active');
+      });
+      document.querySelector(`[data-filter="${filter}"]`).classList.add('active');
+      
+      applyFilters();
+    }
+
+    // تطبيق الفلاتر والبحث
+    function applyFilters() {
+      filteredTenders = allTenders.filter(tender => {
+        // فلتر الفئة
+        const matchesFilter = currentFilter === 'all' || tender.category === currentFilter;
+        
+        // فلتر البحث
+        const matchesSearch = !searchQuery || 
+          (tender.title && tender.title.toLowerCase().includes(searchQuery.toLowerCase())) ||
+          (tender.entity && tender.entity.toLowerCase().includes(searchQuery.toLowerCase())) ||
+          (tender.city && tender.city.toLowerCase().includes(searchQuery.toLowerCase())) ||
+          (tender.description && tender.description.toLowerCase().includes(searchQuery.toLowerCase()));
+        
+        return matchesFilter && matchesSearch;
+      });
+
+      console.log(`تطبيق الفلتر: ${filteredTenders.length} من ${allTenders.length}`);
+      updateStats();
+      renderTenders();
+    }
+
+    // تحديث الإحصائيات
+    function updateStats() {
+      const total = allTenders.length;
+      const filtered = filteredTenders.length;
+      const active = filteredTenders.filter(t => t.status !== 'منتهي' && t.status !== 'مغلق').length;
+      
+      statsDiv.innerHTML = `
+        <strong>${filtered}</strong> مناقصة من أصل ${total} | 
+        <strong>${active}</strong> مناقصة نشطة
+      `;
+    }
+
+    // عرض المناقصات
+    function renderTenders() {
+      console.log(`عرض ${filteredTenders.length} مناقصة`);
+      
+      if (filteredTenders.length === 0) {
+        container.innerHTML = `
+          <div style="text-align: center; padding: 40px; color: #7f8c8d;">
+            <h3>لا توجد مناقصات مطابقة</h3>
+            <p>جرب تغيير معايير البحث أو الفلتر</p>
+            <a href="add-tender.html" class="btn-primary">إضافة أول مناقصة</a>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = filteredTenders.map(tender => createTenderHTML(tender)).join('');
+    }
+
+    // إنشاء HTML للمناقصة
+    function createTenderHTML(tender) {
+      const formatDate = (dateStr) => {
+        if (!dateStr) return 'غير محدد';
+        try {
+          return new Date(dateStr).toLocaleDateString('ar-IQ');
+        } catch {
+          return dateStr;
+        }
+      };
+
+      const calculateDaysLeft = (deadline) => {
+        if (!deadline) return null;
+        try {
+          const deadlineDate = new Date(deadline);
+          const today = new Date();
+          const diffTime = deadlineDate - today;
+          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+          return diffDays;
+        } catch {
+          return null;
+        }
+      };
+
+      const daysLeft = calculateDaysLeft(tender.deadline);
+      let deadlineInfo = '';
+      if (daysLeft !== null) {
+        if (daysLeft < 0) {
+          deadlineInfo = '<span style="color: #e74c3c; font-weight: 600;">منتهية</span>';
+        } else if (daysLeft === 0) {
+          deadlineInfo = '<span style="color: #f39c12; font-weight: 600;">تنتهي اليوم</span>';
+        } else {
+          deadlineInfo = `<span style="color: #27ae60; font-weight: 600;">باقي ${daysLeft} يوم</span>`;
+        }
+      }
+
+      return `
+        <div class="tender-item">
+          <div class="tender-title">${tender.title || 'بدون عنوان'}</div>
+          
+          <div class="tender-meta">
+            <strong>الجهة:</strong> ${tender.entity || 'غير محدد'} | 
+            <strong>التصنيف:</strong> ${tender.category || 'غير محدد'} | 
+            <strong>المدينة:</strong> ${tender.city || 'غير محدد'}
+          </div>
+          
+          ${tender.deadline ? `
+            <div class="tender-meta">
+              <strong>الموعد النهائي:</strong> ${formatDate(tender.deadline)} ${deadlineInfo}
+            </div>
+          ` : ''}
+          
+          ${tender.adNumber ? `
+            <div class="tender-meta">
+              <strong>رقم الإعلان:</strong> ${tender.adNumber}
+            </div>
+          ` : ''}
+          
+          ${tender.description ? `
+            <div class="tender-description">${tender.description}</div>
+          ` : ''}
+          
+          <div class="tender-actions">
+            <a href="tender.html?id=${encodeURIComponent(tender.id)}" class="btn-primary">عرض التفاصيل</a>
+            ${tender.link && tender.link !== '#' ? 
+              `<a href="${tender.link}" target="_blank" class="btn-secondary">المصدر الأصلي</a>` : 
+              ''
+            }
+          </div>
+        </div>
+      `;
+    }
+
+    // عرض خطأ
+    function showError(message) {
+      container.innerHTML = `
+        <div class="error">
+          <h3>خطأ في التحميل</h3>
+          <p>${message}</p>
+          <button onclick="loadTenders()" class="btn-secondary">إعادة المحاولة</button>
+        </div>
+      `;
+    }
+
+    // البحث
+    searchInput.addEventListener('input', (e) => {
+      searchQuery = e.target.value.trim();
+      applyFilters();
+    });
+
+    // فلتر "الكل"
+    document.querySelector('[data-filter="all"]').addEventListener('click', () => setFilter('all'));
+
+    // تحميل البيانات عند تحميل الصفحة
+    document.addEventListener('DOMContentLoaded', loadTenders);
+    
+    // قائمة الموبايل
+    const burger = document.querySelector('.burger');
+    const menu = document.querySelector('.menu');
+    if (burger && menu) {
+      burger.addEventListener('click', () => {
+        menu.classList.toggle('open');
+      });
+    }
+  </script>
+</body>
+</html>

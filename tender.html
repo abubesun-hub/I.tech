@@ -22,9 +22,9 @@
     </div>
     <nav class="menu" aria-label="التنقل الرئيسي">
       <a href="index.html">الرئيسية</a>
-      <a href="tenders.html" class="active">مناقصات العراق</a>
+      <a href="tenders-new.html">مناقصات العراق</a>
+      <a href="add-tender.html">إضافة مناقصة</a>
       <a href="about.html">من نحن</a>
-      <a href="services.html">الخدمات</a>
       <a href="contact.html">تواصل معنا</a>
     </nav>
     <button class="burger" aria-label="فتح القائمة" aria-expanded="false">☰</button>
@@ -71,6 +71,288 @@
     <small>© 2025 I.TECH</small>
   </footer>
 
-  <script src="./js/main.js" defer></script>
+  <script>
+    // تحميل تفاصيل المناقصة
+    async function loadTenderDetails() {
+      try {
+        // الحصول على معرف المناقصة من الرابط
+        const urlParams = new URLSearchParams(window.location.search);
+        const tenderId = urlParams.get('id');
+        
+        if (!tenderId) {
+          throw new Error('لم يتم تحديد معرف المناقصة');
+        }
+
+        console.log('تحميل تفاصيل المناقصة:', tenderId);
+
+        // تحميل ملف JSON
+        const timestamp = new Date().getTime();
+        const response = await fetch(`./assets/data/tenders.json?v=${timestamp}`, {
+          method: 'GET',
+          headers: {
+            'Cache-Control': 'no-cache',
+            'Pragma': 'no-cache'
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error(`خطأ في التحميل: ${response.status}`);
+        }
+
+        const tenders = await response.json();
+        console.log('تم تحميل البيانات:', tenders);
+
+        // البحث عن المناقصة المطلوبة
+        const tender = tenders.find(t => t.id === tenderId);
+        
+        if (!tender) {
+          throw new Error('لم يتم العثور على المناقصة المطلوبة');
+        }
+
+        console.log('تم العثور على المناقصة:', tender);
+        displayTenderDetails(tender);
+
+      } catch (error) {
+        console.error('خطأ في تحميل تفاصيل المناقصة:', error);
+        displayError(error.message);
+      }
+    }
+
+    // عرض تفاصيل المناقصة
+    function displayTenderDetails(tender) {
+      const container = document.getElementById('tenderDetail');
+      
+      const formatDate = (dateStr) => {
+        if (!dateStr) return 'غير محدد';
+        try {
+          return new Date(dateStr).toLocaleDateString('ar-IQ', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+          });
+        } catch {
+          return dateStr;
+        }
+      };
+
+      const calculateDaysLeft = (deadline) => {
+        if (!deadline) return null;
+        try {
+          const deadlineDate = new Date(deadline);
+          const today = new Date();
+          const diffTime = deadlineDate - today;
+          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+          return diffDays;
+        } catch {
+          return null;
+        }
+      };
+
+      const daysLeft = calculateDaysLeft(tender.deadline);
+      let deadlineInfo = '';
+      if (daysLeft !== null) {
+        if (daysLeft < 0) {
+          deadlineInfo = '<span style="color: #e74c3c; font-weight: 600;">منتهية</span>';
+        } else if (daysLeft === 0) {
+          deadlineInfo = '<span style="color: #f39c12; font-weight: 600;">تنتهي اليوم</span>';
+        } else {
+          deadlineInfo = `<span style="color: #27ae60; font-weight: 600;">باقي ${daysLeft} يوم</span>`;
+        }
+      }
+
+      const priceInfo = tender.documentPrice && tender.documentPrice > 0 ? 
+        `<div class="info-item"><strong>سعر الكراس:</strong> ${tender.documentPrice.toLocaleString()} ${tender.currency || 'IQD'}</div>` : '';
+
+      const requirementsList = Array.isArray(tender.submissionRequirements) && tender.submissionRequirements.length > 0 ? 
+        `<div class="requirements">
+          <h3>متطلبات التقديم:</h3>
+          <ul>${tender.submissionRequirements.map(req => `<li>${req}</li>`).join('')}</ul>
+        </div>` : '';
+
+      const contactInfo = tender.contact && (tender.contact.phone || tender.contact.email) ? 
+        `<div class="contact-info">
+          <h3>معلومات التواصل:</h3>
+          ${tender.contact.phone ? `<div>📞 ${tender.contact.phone}</div>` : ''}
+          ${tender.contact.email ? `<div>📧 ${tender.contact.email}</div>` : ''}
+        </div>` : '';
+
+      container.innerHTML = `
+        <h1>${tender.title || 'بدون عنوان'}</h1>
+        
+        <div class="tender-meta" style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
+          <div class="info-grid" style="display: grid; gap: 15px;">
+            <div class="info-item"><strong>الجهة المعلنة:</strong> ${tender.entity || 'غير محدد'}</div>
+            <div class="info-item"><strong>التصنيف:</strong> ${tender.category || 'غير محدد'}</div>
+            <div class="info-item"><strong>المدينة:</strong> ${tender.city || 'غير محدد'}</div>
+            <div class="info-item"><strong>الحالة:</strong> ${tender.status || 'مفتوح'}</div>
+            ${tender.adNumber ? `<div class="info-item"><strong>رقم الإعلان:</strong> ${tender.adNumber}</div>` : ''}
+            ${tender.postedDate ? `<div class="info-item"><strong>تاريخ النشر:</strong> ${formatDate(tender.postedDate)}</div>` : ''}
+            ${tender.deadline ? `<div class="info-item"><strong>الموعد النهائي:</strong> ${formatDate(tender.deadline)} ${deadlineInfo}</div>` : ''}
+            ${priceInfo}
+            ${tender.pickupLocation ? `<div class="info-item"><strong>مكان استلام الكراس:</strong> ${tender.pickupLocation}</div>` : ''}
+            ${tender.submissionPlace ? `<div class="info-item"><strong>مكان تقديم العروض:</strong> ${tender.submissionPlace}</div>` : ''}
+          </div>
+        </div>
+
+        ${tender.description ? `
+          <div class="description" style="margin: 20px 0;">
+            <h3>وصف المناقصة:</h3>
+            <p style="line-height: 1.6; color: #34495e;">${tender.description}</p>
+          </div>
+        ` : ''}
+
+        ${requirementsList}
+
+        ${tender.notes ? `
+          <div class="notes" style="margin: 20px 0;">
+            <h3>ملاحظات:</h3>
+            <p style="line-height: 1.6; color: #34495e;">${tender.notes}</p>
+          </div>
+        ` : ''}
+
+        ${contactInfo}
+
+        <div class="actions" style="margin-top: 30px; display: flex; gap: 15px; flex-wrap: wrap;">
+          ${tender.link && tender.link !== '#' ? 
+            `<a href="${tender.link}" target="_blank" class="btn-primary">المصدر الأصلي</a>` : 
+            ''
+          }
+          <a href="tenders-new.html" class="btn-secondary">العودة إلى المناقصات</a>
+          <button onclick="addToFavorites('${tender.id}')" class="btn-secondary">إضافة إلى المفضلة ★</button>
+          ${tender.deadline ? `<button onclick="addToCalendar('${tender.title}', '${tender.deadline}')" class="btn-secondary">إضافة للتقويم</button>` : ''}
+        </div>
+
+        <style>
+          .btn-primary {
+            background: #3498db;
+            color: white;
+            padding: 12px 24px;
+            text-decoration: none;
+            border-radius: 6px;
+            display: inline-block;
+            font-weight: 600;
+          }
+          .btn-secondary {
+            background: #95a5a6;
+            color: white;
+            padding: 12px 24px;
+            text-decoration: none;
+            border-radius: 6px;
+            display: inline-block;
+            border: none;
+            cursor: pointer;
+          }
+          .btn-primary:hover, .btn-secondary:hover {
+            opacity: 0.9;
+          }
+          .info-item {
+            padding: 8px 0;
+            border-bottom: 1px solid #ecf0f1;
+          }
+          .info-item:last-child {
+            border-bottom: none;
+          }
+          .requirements ul {
+            background: #f8f9fa;
+            padding: 15px 20px;
+            border-radius: 6px;
+            margin: 10px 0;
+          }
+          .requirements li {
+            margin-bottom: 8px;
+            line-height: 1.5;
+          }
+          .contact-info {
+            background: #e8f5e8;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 20px 0;
+          }
+        </style>
+      `;
+    }
+
+    // عرض خطأ
+    function displayError(message) {
+      const container = document.getElementById('tenderDetail');
+      container.innerHTML = `
+        <div style="text-align: center; padding: 40px; background: #f8d7da; border: 1px solid #f5c6cb; border-radius: 8px; color: #721c24;">
+          <h2>خطأ في تحميل المناقصة</h2>
+          <p>${message}</p>
+          <div style="margin-top: 20px;">
+            <a href="tenders-new.html" class="btn-primary">العودة إلى المناقصات</a>
+            <button onclick="loadTenderDetails()" class="btn-secondary" style="margin-right: 10px;">إعادة المحاولة</button>
+          </div>
+        </div>
+        
+        <style>
+          .btn-primary {
+            background: #3498db;
+            color: white;
+            padding: 12px 24px;
+            text-decoration: none;
+            border-radius: 6px;
+            display: inline-block;
+            margin: 0 5px;
+          }
+          .btn-secondary {
+            background: #95a5a6;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            margin: 0 5px;
+          }
+        </style>
+      `;
+    }
+
+    // إضافة إلى المفضلة
+    function addToFavorites(tenderId) {
+      try {
+        let favorites = JSON.parse(localStorage.getItem('tender_favorites') || '[]');
+        if (!favorites.includes(tenderId)) {
+          favorites.push(tenderId);
+          localStorage.setItem('tender_favorites', JSON.stringify(favorites));
+          alert('تم إضافة المناقصة إلى المفضلة');
+        } else {
+          alert('المناقصة موجودة بالفعل في المفضلة');
+        }
+      } catch (error) {
+        alert('حدث خطأ في إضافة المناقصة للمفضلة');
+      }
+    }
+
+    // إضافة للتقويم
+    function addToCalendar(title, deadline) {
+      try {
+        const date = new Date(deadline);
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const dateStr = `${year}${month}${day}`;
+        
+        const eventTitle = encodeURIComponent(`موعد مناقصة: ${title}`);
+        const googleUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${eventTitle}&dates=${dateStr}/${dateStr}`;
+        
+        window.open(googleUrl, '_blank');
+      } catch (error) {
+        alert('حدث خطأ في إضافة الحدث للتقويم');
+      }
+    }
+
+    // قائمة الموبايل
+    const burger = document.querySelector('.burger');
+    const menu = document.querySelector('.menu');
+    if (burger && menu) {
+      burger.addEventListener('click', () => {
+        menu.classList.toggle('open');
+      });
+    }
+
+    // تحميل التفاصيل عند تحميل الصفحة
+    document.addEventListener('DOMContentLoaded', loadTenderDetails);
+  </script>
 </body>
 </html>
