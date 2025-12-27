@@ -279,6 +279,13 @@ async function loadData() {
 
   function renderList(items) {
     list.innerHTML = '';
+    if (!items || items.length === 0) {
+      const empty = document.createElement('div');
+      empty.className = 'muted';
+      empty.textContent = 'لا توجد مناقصات مطابقة حالياً.';
+      list.appendChild(empty);
+      return;
+    }
     items.forEach(t => {
       const card = document.createElement('div');
       card.className = 'card tender-card reveal';

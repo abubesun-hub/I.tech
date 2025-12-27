@@ -277,7 +277,11 @@
       const path = ($('#gh_path').value||'assets/data/tenders.json').trim();
       const token = ($('#gh_token').value||'').trim();
       const wrap = document.getElementById('adminList');
-      if (!wrap || !owner || !repo || !branch || !path) return;
+      if (!wrap) return;
+      if (!owner || !repo || !branch || !path) {
+        wrap.innerHTML = '<div class="muted">أكمل إعدادات GitHub (المالك، المستودع، الفرع، والمسار) يسار الصفحة، ثم اضغط "تحديث القائمة".</div>';
+        return;
+      }
       wrap.innerHTML = '<div class="muted">جلب القائمة...</div>';
       try {
         const arr = await fetchCurrentTendersRaw(owner, repo, branch, path);
