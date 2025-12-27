@@ -668,7 +668,7 @@ async function loadData() {
         ${item.notes ? `<p class="tender-desc"><strong>ملاحظات:</strong> ${item.notes}</p>` : ''}
         <div class="actions">
           <a class="btn primary" href="${item.link||'#'}" target="_blank" rel="noopener">المصدر / التفاصيل</a>
-          <a class="btn" href="tenders.html">العودة إلى المناقصات</a>
+          <a class="btn" href="tenders-new.html">العودة إلى المناقصات</a>
         </div>
       `;
 
