@@ -205,6 +205,17 @@
             </label>
           </div>
           
+          <div style="margin: 15px 0; padding: 10px; background: #f8f9fa; border-radius: 4px;">
+            <strong>إحصائيات أرقام الإعلانات:</strong>
+            <div style="display: flex; gap: 15px; margin-top: 8px; flex-wrap: wrap;">
+              <button type="button" onclick="getCounterStats()" class="btn-edit" style="font-size: 11px; padding: 4px 8px;">📊 عرض الإحصائيات</button>
+              <button type="button" onclick="resetCounters()" class="btn-delete" style="font-size: 11px; padding: 4px 8px;">🔄 إعادة تعيين العدادات</button>
+            </div>
+            <small style="color: #7f8c8d; display: block; margin-top: 5px;">
+              العدادات: حكومية (GOV-TN)، شركات (CMP-TN)، جامعات (UNI-TN)، منظمات (NGO-TN)
+            </small>
+          </div>
+          
           <button class="test-connection" onclick="testConnection()">اختبار الاتصال</button>
         </div>
       </div>
@@ -254,8 +265,9 @@
             <input type="text" id="tenderCity" placeholder="بغداد">
           </div>
           <div class="form-group">
-            <label for="tenderAdNumber">رقم الإعلان</label>
-            <input type="text" id="tenderAdNumber" placeholder="إعلان/2025/001">
+            <label for="tenderAdNumber">رقم الإعلان <span style="color: #27ae60; font-size: 12px;">(تلقائي)</span></label>
+            <input type="text" id="tenderAdNumber" readonly placeholder="سيتم إنشاء الرقم تلقائياً" style="background-color: #f8f9fa; cursor: not-allowed;">
+            <small style="color: #7f8c8d; font-size: 11px;">يتم توليد هذا الرقم تلقائياً حسب التصنيف</small>
           </div>
         </div>
 
@@ -655,7 +667,87 @@
       
       // تحميل جدول المناقصات
       loadTendersTable();
+      
+      // ربط تغيير التصنيف بتوليد رقم الإعلان
+      document.getElementById('tenderCategory').addEventListener('change', generateAdNumber);
+      
+      // إنشاء رقم إعلان افتراضي
+      generateAdNumber();
     });
+
+    // === نظام الترقيم التلقائي لرقم الإعلان ===
+    
+    // أنماط الترقيم لكل نوع جهة
+    const numberingPatterns = {
+      'حكومية': { prefix: 'GOV-TN', key: 'gov_counter' },
+      'شركات': { prefix: 'CMP-TN', key: 'company_counter' },
+      'جامعات': { prefix: 'UNI-TN', key: 'university_counter' },
+      'منظمات': { prefix: 'NGO-TN', key: 'ngo_counter' }
+    };
+    
+    // توليد رقم الإعلان التلقائي
+    function generateAdNumber() {
+      const category = document.getElementById('tenderCategory').value;
+      const pattern = numberingPatterns[category];
+      
+      if (!pattern) {
+        document.getElementById('tenderAdNumber').value = 'غير محدد';
+        return;
+      }
+      
+      // الحصول على العداد الحالي أو البدء من 1
+      let counter = parseInt(localStorage.getItem(pattern.key) || '0') + 1;
+      
+      // تحديث العداد في localStorage
+      localStorage.setItem(pattern.key, counter.toString());
+      
+      // تنسيق الرقم: PREFIX-YEAR-NUMBER
+      const currentYear = new Date().getFullYear();
+      const formattedNumber = counter.toString().padStart(3, '0');
+      const adNumber = `${pattern.prefix}-${currentYear}-${formattedNumber}`;
+      
+      // تحديث الحقل
+      document.getElementById('tenderAdNumber').value = adNumber;
+      
+      console.log(`تم إنشاء رقم إعلان جديد: ${adNumber} للفئة: ${category}`);
+      
+      // تحديث المعاينة
+      updatePreview();
+    }
+    
+    // دالة لاسترداد العداد السابق (في حالة التعديل أو الحذف)
+    function revertCounter(category) {
+      const pattern = numberingPatterns[category];
+      if (!pattern) return;
+      
+      let counter = parseInt(localStorage.getItem(pattern.key) || '1');
+      if (counter > 1) {
+        counter--;
+        localStorage.setItem(pattern.key, counter.toString());
+        console.log(`تم تقليل عداد ${category} إلى: ${counter}`);
+      }
+    }
+    
+    // دالة لإعادة تعيين العدادات (للمطورين فقط)
+    function resetCounters() {
+      if (confirm('هل أنت متأكد من إعادة تعيين جميع العدادات؟ هذا الإجراء لا يمكن التراجع عنه.')) {
+        Object.values(numberingPatterns).forEach(pattern => {
+          localStorage.removeItem(pattern.key);
+        });
+        console.log('تم إعادة تعيين جميع العدادات');
+        generateAdNumber(); // إعادة إنشاء الرقم
+      }
+    }
+    
+    // دالة للحصول على إحصائيات العدادات
+    function getCounterStats() {
+      const stats = {};
+      Object.entries(numberingPatterns).forEach(([category, pattern]) => {
+        stats[category] = parseInt(localStorage.getItem(pattern.key) || '0');
+      });
+      console.table(stats);
+      return stats;
+    }
 
     // === وظائف جدول المناقصات ===
     
@@ -784,6 +876,7 @@
         document.getElementById('tenderEntity').value = tender.entity || '';
         document.getElementById('tenderCategory').value = tender.category || '';
         document.getElementById('tenderCity').value = tender.city || '';
+        // رقم الإعلان يُملأ مباشرة من البيانات المحفوظة (لا نغيره أثناء التعديل)
         document.getElementById('tenderAdNumber').value = tender.adNumber || '';
         document.getElementById('tenderDeadline').value = tender.deadline || '';
         document.getElementById('tenderPostedDate').value = tender.postedDate || tender.publishDate || '';
@@ -839,6 +932,12 @@
         // حذف المناقصة من المصفوفة
         const deletedTender = tenders[tenderIndex];
         tenders.splice(tenderIndex, 1);
+        
+        // تقليل العداد للفئة المحذوفة (اختياري)
+        if (deletedTender.category && numberingPatterns[deletedTender.category]) {
+          // يمكن إلغاء التعليق على السطر التالي إذا أردت تقليل العداد عند الحذف
+          // revertCounter(deletedTender.category);
+        }
         
         // هنا يجب إضافة آلية حفظ البيانات المحدثة
         // (يتطلب تكامل مع GitHub API أو خدمة أخرى)
