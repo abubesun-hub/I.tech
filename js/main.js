@@ -15,7 +15,15 @@ try {
   const json = params.get('json');
   const nocache = params.get('nocache');
   if (json) window.ITECH_TENDERS_CONFIG.jsonUrl = json;
-  if (nocache === '1') { try { localStorage.removeItem('itech_tenders_cache'); } catch {} }
+  if (nocache === '1') {
+    try { localStorage.removeItem('itech_tenders_cache'); } catch {}
+    // أضف وسيط زمني لكسر الكاش على مستوى الشبكة أيضًا
+    try {
+      const u = new URL(window.ITECH_TENDERS_CONFIG.jsonUrl, location.href);
+      u.searchParams.set('v', Date.now().toString());
+      window.ITECH_TENDERS_CONFIG.jsonUrl = u.toString();
+    } catch {}
+  }
 } catch {}
 (function(){
   const burger = document.querySelector('.burger');
@@ -211,12 +219,17 @@ async function loadData() {
     const ttlMs = 15 * 60 * 1000;
     const cache = (() => { try { return JSON.parse(localStorage.getItem(cacheKey) || 'null'); } catch { return null; } })();
     if (cache && (Date.now() - cache.ts < ttlMs) && Array.isArray(cache.data)) return cache.data;
-    const r = await fetch(cfg.jsonUrl || './assets/data/tenders.json');
+    const r = await fetch(cfg.jsonUrl || './assets/data/tenders.json', { cache: 'no-store' });
+    if (!r.ok) throw new Error('fetch_failed_' + r.status);
     const j = await r.json();
     localStorage.setItem(cacheKey, JSON.stringify({ ts: Date.now(), data: j }));
     return j;
   } catch (e) {
-    try { const r = await fetch('./assets/data/tenders.json'); return await r.json(); } catch { return []; }
+    try {
+      const r = await fetch('./assets/data/tenders.json', { cache: 'no-store' });
+      if (!r.ok) return [];
+      return await r.json();
+    } catch { return []; }
   }
 }
 
