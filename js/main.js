@@ -214,22 +214,109 @@ function normalizeApiResponse(resp) {
 
 async function loadData() {
   const cfg = window.ITECH_TENDERS_CONFIG || {};
+  
+  // تحديد مصدر البيانات (محلي، خارجي، أو افتراضي)
+  const dataSourceType = localStorage.getItem('itech_data_source_type');
+  const customJsonUrl = localStorage.getItem('itech_json_url');
+  
+  // 1. جرب تحميل البيانات المحلية أولاً إذا كانت متوفرة
+  const localKey = 'itech_tenders_local';
+  try {
+    const localData = localStorage.getItem(localKey);
+    if (localData) {
+      const parsed = JSON.parse(localData);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        console.log('تم تحميل البيانات من التخزين المحلي');
+        return parsed;
+      }
+    }
+  } catch (e) {
+    console.log('تعذر تحميل البيانات المحلية:', e);
+  }
+  
+  // 2. جرب تحميل البيانات مع الكاش
   try {
     const cacheKey = 'itech_tenders_cache';
-    const ttlMs = 15 * 60 * 1000;
+    const ttlMs = 5 * 60 * 1000; // تقليل الكاش إلى 5 دقائق للبيانات الأونلاين
     const cache = (() => { try { return JSON.parse(localStorage.getItem(cacheKey) || 'null'); } catch { return null; } })();
-    if (cache && (Date.now() - cache.ts < ttlMs) && Array.isArray(cache.data)) return cache.data;
-    const r = await fetch(cfg.jsonUrl || './assets/data/tenders.json', { cache: 'no-store' });
-    if (!r.ok) throw new Error('fetch_failed_' + r.status);
-    const j = await r.json();
-    localStorage.setItem(cacheKey, JSON.stringify({ ts: Date.now(), data: j }));
-    return j;
+    if (cache && (Date.now() - cache.ts < ttlMs) && Array.isArray(cache.data)) {
+      console.log('تم تحميل البيانات من الكاش');
+      return cache.data;
+    }
+    
+    // تحديد الرابط المطلوب
+    let url = customJsonUrl || cfg.jsonUrl || './assets/data/tenders.json';
+    
+    // إعداد headers خاصة لكل نوع
+    const headers = {
+      'Accept': 'application/json'
+    };
+    
+    // إضافة headers خاصة بـ JSONBin إذا لزم الأمر
+    if (dataSourceType === 'jsonbin' && url.includes('jsonbin.io')) {
+      const apiKey = (() => {
+        try {
+          const settings = JSON.parse(localStorage.getItem('itech_jsonbin_settings') || '{}');
+          return settings.key;
+        } catch { return null; }
+      })();
+      
+      if (apiKey) {
+        headers['X-Master-Key'] = apiKey;
+      }
+    }
+    
+    console.log('محاولة تحميل البيانات من:', url);
+    const r = await fetch(url, { 
+      cache: 'no-store',
+      headers
+    });
+    
+    if (!r.ok) {
+      console.error('فشل في تحميل البيانات، رمز الحالة:', r.status);
+      throw new Error('fetch_failed_' + r.status);
+    }
+    
+    let data;
+    const jsonResponse = await r.json();
+    
+    // معالجة استجابة JSONBin
+    if (dataSourceType === 'jsonbin' && jsonResponse.record) {
+      data = jsonResponse.record;
+    } else {
+      data = jsonResponse;
+    }
+    
+    if (!Array.isArray(data)) {
+      console.error('البيانات المستلمة ليست مصفوفة:', data);
+      throw new Error('Invalid data format');
+    }
+    
+    console.log('تم تحميل البيانات بنجاح، عدد المناقصات:', data.length);
+    localStorage.setItem(cacheKey, JSON.stringify({ ts: Date.now(), data }));
+    return data;
+    
   } catch (e) {
+    console.error('خطأ في تحميل البيانات:', e);
+    
+    // محاولة أخيرة من الملف الافتراضي إذا فشل المصدر المخصص
     try {
-      const r = await fetch('./assets/data/tenders.json', { cache: 'no-store' });
-      if (!r.ok) return [];
-      return await r.json();
-    } catch { return []; }
+      console.log('محاولة تحميل من الملف الافتراضي...');
+      const r = await fetch('./assets/data/tenders.json', { 
+        cache: 'no-store',
+        mode: 'same-origin'
+      });
+      if (!r.ok) {
+        console.error('فشل في المحاولة الأخيرة، رمز الحالة:', r.status);
+        return [];
+      }
+      const data = await r.json();
+      console.log('تم تحميل البيانات في المحاولة الأخيرة، عدد المناقصات:', data.length);
+      return data;
+    } catch (finalError) {
+      console.error('فشل نهائي في تحميل البيانات:', finalError);
+      return [];
+    }
   }
 }
 
@@ -357,8 +444,28 @@ async function loadData() {
 
   async function init() {
     try {
+      console.log('بدء تحميل بيانات المناقصات...');
       const data = await loadData();
-      state.data = Array.isArray(data) ? data : [];
+      console.log('تم تحميل البيانات:', data);
+      
+      if (!Array.isArray(data) || data.length === 0) {
+        console.log('لا توجد بيانات أو البيانات فارغة');
+        list.innerHTML = `
+          <div class="card" style="padding: 20px; text-align: center; border: 1px dashed #ddd;">
+            <h3>لا توجد مناقصات حالياً</h3>
+            <p>البيانات قيد التحميل أو لم يتم إضافة مناقصات بعد.</p>
+            <div style="margin: 15px 0;">
+              <a href="tender-admin-online.html" class="btn primary">نشر مناقصة أونلاين</a>
+              <a href="tender-admin-simple.html" class="btn">إضافة محلياً</a>
+            </div>
+            <p><a href="github-setup-guide.html">دليل الإعداد للنشر الأونلاين</a></p>
+            <p><small>للمطورين: تحقق من ملف assets/data/tenders.json أو console للتفاصيل</small></p>
+          </div>
+        `;
+        return;
+      }
+      
+      state.data = data;
       state.categories = new Set(state.data.map(d => d.category).filter(Boolean));
       renderChips();
       // restore state from URL
@@ -371,7 +478,23 @@ async function loadData() {
       if (s0 && sortSelect) sortSelect.value = s0;
       applyFilter();
     } catch (e) {
-      list.innerHTML = '<p class="under-construction">تعذر تحميل البيانات. سيتم ربط مصدر حقيقي لاحقًا.</p>';
+      console.error('خطأ في تهيئة صفحة المناقصات:', e);
+      list.innerHTML = `
+        <div class="card" style="padding: 20px; text-align: center; border: 1px solid #ff6b6b; background: #ffe0e0;">
+          <h3 style="color: #d63031;">خطأ في تحميل المناقصات</h3>
+          <p>تعذر تحميل بيانات المناقصات. يرجى:</p>
+          <ul style="text-align: right; display: inline-block;">
+            <li>التأكد من الاتصال بالإنترنت</li>
+            <li>تحديث الصفحة</li>
+            <li>أو <a href="tender-admin-online.html">نشر مناقصات جديدة أونلاين</a></li>
+            <li>أو استخدام <a href="tender-admin-simple.html">الإضافة المحلية</a></li>
+          </ul>
+          <div style="margin: 15px 0;">
+            <button onclick="location.reload()" class="btn primary">تحديث الصفحة</button>
+            <a href="github-setup-guide.html" class="btn">دليل الإعداد</a>
+          </div>
+        </div>
+      `;
     }
   }
 
