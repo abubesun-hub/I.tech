@@ -481,22 +481,39 @@
       try {
         console.log('بدء تحميل المناقصات...');
         
-        // إضافة معلومة زمنية لتجنب الكاش
-        const timestamp = new Date().getTime();
-        const response = await fetch(`./assets/data/tenders.json?v=${timestamp}`, {
-          method: 'GET',
-          headers: {
-            'Cache-Control': 'no-cache',
-            'Pragma': 'no-cache'
+        let data;
+        
+        // التحقق من وجود بيانات محدثة في localStorage
+        const updatedData = localStorage.getItem('updated_tenders_data');
+        if (updatedData) {
+          try {
+            data = JSON.parse(updatedData);
+            console.log('تم تحميل البيانات المحدثة من localStorage:', data);
+          } catch (e) {
+            console.warn('فشل في قراءة البيانات من localStorage، سيتم تحميل البيانات الأصلية');
+            localStorage.removeItem('updated_tenders_data');
           }
-        });
-
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
+        
+        // تحميل البيانات الأصلية إذا لم تكن متوفرة في localStorage
+        if (!data) {
+          // إضافة معلومة زمنية لتجنب الكاش
+          const timestamp = new Date().getTime();
+          const response = await fetch(`./assets/data/tenders.json?v=${timestamp}`, {
+            method: 'GET',
+            headers: {
+              'Cache-Control': 'no-cache',
+              'Pragma': 'no-cache'
+            }
+          });
 
-        const data = await response.json();
-        console.log('تم تحميل البيانات:', data);
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+          }
+
+          data = await response.json();
+          console.log('تم تحميل البيانات الأصلية:', data);
+        }
 
         if (!Array.isArray(data)) {
           throw new Error('البيانات المستلمة ليست مصفوفة');

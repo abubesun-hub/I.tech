@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>اختبار الحذف النهائي</title>
+  <style>
+    body { 
+      font-family: Arial, sans-serif; 
+      margin: 20px; 
+      background: #f5f5f5;
+      direction: rtl;
+    }
+    .test-container {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
+    }
+    button {
+      background: #007bff;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 4px;
+      cursor: pointer;
+      margin: 5px;
+    }
+    button:hover { background: #0056b3; }
+    .delete-btn { background: #dc3545; }
+    .delete-btn:hover { background: #c82333; }
+    .status {
+      padding: 10px;
+      border-radius: 4px;
+      margin: 10px 0;
+      font-weight: bold;
+    }
+    .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+    .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+    .info { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+    .tender-item {
+      border: 1px solid #ddd;
+      padding: 15px;
+      margin: 10px 0;
+      border-radius: 5px;
+      background: #f9f9f9;
+    }
+  </style>
+</head>
+<body>
+  <h1>اختبار نظام الحذف النهائي للمناقصات</h1>
+  
+  <div class="test-container">
+    <h2>إدارة البيانات</h2>
+    <button onclick="loadOriginalData()">تحميل البيانات الأصلية</button>
+    <button onclick="loadLocalData()">تحميل البيانات من localStorage</button>
+    <button onclick="clearLocalStorage()">مسح localStorage</button>
+    <button onclick="resetToOriginal()">إعادة تعيين للبيانات الأصلية</button>
+    <div id="status"></div>
+  </div>
+  
+  <div class="test-container">
+    <h2>المناقصات المتاحة</h2>
+    <div id="tenders-list"></div>
+  </div>
+
+  <script>
+    let currentTenders = [];
+    
+    function showStatus(message, type = 'info') {
+      const statusEl = document.getElementById('status');
+      statusEl.innerHTML = `<div class="status ${type}">${message}</div>`;
+      setTimeout(() => {
+        statusEl.innerHTML = '';
+      }, 5000);
+    }
+    
+    // تحميل البيانات الأصلية من ملف JSON
+    async function loadOriginalData() {
+      try {
+        showStatus('🔄 جاري تحميل البيانات الأصلية...', 'info');
+        const response = await fetch('./assets/data/tenders.json?v=' + Date.now());
+        const data = await response.json();
+        currentTenders = data;
+        renderTenders();
+        showStatus(`✅ تم تحميل ${data.length} مناقصة من الملف الأصلي`, 'success');
+      } catch (error) {
+        showStatus('❌ خطأ في تحميل البيانات الأصلية: ' + error.message, 'error');
+      }
+    }
+    
+    // تحميل البيانات من localStorage
+    function loadLocalData() {
+      try {
+        const localData = localStorage.getItem('updated_tenders_data');
+        if (localData) {
+          currentTenders = JSON.parse(localData);
+          renderTenders();
+          showStatus(`✅ تم تحميل ${currentTenders.length} مناقصة من localStorage`, 'success');
+        } else {
+          showStatus('⚠️ لا توجد بيانات محفوظة في localStorage', 'info');
+        }
+      } catch (error) {
+        showStatus('❌ خطأ في تحميل البيانات من localStorage: ' + error.message, 'error');
+      }
+    }
+    
+    // مسح localStorage
+    function clearLocalStorage() {
+      localStorage.removeItem('updated_tenders_data');
+      showStatus('🗑️ تم مسح البيانات من localStorage', 'info');
+    }
+    
+    // إعادة تعيين للبيانات الأصلية
+    async function resetToOriginal() {
+      await loadOriginalData();
+      localStorage.removeItem('updated_tenders_data');
+      showStatus('♻️ تم إعادة تعيين البيانات للحالة الأصلية', 'success');
+    }
+    
+    // حذف مناقصة نهائياً
+    async function deleteTender(tenderId) {
+      if (!confirm('هل أنت متأكد من حذف هذه المناقصة نهائياً؟')) {
+        return;
+      }
+      
+      try {
+        showStatus('🔄 جاري حذف المناقصة...', 'info');
+        
+        // العثور على المناقصة وحذفها
+        const tenderIndex = currentTenders.findIndex(t => t.id === tenderId);
+        if (tenderIndex === -1) {
+          showStatus('❌ لم يتم العثور على المناقصة', 'error');
+          return;
+        }
+        
+        const deletedTender = currentTenders[tenderIndex];
+        currentTenders.splice(tenderIndex, 1);
+        
+        // حفظ البيانات المحدثة في localStorage
+        localStorage.setItem('updated_tenders_data', JSON.stringify(currentTenders));
+        
+        // إعادة عرض المناقصات
+        renderTenders();
+        
+        showStatus(`✅ تم حذف المناقصة "${deletedTender.title}" نهائياً`, 'success');
+        
+      } catch (error) {
+        showStatus('❌ خطأ في حذف المناقصة: ' + error.message, 'error');
+      }
+    }
+    
+    // عرض المناقصات
+    function renderTenders() {
+      const container = document.getElementById('tenders-list');
+      
+      if (!currentTenders || currentTenders.length === 0) {
+        container.innerHTML = '<p>لا توجد مناقصات متاحة</p>';
+        return;
+      }
+      
+      container.innerHTML = currentTenders.map(tender => `
+        <div class="tender-item">
+          <h3>${tender.title}</h3>
+          <p><strong>الرقم:</strong> ${tender.number || tender.id}</p>
+          <p><strong>الجهة:</strong> ${tender.entity}</p>
+          <p><strong>الموعد النهائي:</strong> ${tender.deadline}</p>
+          <p><strong>الوصف:</strong> ${tender.description}</p>
+          <button class="delete-btn" onclick="deleteTender('${tender.id}')">🗑️ حذف نهائي</button>
+        </div>
+      `).join('');
+    }
+    
+    // تحميل البيانات عند بدء التشغيل
+    window.addEventListener('load', () => {
+      // التحقق من وجود بيانات في localStorage أولاً
+      const localData = localStorage.getItem('updated_tenders_data');
+      if (localData) {
+        loadLocalData();
+        showStatus('🔄 تم تحميل البيانات من localStorage تلقائياً', 'info');
+      } else {
+        loadOriginalData();
+      }
+    });
+  </script>
+</body>
+</html>

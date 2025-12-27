@@ -749,6 +749,119 @@
       return stats;
     }
 
+    // === وظائف حفظ وإدارة البيانات ===
+    
+    const UPDATED_TENDERS_KEY = 'updated_tenders_data';
+    
+    // حفظ البيانات المحدثة في localStorage
+    function saveUpdatedTenders(tenders) {
+      try {
+        localStorage.setItem(UPDATED_TENDERS_KEY, JSON.stringify({
+          data: tenders,
+          lastUpdate: new Date().toISOString(),
+          version: Date.now()
+        }));
+        console.log('✅ تم حفظ البيانات المحدثة في localStorage');
+        return true;
+      } catch (error) {
+        console.error('❌ خطأ في حفظ البيانات:', error);
+        return false;
+      }
+    }
+    
+    // تحميل البيانات المحدثة من localStorage
+    function getUpdatedTenders() {
+      try {
+        const stored = localStorage.getItem(UPDATED_TENDERS_KEY);
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          console.log('✅ تم تحميل البيانات المحدثة من localStorage');
+          return parsed.data;
+        }
+        return null;
+      } catch (error) {
+        console.error('❌ خطأ في تحميل البيانات المحدثة:', error);
+        return null;
+      }
+    }
+    
+    // محاولة حفظ البيانات عبر GitHub API
+    async function saveToGitHub(tenders) {
+      const owner = document.getElementById('githubOwner')?.value?.trim();
+      const repo = document.getElementById('githubRepo')?.value?.trim();
+      const branch = document.getElementById('githubBranch')?.value?.trim();
+      const path = document.getElementById('githubPath')?.value?.trim();
+      const token = document.getElementById('githubToken')?.value?.trim();
+      
+      if (!owner || !repo || !branch || !path || !token) {
+        console.warn('⚠️ إعدادات GitHub غير مكتملة - لن يتم الحفظ عبر GitHub');
+        return false;
+      }
+      
+      try {
+        // الحصول على SHA للملف الحالي
+        let sha = null;
+        const fileResponse = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Accept': 'application/vnd.github+json'
+          }
+        });
+        
+        if (fileResponse.ok) {
+          const fileData = await fileResponse.json();
+          sha = fileData.sha;
+        }
+        
+        // رفع الملف المحدث
+        const newContent = JSON.stringify(tenders, null, 2);
+        const base64Content = btoa(unescape(encodeURIComponent(newContent)));
+        
+        const updateData = {
+          message: `Update tenders data - ${new Date().toISOString()}`,
+          content: base64Content,
+          branch: branch
+        };
+        
+        if (sha) {
+          updateData.sha = sha;
+        }
+        
+        const updateResponse = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}`, {
+          method: 'PUT',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Accept': 'application/vnd.github+json',
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(updateData)
+        });
+        
+        if (updateResponse.ok) {
+          console.log('✅ تم حفظ البيانات عبر GitHub بنجاح');
+          return true;
+        } else {
+          console.error('❌ خطأ في حفظ البيانات عبر GitHub:', updateResponse.status);
+          return false;
+        }
+        
+      } catch (error) {
+        console.error('❌ خطأ في حفظ البيانات عبر GitHub:', error);
+        return false;
+      }
+    }
+    
+    // حفظ شامل (محلي + GitHub)
+    async function saveData(tenders) {
+      // حفظ في localStorage أولاً (سريع ومضمون)
+      const localSaved = saveUpdatedTenders(tenders);
+      
+      // محاولة حفظ عبر GitHub
+      const githubSaved = await saveToGitHub(tenders);
+      
+      return { localSaved, githubSaved };
+    }
+
     // === وظائف جدول المناقصات ===
     
     // تحميل وعرض جدول المناقصات
@@ -757,14 +870,24 @@
       container.innerHTML = '<div class="empty-state">🔄 جاري تحميل المناقصات...</div>';
       
       try {
-        // محاولة التحميل من ملف JSON
-        const response = await fetch('./assets/data/tenders.json?v=' + Date.now());
+        let tenders = null;
         
-        if (!response.ok) {
-          throw new Error(`خطأ في التحميل: ${response.status}`);
+        // محاولة تحميل البيانات المحدثة من localStorage أولاً
+        tenders = getUpdatedTenders();
+        
+        if (!tenders) {
+          // إذا لم توجد بيانات محدثة، تحميل من ملف JSON
+          console.log('📁 تحميل من ملف JSON الأصلي...');
+          const response = await fetch('./assets/data/tenders.json?v=' + Date.now());
+          
+          if (!response.ok) {
+            throw new Error(`خطأ في التحميل: ${response.status}`);
+          }
+          
+          tenders = await response.json();
+        } else {
+          console.log('💾 تم استخدام البيانات المحدثة من localStorage');
         }
-        
-        const tenders = await response.json();
         
         if (!Array.isArray(tenders) || tenders.length === 0) {
           container.innerHTML = '<div class="empty-state">📝 لا توجد مناقصات معلنة حتى الآن</div>';
@@ -918,9 +1041,15 @@
       }
       
       try {
-        // جلب البيانات الحالية
-        const response = await fetch('./assets/data/tenders.json?v=' + Date.now());
-        let tenders = await response.json();
+        showStatus('🔄 جاري حذف المناقصة...', 'info');
+        
+        // جلب البيانات الحالية (من localStorage أو الملف الأصلي)
+        let tenders = getUpdatedTenders();
+        
+        if (!tenders) {
+          const response = await fetch('./assets/data/tenders.json?v=' + Date.now());
+          tenders = await response.json();
+        }
         
         // البحث عن المناقصة
         const tenderIndex = tenders.findIndex(t => t.id === tenderId);
@@ -933,22 +1062,29 @@
         const deletedTender = tenders[tenderIndex];
         tenders.splice(tenderIndex, 1);
         
-        // تقليل العداد للفئة المحذوفة (اختياري)
-        if (deletedTender.category && numberingPatterns[deletedTender.category]) {
-          // يمكن إلغاء التعليق على السطر التالي إذا أردت تقليل العداد عند الحذف
-          // revertCounter(deletedTender.category);
+        // حفظ البيانات المحدثة
+        const saveResult = await saveData(tenders);
+        
+        let statusMessage = '';
+        if (saveResult.localSaved && saveResult.githubSaved) {
+          statusMessage = `✅ تم حذف المناقصة "${deletedTender.title}" نهائياً من الموقع ومن GitHub`;
+        } else if (saveResult.localSaved && !saveResult.githubSaved) {
+          statusMessage = `✅ تم حذف المناقصة "${deletedTender.title}" من الموقع. تحذير: لم يتم التحديث على GitHub`;
+        } else {
+          statusMessage = `❌ فشل في حفظ التغييرات للمناقصة "${deletedTender.title}"`;
         }
         
-        // هنا يجب إضافة آلية حفظ البيانات المحدثة
-        // (يتطلب تكامل مع GitHub API أو خدمة أخرى)
-        
-        // تنبيه: الحذف يعمل مؤقتاً فقط في المتصفح
-        console.warn('تنبيه: الحذف مؤقت فقط - لن يتم حفظه في الملف');
-        
-        showStatus(`⚠️ تم حذف المناقصة "${deletedTender.title}" مؤقتاً فقط. لحفظ التغيير اتصل بما لك النظام`, 'info');
+        showStatus(statusMessage, saveResult.localSaved ? 'success' : 'error');
         
         // إعادة تحميل الجدول
         loadTendersTable();
+        
+        console.log('🗑️ تم حذف المناقصة:', {
+          id: deletedTender.id,
+          title: deletedTender.title,
+          localSaved: saveResult.localSaved,
+          githubSaved: saveResult.githubSaved
+        });
         
       } catch (error) {
         console.error('خطأ في حذف المناقصة:', error);
