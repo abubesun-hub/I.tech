@@ -340,6 +340,17 @@
           <p style="color: #7f8c8d; text-align: center;">املأ البيانات أعلاه لمعاينة المناقصة</p>
         </div>
       </div>
+
+      <!-- جدول المناقصات المعلنة -->
+      <div class="tenders-table-section">
+        <div class="table-header">
+          <h3>المناقصات المعلنة</h3>
+          <button onclick="loadTendersTable()" class="btn-refresh">🔄 تحديث</button>
+        </div>
+        <div id="tendersTableContainer">
+          <div class="empty-state">📊 جاري تحميل المناقصات...</div>
+        </div>
+      </div>
     </div>
   </main>
 
@@ -641,7 +652,207 @@
       document.getElementById('tenderPostedDate').value = new Date().toISOString().split('T')[0];
       
       updatePreview();
+      
+      // تحميل جدول المناقصات
+      loadTendersTable();
     });
+
+    // === وظائف جدول المناقصات ===
+    
+    // تحميل وعرض جدول المناقصات
+    async function loadTendersTable() {
+      const container = document.getElementById('tendersTableContainer');
+      container.innerHTML = '<div class="empty-state">🔄 جاري تحميل المناقصات...</div>';
+      
+      try {
+        // محاولة التحميل من ملف JSON
+        const response = await fetch('./assets/data/tenders.json?v=' + Date.now());
+        
+        if (!response.ok) {
+          throw new Error(`خطأ في التحميل: ${response.status}`);
+        }
+        
+        const tenders = await response.json();
+        
+        if (!Array.isArray(tenders) || tenders.length === 0) {
+          container.innerHTML = '<div class="empty-state">📝 لا توجد مناقصات معلنة حتى الآن</div>';
+          return;
+        }
+        
+        // إنشاء الجدول
+        container.innerHTML = `
+          <table class="tenders-table">
+            <thead>
+              <tr>
+                <th>العنوان</th>
+                <th>الجهة</th>
+                <th>المدينة</th>
+                <th>الموعد النهائي</th>
+                <th>الحالة</th>
+                <th>الإجراءات</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${tenders.map(tender => createTenderRow(tender)).join('')}
+            </tbody>
+          </table>
+        `;
+        
+        console.log(`تم تحميل ${tenders.length} مناقصة في الجدول`);
+        
+      } catch (error) {
+        console.error('خطأ في تحميل المناقصات:', error);
+        container.innerHTML = `
+          <div class="empty-state">
+            ❌ خطأ في تحميل البيانات: ${error.message}
+            <br><button onclick="loadTendersTable()" class="btn-refresh" style="margin-top: 10px;">🔄 إعادة المحاولة</button>
+          </div>
+        `;
+      }
+    }
+    
+    // إنشاء صف في الجدول للمناقصة
+    function createTenderRow(tender) {
+      const formatDate = (dateStr) => {
+        if (!dateStr) return 'غير محدد';
+        try {
+          return new Date(dateStr).toLocaleDateString('ar-IQ');
+        } catch {
+          return dateStr;
+        }
+      };
+      
+      const getStatus = (tender) => {
+        if (!tender.deadline) return '❓ غير محدد';
+        
+        const deadline = new Date(tender.deadline);
+        const now = new Date();
+        
+        if (deadline < now) return '❌ منتهية';
+        
+        const daysLeft = Math.ceil((deadline - now) / (1000 * 60 * 60 * 24));
+        if (daysLeft <= 3) return `⚠️ ${daysLeft} أيام`;
+        
+        return '✅ نشطة';
+      };
+      
+      return `
+        <tr>
+          <td style="max-width: 200px; overflow: hidden; text-overflow: ellipsis;" title="${tender.title || 'بدون عنوان'}">
+            ${(tender.title || 'بدون عنوان').substring(0, 50)}${tender.title && tender.title.length > 50 ? '...' : ''}
+          </td>
+          <td>${tender.entity || 'غير محدد'}</td>
+          <td>${tender.city || 'غير محدد'}</td>
+          <td>${formatDate(tender.deadline)}</td>
+          <td>${getStatus(tender)}</td>
+          <td>
+            <div class="action-buttons">
+              <button onclick="editTender('${tender.id}')" class="btn-edit" title="تعديل">✏️</button>
+              <button onclick="deleteTender('${tender.id}')" class="btn-delete" title="حذف">🗑️</button>
+            </div>
+          </td>
+        </tr>
+      `;
+    }
+    
+    // تعديل مناقصة
+    function editTender(tenderId) {
+      if (!tenderId) {
+        showStatus('❌ معرف المناقصة غير صحيح', 'error');
+        return;
+      }
+      
+      // تحميل بيانات المناقصة في النموذج
+      loadTenderForEdit(tenderId);
+    }
+    
+    // تحميل مناقصة للتعديل
+    async function loadTenderForEdit(tenderId) {
+      try {
+        const response = await fetch('./assets/data/tenders.json?v=' + Date.now());
+        const tenders = await response.json();
+        
+        const tender = tenders.find(t => t.id === tenderId);
+        if (!tender) {
+          showStatus('❌ لم يتم العثور على المناقصة', 'error');
+          return;
+        }
+        
+        // ملء النموذج ببيانات المناقصة
+        document.getElementById('tenderId').value = tender.id || '';
+        document.getElementById('tenderTitle').value = tender.title || '';
+        document.getElementById('tenderEntity').value = tender.entity || '';
+        document.getElementById('tenderCategory').value = tender.category || '';
+        document.getElementById('tenderCity').value = tender.city || '';
+        document.getElementById('tenderAdNumber').value = tender.adNumber || '';
+        document.getElementById('tenderDeadline').value = tender.deadline || '';
+        document.getElementById('tenderPostedDate').value = tender.postedDate || tender.publishDate || '';
+        document.getElementById('tenderStatus').value = tender.status || 'نشط';
+        document.getElementById('tenderLink').value = tender.link || '';
+        document.getElementById('tenderDescription').value = tender.description || '';
+        document.getElementById('tenderDocPrice').value = tender.documentPrice || '';
+        document.getElementById('tenderCurrency').value = tender.currency || 'IQD';
+        document.getElementById('tenderPickupLocation').value = tender.pickupLocation || '';
+        document.getElementById('tenderSubmissionPlace').value = tender.submissionPlace || '';
+        document.getElementById('tenderRequirements').value = (tender.submissionRequirements || []).join('; ');
+        document.getElementById('tenderNotes').value = tender.notes || '';
+        document.getElementById('tenderPhone').value = tender.contact?.phone || '';
+        document.getElementById('tenderEmail').value = tender.contact?.email || '';
+        
+        // تحديث المعاينة
+        updatePreview();
+        
+        // التمرير إلى أعلى النموذج
+        document.getElementById('tenderForm').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        
+        showStatus('✅ تم تحميل بيانات المناقصة للتعديل', 'success');
+        
+      } catch (error) {
+        console.error('خطأ في تحميل بيانات المناقصة:', error);
+        showStatus('❌ خطأ في تحميل بيانات المناقصة: ' + error.message, 'error');
+      }
+    }
+    
+    // حذف مناقصة
+    async function deleteTender(tenderId) {
+      if (!tenderId) {
+        showStatus('❌ معرف المناقصة غير صحيح', 'error');
+        return;
+      }
+      
+      if (!confirm('هل أنت متأكد من حذف هذه المناقصة؟ لا يمكن التراجع عن هذا الإجراء.')) {
+        return;
+      }
+      
+      try {
+        // جلب البيانات الحالية
+        const response = await fetch('./assets/data/tenders.json?v=' + Date.now());
+        let tenders = await response.json();
+        
+        // البحث عن المناقصة
+        const tenderIndex = tenders.findIndex(t => t.id === tenderId);
+        if (tenderIndex === -1) {
+          showStatus('❌ لم يتم العثور على المناقصة', 'error');
+          return;
+        }
+        
+        // حذف المناقصة من المصفوفة
+        const deletedTender = tenders[tenderIndex];
+        tenders.splice(tenderIndex, 1);
+        
+        // هنا يجب إضافة آلية حفظ البيانات المحدثة
+        // (يتطلب تكامل مع GitHub API أو خدمة أخرى)
+        
+        showStatus(`✅ تم حذف المناقصة "${deletedTender.title}" بنجاح`, 'success');
+        
+        // إعادة تحميل الجدول
+        loadTendersTable();
+        
+      } catch (error) {
+        console.error('خطأ في حذف المناقصة:', error);
+        showStatus('❌ خطأ في حذف المناقصة: ' + error.message, 'error');
+      }
+    }
   </script>
 </body>
 </html>
