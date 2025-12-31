@@ -215,5 +215,31 @@
       "phone": "07817823680",
       "email": "itechanbar@gmail.com"
     }
+  },
+  {
+    "id": "2026-02",
+    "title": "إنشاء وتركيب نظام مستدام لتجميع مياه الأمطار",
+    "entity": "@",
+    "category": "منظمات",
+    "city": "@",
+    "adNumber": "NGO-TN-2025-002",
+    "deadline": "2026-01-04",
+    "postedDate": "2025-12-31",
+    "status": "مفتوح",
+    "link": "https://www.facebook.com/IraqsTenders",
+    "description": "إنشاء وتركيب نظام مستدام لتجميع مياه الأمطار",
+    "documentPrice": 0,
+    "currency": "USD",
+    "pickupLocation": "مكتب ايتك",
+    "submissionPlace": "مكتب ايتك",
+    "submissionRequirements": [
+      "@"
+    ],
+    "notes": "@",
+    "files": [],
+    "contact": {
+      "phone": "07817823680",
+      "email": "itechanbar@gmail.com"
+    }
   }
 ]
