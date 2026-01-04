@@ -260,5 +260,31 @@
       "phone": "07817823680",
       "email": "itechanbar@gmail.com"
     }
+  },
+  {
+    "id": "005",
+    "title": "تصميم وتطوير وتنفيذ مكونات نظام معلومات إدارة الضمان الاجتماعي المتكاملة والمحسّنة لوزارة العمل والشؤون الاجتماعية في العراق",
+    "entity": "@",
+    "category": "منظمات",
+    "city": "@",
+    "adNumber": "NGO-TN-2026-003",
+    "deadline": "2026-01-10",
+    "postedDate": "2026-01-04",
+    "status": "مفتوح",
+    "link": "https://www.facebook.com/IraqsTenders",
+    "description": "@",
+    "documentPrice": 0,
+    "currency": "IQD",
+    "pickupLocation": "ايتك",
+    "submissionPlace": "@",
+    "submissionRequirements": [
+      "@"
+    ],
+    "notes": "@",
+    "files": [],
+    "contact": {
+      "phone": "07817823680",
+      "email": "itechanbar@gmail.com"
+    }
   }
 ]
