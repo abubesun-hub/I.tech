@@ -21,6 +21,20 @@ Start-Process "http://localhost:8080/index.html"
 ## مناقصات العراق — مصدر البيانات
 تعتمد الصفحة الآن على ملف JSON داخل الموقع: [assets/data/tenders.json](assets/data/tenders.json). يتم تحميله مباشرة بدون أي Backend.
 
+## البرامج — صفحة جديدة
+يوجد الآن صفحة لاستعراض موجز البرامج المنجزة: [programs.html](programs.html). تم إعدادها ببنية بطاقات جاهزة وتعمل كصفحة ثابتة حاليًا.
+
+### مصدر بيانات البرامج (اختياري)
+يمكن لاحقًا ربط الصفحة بملف JSON مشابه لآلية المناقصات. تم إنشاء نموذج أولي: [assets/data/programs.json](assets/data/programs.json).
+- الحقول المقترحة: `id, name, logo, image, shortDescription, features[], link`.
+- تمت إضافة عارض ديناميكي في [js/main.js](js/main.js) يقوم بقراءة الملف تلقائياً إذا كانت الصفحة تحتوي على عنصر بقيمة `id="programs"`.
+
+### أين أضيف البرامج؟
+- طريقة ديناميكية: أضف كل برنامج كسجل جديد داخل [assets/data/programs.json](assets/data/programs.json) بنفس البنية المذكورة أعلاه؛ ستظهر البطاقات تلقائياً في صفحة البرامج.
+- طريقة ثابتة: حرّر [programs.html](programs.html) وأضف بطاقة جديدة داخل قسم الشبكة `#programs` باستخدام نفس بنية البطاقات الحالية.
+
+> ملاحظة: الصفحة تعرض حالياً بطاقات Placeholder، وسيتم تغذيتها لاحقًا وفق المصدر الذي تختارونه.
+
 ## إضافة إعلان جديد (بدون Backend)
 - افتح صفحة الإدارة: [tender-admin.html](tender-admin.html).
 - املأ كافة الحقول المطلوبة.

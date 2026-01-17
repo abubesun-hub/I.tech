@@ -220,6 +220,22 @@ async function loadData() {
   }
 }
 
+// --- برامج: تحميل بيانات البرامج من JSON مع كاش بسيط ---
+async function loadProgramsData() {
+  try {
+    const cacheKey = 'itech_programs_cache';
+    const ttlMs = 15 * 60 * 1000;
+    const cache = (() => { try { return JSON.parse(localStorage.getItem(cacheKey) || 'null'); } catch { return null; } })();
+    if (cache && (Date.now() - cache.ts < ttlMs) && Array.isArray(cache.data)) return cache.data;
+    const r = await fetch('./assets/data/programs.json');
+    const j = await r.json();
+    localStorage.setItem(cacheKey, JSON.stringify({ ts: Date.now(), data: j }));
+    return j;
+  } catch (e) {
+    return [];
+  }
+}
+
 // Tenders page basic interactions
 (function(){
   const list = document.getElementById('tendersList');
@@ -442,4 +458,47 @@ async function loadData() {
       }
     })
     .catch(() => { container.innerHTML = '<p class="under-construction">تعذر تحميل التفاصيل.</p>'; });
+})();
+
+// Programs page: render from assets/data/programs.json if available
+(function(){
+  const grid = document.getElementById('programs');
+  if (!grid) return;
+
+  function render(items) {
+    grid.innerHTML = '';
+    items.forEach(p => {
+      const card = document.createElement('article');
+      card.className = 'card program-card reveal';
+      const features = Array.isArray(p.features) ? p.features.slice(0, 3) : [];
+      card.innerHTML = `
+        ${p.image ? `<img src="${p.image}" alt="${p.name}" class="card-img" loading="lazy" />` : ''}
+        <h2>${p.logo ? `<img src="${p.logo}" alt="لوغو ${p.name}" style="width:32px;height:32px;object-fit:contain;margin-left:8px;vertical-align:middle">` : ''}${p.name||'برنامج'}</h2>
+        ${p.shortDescription ? `<p class="tender-desc">${p.shortDescription}</p>` : ''}
+        ${features.length ? `<ul>${features.map(f=>`<li>${f}</li>`).join('')}</ul>` : ''}
+        <div class="actions">
+          <a class="btn link" href="${p.link||'#'}">تفاصيل لاحقًا</a>
+        </div>
+      `;
+      grid.appendChild(card);
+    });
+  }
+
+  loadProgramsData()
+    .then(arr => {
+      if (!Array.isArray(arr) || arr.length === 0) {
+        const msg = document.createElement('p');
+        msg.className = 'under-construction';
+        msg.textContent = 'لا توجد برامج حالياً. سيتم إضافة المحتوى لاحقاً.';
+        grid.parentElement.insertBefore(msg, grid);
+        return;
+      }
+      render(arr);
+    })
+    .catch(() => {
+      const msg = document.createElement('p');
+      msg.className = 'under-construction';
+      msg.textContent = 'تعذر تحميل بيانات البرامج.';
+      grid.parentElement.insertBefore(msg, grid);
+    });
 })();
