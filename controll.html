@@ -17,22 +17,50 @@
       </div>
       <h2 style="margin-bottom:24px;">تسجيل دخول المسؤول</h2>
       <div class="form">
+        <input type="text" id="admin-user" placeholder="اسم المستخدم" style="margin-bottom:12px;text-align:center;">
         <input type="password" id="admin-pass" placeholder="كلمة المرور" style="margin-bottom:16px;text-align:center;">
-        <button class="btn primary" style="width:100%;" onclick="checkAdmin()">دخول</button>
-        <p id="login-error" style="color:#ef4444;display:none;margin-top:12px;font-weight:bold;">كلمة المرور غير صحيحة</p>
+        <button class="btn primary" id="btn-login" style="width:100%;">دخول</button>
+        <p id="login-error" style="color:#ef4444;display:none;margin-top:12px;font-weight:bold;">فشل تسجيل الدخول</p>
       </div>
     </div>
   </div>
   <script>
-    function checkAdmin() {
-      const p = document.getElementById('admin-pass').value;
-      if(p === 'admin123') { 
-        document.getElementById('login-overlay').style.opacity = '0';
-        setTimeout(() => document.getElementById('login-overlay').style.display = 'none', 300);
-      } else {
-        document.getElementById('login-error').style.display = 'block';
+    // ملاحظة أمنية: لا يمكن إخفاء كلمات المرور في ملفات الواجهة الأمامية.
+    // الحل: التحقق يتم من جهة خادم (Web App) ويعيد رمز وصول (Token).
+    const LOGIN_URL = window.ITECH_LOGIN_URL || 'https://script.google.com/macros/s/AKfycbxJL5THQR4YfjSYehmozhTeEkmUFmv70cJLJljVOxh3A7xqj7HIOJljPbn-MtxFPGybGA/exec'; // اضبطه إلى رابط النشر من Google Apps Script
+    const elOverlay = document.getElementById('login-overlay');
+    const elErr = document.getElementById('login-error');
+    const elBtn = document.getElementById('btn-login');
+    async function doLogin(){
+      elErr.style.display = 'none';
+      const u = (document.getElementById('admin-user').value||'').trim();
+      const p = (document.getElementById('admin-pass').value||'').trim();
+      if(!LOGIN_URL || LOGIN_URL.includes('YOUR_APPS_SCRIPT_WEBAPP_URL')){
+        elErr.textContent = 'خدمة تسجيل الدخول غير مُعدة. الرجاء تهيئة رابط الخادم.';
+        elErr.style.display = 'block';
+        return;
+      }
+      try {
+        elBtn.disabled = true;
+        const url = `${LOGIN_URL}?action=login&user=${encodeURIComponent(u)}&pass=${encodeURIComponent(p)}`;
+        const r = await fetch(url, { method: 'GET', credentials: 'omit' });
+        const j = await r.json();
+        if(j && j.ok && j.token){
+          sessionStorage.setItem('itech_token', j.token);
+          elOverlay.style.opacity = '0';
+          setTimeout(()=>{ elOverlay.style.display = 'none'; }, 300);
+        } else {
+          elErr.textContent = 'بيانات الدخول غير صحيحة';
+          elErr.style.display = 'block';
+        }
+      } catch(e){
+        elErr.textContent = 'تعذر الاتصال بالخادم';
+        elErr.style.display = 'block';
+      } finally {
+        elBtn.disabled = false;
       }
     }
+    document.getElementById('btn-login').addEventListener('click', doLogin);
   </script>
   <header class="nav">
     <div class="brand">
@@ -46,11 +74,11 @@
     </div>
     <nav class="menu">
       <a href="index.html">الرئيسية</a>
-      <a href="tenders.html">مناقصات العراق</a>
+      <a href="tenders-new.html">مناقصات العراق</a>
       <a href="about.html">من نحن</a>
       <a href="services.html">الخدمات</a>
       <a href="contact.html">تواصل معنا</a>
-      <a href="tender-admin.html?user=Abubesun&pass=Ahmed1985" class="pill">إضافة مناقصة</a>
+      <a href="add-tender.html" class="pill">إضافة مناقصة</a>
     </nav>
     <button class="burger" aria-label="فتح القائمة" aria-expanded="false">☰</button>
   </header>

@@ -1,0 +1,775 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>مناقصات العراق | I.TECH</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./css/main.css" />
+  <style>
+    .theme-toggle {
+      background: none;
+      border: none;
+      font-size: 20px;
+      cursor: pointer;
+      padding: 8px;
+      border-radius: 50%;
+      transition: background-color 0.3s ease;
+      margin-left: 10px;
+    }
+    .theme-toggle:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+    [data-theme="dark"] .theme-toggle:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
+    
+    .tender-item {
+      background: white;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 15px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      transition: transform 0.2s;
+    }
+    .tender-item:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    }
+    .tender-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: #2c3e50;
+      margin-bottom: 10px;
+    }
+    .tender-meta {
+      font-size: 14px;
+      color: #7f8c8d;
+      margin-bottom: 8px;
+    }
+    .tender-description {
+      color: #34495e;
+      margin-bottom: 15px;
+      line-height: 1.5;
+    }
+    .tender-actions {
+      display: flex;
+      gap: 10px;
+    }
+    .btn-primary {
+      background: #3498db;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-block;
+    }
+    .btn-secondary {
+      background: #95a5a6;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-block;
+    }
+    .loading {
+      text-align: center;
+      padding: 40px;
+      font-size: 18px;
+      color: #7f8c8d;
+    }
+    .error {
+      background: #e74c3c;
+      color: white;
+      padding: 20px;
+      border-radius: 8px;
+      margin: 20px 0;
+      text-align: center;
+    }
+    .search-section {
+      background: #f8f9fa;
+      padding: 20px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+    }
+    .search-row {
+      display: flex;
+      gap: 15px;
+      margin-bottom: 15px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .search-input-group {
+      flex: 1;
+      min-width: 300px;
+      display: flex;
+      background: white;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      overflow: hidden;
+    }
+    .search-input-group input {
+      flex: 1;
+      padding: 12px 15px;
+      border: none;
+      outline: none;
+      font-size: 16px;
+      font-family: 'Cairo', sans-serif;
+    }
+    .search-btn {
+      background: #3498db;
+      color: white;
+      border: none;
+      padding: 12px 20px;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: 600;
+      transition: background 0.3s;
+    }
+    .search-btn:hover {
+      background: #2980b9;
+    }
+    .sort-dropdown {
+      padding: 12px 15px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      background: white;
+      font-size: 16px;
+      font-family: 'Cairo', sans-serif;
+      min-width: 180px;
+    }
+    .filters {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .filters-label {
+      font-weight: 600;
+      color: #2c3e50;
+      margin-left: 10px;
+    }
+    .filter-btn {
+      padding: 8px 16px;
+      border: 1px solid #3498db;
+      background: white;
+      color: #3498db;
+      border-radius: 20px;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-size: 14px;
+      font-weight: 500;
+    }
+    .filter-btn.active {
+      background: #3498db;
+      color: white;
+    }
+    .filter-btn:hover {
+      background: #3498db;
+      color: white;
+    }
+    @media (max-width: 768px) {
+      .search-row {
+        flex-direction: column;
+      }
+      .search-input-group {
+        min-width: 100%;
+      }
+      .sort-dropdown {
+        width: 100%;
+      }
+    }
+    .stats {
+      background: #f8f9fa;
+      padding: 15px;
+      border-radius: 6px;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+
+    /* تنسيقات الوضع الليلي */
+    [data-theme="dark"] .search-section {
+      background: rgba(30, 41, 59, 0.8);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    [data-theme="dark"] .search-input-group {
+      background: rgba(45, 55, 72, 0.9);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    [data-theme="dark"] .search-input-group input {
+      background: transparent;
+      color: #e2e8f0;
+    }
+
+    [data-theme="dark"] .search-input-group input::placeholder {
+      color: #a0aec0;
+    }
+
+    [data-theme="dark"] .sort-dropdown {
+      background: rgba(45, 55, 72, 0.9);
+      color: #e2e8f0;
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    [data-theme="dark"] .filters-label {
+      color: #e2e8f0;
+    }
+
+    [data-theme="dark"] .filter-btn {
+      background: rgba(45, 55, 72, 0.7);
+      color: #3498db;
+      border-color: #3498db;
+    }
+
+    [data-theme="dark"] .filter-btn.active {
+      background: #3498db;
+      color: white;
+    }
+
+    [data-theme="dark"] .filter-btn:hover {
+      background: #3498db;
+      color: white;
+    }
+
+    [data-theme="dark"] .stats {
+      background: rgba(30, 41, 59, 0.8);
+      color: #e2e8f0;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    [data-theme="dark"] .tender-item {
+      background: rgba(30, 41, 59, 0.8);
+      border-color: rgba(255, 255, 255, 0.1);
+      color: #e2e8f0;
+    }
+
+    [data-theme="dark"] .tender-title {
+      color: #f7fafc;
+    }
+
+    [data-theme="dark"] .tender-meta {
+      color: #a0aec0;
+    }
+
+    [data-theme="dark"] .tender-description {
+      color: #cbd5e0;
+    }
+
+    [data-theme="dark"] .loading {
+      color: #a0aec0;
+    }
+
+    [data-theme="dark"] .btn-primary {
+      background: #3498db;
+      color: white;
+    }
+
+    [data-theme="dark"] .btn-primary:hover {
+      background: #2980b9;
+    }
+
+    [data-theme="dark"] .btn-secondary {
+      background: #4a5568;
+      color: #e2e8f0;
+    }
+
+    [data-theme="dark"] .btn-secondary:hover {
+      background: #2d3748;
+    }
+  </style>
+</head>
+<body class="page-tenders">
+  <header class="nav">
+    <div class="brand">
+      <div class="logo-circle">
+        <img src="./assets/images/I-Tech logo.png" alt="شعار ايتك I.TECH" />
+      </div>
+      <div class="names">
+        <div class="ar">ايتك</div>
+        <div class="en">I.TECH</div>
+      </div>
+    </div>
+    <nav class="menu">
+      <a href="index.html">الرئيسية</a>
+      <a href="tenders-new.html" class="active">مناقصات العراق</a>
+      <a href="about.html">من نحن</a>
+      <a href="contact.html">تواصل معنا</a>
+    </nav>
+    <button class="theme-toggle" onclick="toggleTheme()" title="تبديل الوضع">🌙</button>
+    <button class="burger" aria-label="فتح القائمة">☰</button>
+  </header>
+
+  <main class="container">
+    <section class="card">
+      <h1>مناقصات العراق</h1>
+      <p>جميع المناقصات الحكومية والخاصة في العراق</p>
+      
+      <div class="stats" id="stats">
+        <span>جاري التحميل...</span>
+      </div>
+      
+      <div class="search-section">
+        <div class="search-row">
+          <div class="search-input-group">
+            <input type="text" id="searchInput" placeholder="ابحث عن مناقصة (جهة، عنوان، مدينة)">
+            <button class="search-btn" onclick="performSearch()">بحث</button>
+          </div>
+          <select class="sort-dropdown" id="sortDropdown" onchange="applySorting()">
+            <option value="deadline">الأقرب للانتهاء</option>
+            <option value="newest">الأحدث</option>
+            <option value="oldest">الأقدم</option>
+            <option value="title">ترتيب أبجدي</option>
+          </select>
+        </div>
+        
+        <div class="filters">
+          <span class="filters-label">ترتيب:</span>
+          <button class="filter-btn active" data-filter="all" onclick="setFilter('all')">الكل</button>
+          <button class="filter-btn" data-filter="المنطقة" onclick="setFilter('المنطقة')">المنطقة</button>
+          <button class="filter-btn" data-filter="حكومية" onclick="setFilter('حكومية')">حكومية</button>
+          <button class="filter-btn" data-filter="خاصة" onclick="setFilter('خاصة')">خاصة</button>
+          <button class="filter-btn" data-filter="شركات" onclick="setFilter('شركات')">شركات</button>
+          <button class="filter-btn" data-filter="جامعات" onclick="setFilter('جامعات')">جامعات</button>
+        </div>
+      </div>
+      
+      <div id="tendersContainer">
+        <div class="loading">جاري تحميل المناقصات...</div>
+      </div>
+      
+      <div class="actions" style="margin-top: 30px;">
+        <a href="index.html" class="btn-secondary">العودة إلى الرئيسية</a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <small>© 2025 I.TECH - مناقصات العراق</small>
+  </footer>
+
+  <script>
+    // البيانات والحالة
+    let allTenders = [];
+    let filteredTenders = [];
+    let currentFilter = 'all';
+    let searchQuery = '';
+    let currentSort = 'deadline';
+
+    // العناصر
+    const container = document.getElementById('tendersContainer');
+    const searchInput = document.getElementById('searchInput');
+    const statsDiv = document.getElementById('stats');
+
+    // وظائف البحث والفلترة الجديدة
+    function performSearch() {
+      const searchValue = searchInput.value.trim();
+      searchQuery = searchValue;
+      console.log('البحث عن:', searchQuery);
+      applyFilters();
+    }
+
+    function applySorting() {
+      const sortDropdown = document.getElementById('sortDropdown');
+      currentSort = sortDropdown.value;
+      console.log('ترتيب حسب:', currentSort);
+      sortTenders();
+      renderTenders();
+    }
+
+    function sortTenders() {
+      filteredTenders.sort((a, b) => {
+        switch (currentSort) {
+          case 'deadline':
+            const dateA = new Date(a.deadline || '2099-12-31');
+            const dateB = new Date(b.deadline || '2099-12-31');
+            return dateA - dateB;
+          case 'newest':
+            const postedA = new Date(a.postedDate || a.publishDate || '1900-01-01');
+            const postedB = new Date(b.postedDate || b.publishDate || '1900-01-01');
+            return postedB - postedA;
+          case 'oldest':
+            const oldA = new Date(a.postedDate || a.publishDate || '2099-12-31');
+            const oldB = new Date(b.postedDate || b.publishDate || '2099-12-31');
+            return oldA - oldB;
+          case 'title':
+            return (a.title || '').localeCompare(b.title || '', 'ar');
+          default:
+            return 0;
+        }
+      });
+    }
+
+    function setFilter(filter) {
+      currentFilter = filter;
+      
+      // تحديث مظهر الأزرار
+      document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.classList.remove('active');
+      });
+      document.querySelector(`[data-filter="${filter}"]`).classList.add('active');
+      
+      console.log('فلتر حسب:', filter);
+      applyFilters();
+    }
+
+    // تطبيق الفلاتر والبحث
+    function applyFilters() {
+      filteredTenders = allTenders.filter(tender => {
+        // فلتر البحث
+        const matchesSearch = !searchQuery || 
+          (tender.title && tender.title.toLowerCase().includes(searchQuery.toLowerCase())) ||
+          (tender.entity && tender.entity.toLowerCase().includes(searchQuery.toLowerCase())) ||
+          (tender.city && tender.city.toLowerCase().includes(searchQuery.toLowerCase())) ||
+          (tender.description && tender.description.toLowerCase().includes(searchQuery.toLowerCase()));
+        
+        // فلتر الفئة
+        let matchesFilter = true;
+        if (currentFilter !== 'all') {
+          switch (currentFilter) {
+            case 'حكومية':
+              matchesFilter = tender.category === 'حكومية' || tender.type === 'حكومية' || (tender.entity && tender.entity.includes('وزارة'));
+              break;
+            case 'خاصة':
+              matchesFilter = tender.category === 'خاصة' || tender.type === 'خاصة';
+              break;
+            case 'شركات':
+              matchesFilter = tender.category === 'شركات' || tender.type === 'شركات' || (tender.entity && tender.entity.includes('شركة'));
+              break;
+            case 'جامعات':
+              matchesFilter = tender.category === 'جامعات' || tender.type === 'جامعات' || (tender.entity && (tender.entity.includes('جامعة') || tender.entity.includes('كلية')));
+              break;
+            case 'المنطقة':
+              // فلترة حسب المنطقة - يمكن تخصيصها لاحقاً
+              matchesFilter = true;
+              break;
+            default:
+              matchesFilter = true;
+          }
+        }
+        
+        return matchesSearch && matchesFilter;
+      });
+
+      console.log(`تطبيق الفلتر: ${filteredTenders.length} من ${allTenders.length}`);
+      sortTenders();
+      updateStats();
+      renderTenders();
+    }
+
+    // البحث عند الكتابة
+    searchInput.addEventListener('input', (e) => {
+      searchQuery = e.target.value.trim();
+      applyFilters();
+    });
+
+    // البحث عند الضغط على Enter
+    searchInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        performSearch();
+      }
+    });
+
+    // تحميل البيانات
+    async function loadTenders() {
+      try {
+        console.log('بدء تحميل المناقصات...');
+        
+        let data;
+        
+        // التحقق من وجود بيانات محدثة في localStorage
+        const updatedData = localStorage.getItem('updated_tenders_data');
+        if (updatedData) {
+          try {
+            const parsedData = JSON.parse(updatedData);
+            // التحقق من نوع البيانات المحفوظة
+            if (Array.isArray(parsedData)) {
+              // البيانات محفوظة مباشرة كمصفوفة
+              data = parsedData;
+              console.log('تم تحميل البيانات المحدثة من localStorage (مصفوفة مباشرة):', data.length, 'مناقصة');
+            } else if (parsedData && Array.isArray(parsedData.data)) {
+              // البيانات محفوظة في كائن مع خاصية data
+              data = parsedData.data;
+              console.log('تم تحميل البيانات المحدثة من localStorage (كائن):', data.length, 'مناقصة');
+            } else {
+              console.warn('البيانات في localStorage لا تحتوي على مصفوفة، سيتم حذفها وتحميل البيانات الأصلية');
+              localStorage.removeItem('updated_tenders_data');
+            }
+          } catch (e) {
+            console.warn('فشل في قراءة البيانات من localStorage، سيتم تحميل البيانات الأصلية');
+            localStorage.removeItem('updated_tenders_data');
+          }
+        }
+        
+        // تحميل البيانات الأصلية إذا لم تكن متوفرة في localStorage
+        if (!data) {
+          // إضافة معلومة زمنية لتجنب الكاش
+          const timestamp = new Date().getTime();
+          const response = await fetch(`./assets/data/tenders.json?v=${timestamp}`, {
+            method: 'GET',
+            headers: {
+              'Cache-Control': 'no-cache',
+              'Pragma': 'no-cache'
+            }
+          });
+
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+          }
+
+          data = await response.json();
+          console.log('تم تحميل البيانات الأصلية:', data);
+        }
+
+        if (!Array.isArray(data)) {
+          throw new Error('البيانات المستلمة ليست مصفوفة');
+        }
+
+        allTenders = data;
+        filteredTenders = [...allTenders];
+        
+        console.log(`تم تحميل ${allTenders.length} مناقصة بنجاح`);
+        
+        setupFilters();
+        sortTenders(); // تطبيق الترتيب الافتراضي
+        updateStats();
+        renderTenders();
+        
+      } catch (error) {
+        console.error('خطأ في تحميل المناقصات:', error);
+        
+        // في حالة خطأ البيانات، جرب مسح localStorage والمحاولة مرة أخرى
+        if (error.message.includes('ليست مصفوفة') && localStorage.getItem('updated_tenders_data')) {
+          console.log('محاولة إصلاح البيانات بمسح localStorage...');
+          localStorage.removeItem('updated_tenders_data');
+          
+          // إعادة محاولة التحميل بدون localStorage
+          try {
+            const timestamp = new Date().getTime();
+            const response = await fetch(`./assets/data/tenders.json?v=${timestamp}`);
+            const originalData = await response.json();
+            
+            if (Array.isArray(originalData)) {
+              allTenders = originalData;
+              filteredTenders = [...allTenders];
+              setupFilters();
+              sortTenders();
+              updateStats();
+              renderTenders();
+              
+              showStatus('تم إصلاح المشكلة وتحميل البيانات الأصلية', 'success');
+              return;
+            }
+          } catch (retryError) {
+            console.error('فشل في إعادة المحاولة:', retryError);
+          }
+        }
+        
+        showError(`فشل في تحميل المناقصات: ${error.message}`);
+      }
+    }
+
+    // إعداد الفلاتر (تتم تلقائياً الآن)
+    function setupFilters() {
+      // لا حاجة لإعداد إضافي - الفلاتر مُضافة في HTML مباشرة
+      console.log('الفلاتر جاهزة');
+    }
+
+    // تحديث الإحصائيات
+    function updateStats() {
+      const total = allTenders.length;
+      const filtered = filteredTenders.length;
+      const active = filteredTenders.filter(t => t.status !== 'منتهي' && t.status !== 'مغلق').length;
+      
+      statsDiv.innerHTML = `
+        <strong>${filtered}</strong> مناقصة من أصل ${total} | 
+        <strong>${active}</strong> مناقصة نشطة
+      `;
+    }
+
+    // عرض المناقصات
+    function renderTenders() {
+      console.log(`عرض ${filteredTenders.length} مناقصة`);
+      
+      if (filteredTenders.length === 0) {
+        container.innerHTML = `
+          <div style="text-align: center; padding: 40px; color: #7f8c8d;">
+            <h3>لا توجد مناقصات مطابقة</h3>
+            <p>جرب تغيير معايير البحث أو الفلتر</p>
+            <a href="controll.html" class="btn-primary">لوحة التحكم</a>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = filteredTenders.map(tender => createTenderHTML(tender)).join('');
+    }
+
+    // إنشاء HTML للمناقصة
+    function createTenderHTML(tender) {
+      const formatDate = (dateStr) => {
+        if (!dateStr) return 'غير محدد';
+        try {
+          return new Date(dateStr).toLocaleDateString('ar-IQ');
+        } catch {
+          return dateStr;
+        }
+      };
+
+      const calculateDaysLeft = (deadline) => {
+        if (!deadline) return null;
+        try {
+          const deadlineDate = new Date(deadline);
+          const today = new Date();
+          const diffTime = deadlineDate - today;
+          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+          return diffDays;
+        } catch {
+          return null;
+        }
+      };
+
+      const daysLeft = calculateDaysLeft(tender.deadline);
+      let deadlineInfo = '';
+      if (daysLeft !== null) {
+        if (daysLeft < 0) {
+          deadlineInfo = '<span style="color: #e74c3c; font-weight: 600;">منتهية</span>';
+        } else if (daysLeft === 0) {
+          deadlineInfo = '<span style="color: #f39c12; font-weight: 600;">تنتهي اليوم</span>';
+        } else {
+          deadlineInfo = `<span style="color: #27ae60; font-weight: 600;">باقي ${daysLeft} يوم</span>`;
+        }
+      }
+
+      return `
+        <div class="tender-item">
+          <div class="tender-title">${tender.title || 'بدون عنوان'}</div>
+          
+          <div class="tender-meta">
+            <strong>الجهة:</strong> ${tender.entity || 'غير محدد'} | 
+            <strong>التصنيف:</strong> ${tender.category || 'غير محدد'} | 
+            <strong>المدينة:</strong> ${tender.city || 'غير محدد'}
+          </div>
+          
+          ${tender.deadline ? `
+            <div class="tender-meta">
+              <strong>الموعد النهائي:</strong> ${formatDate(tender.deadline)} ${deadlineInfo}
+            </div>
+          ` : ''}
+          
+          ${tender.adNumber ? `
+            <div class="tender-meta">
+              <strong>رقم الإعلان:</strong> ${tender.adNumber}
+            </div>
+          ` : ''}
+          
+          ${tender.description ? `
+            <div class="tender-description">${tender.description}</div>
+          ` : ''}
+          
+          <div class="tender-actions">
+            <a href="tender.html?id=${encodeURIComponent(tender.id)}" class="btn-primary">عرض التفاصيل</a>
+            ${tender.link && tender.link !== '#' ? 
+              `<a href="${tender.link}" target="_blank" class="btn-secondary">المصدر الأصلي</a>` : 
+              ''
+            }
+          </div>
+        </div>
+      `;
+    }
+
+    // عرض خطأ
+    function showError(message) {
+      const isDataIssue = message.includes('ليست مصفوفة') || message.includes('localStorage');
+      container.innerHTML = `
+        <div class="error">
+          <h3>خطأ في التحميل</h3>
+          <p>${message}</p>
+          <div style="margin-top: 15px;">
+            <button onclick="loadTenders()" class="btn-secondary">إعادة المحاولة</button>
+            ${isDataIssue ? '<button onclick="window.open(\'fix-storage.html\', \'_blank\')" class="btn-primary" style="margin-right: 10px;">إصلاح البيانات</button>' : ''}
+          </div>
+        </div>
+      `;
+    }
+
+    // عرض رسالة الحالة
+    function showStatus(message, type = 'info') {
+      const statusClass = type === 'success' ? 'tender-item' : 'error';
+      container.innerHTML = `
+        <div class="${statusClass}" style="text-align: center; background: ${type === 'success' ? '#d4edda' : '#f8d7da'}; color: ${type === 'success' ? '#155724' : '#721c24'};">
+          <h3>${type === 'success' ? '✅ تم بنجاح' : '⚠️ تنبيه'}</h3>
+          <p>${message}</p>
+          <button onclick="loadTenders()" class="btn-primary">متابعة</button>
+        </div>
+      `;
+      
+      // إخفاء الرسالة تلقائياً بعد 3 ثوان
+      if (type === 'success') {
+        setTimeout(() => {
+          loadTenders();
+        }, 3000);
+      }
+    }
+
+    // البحث
+    searchInput.addEventListener('input', (e) => {
+      searchQuery = e.target.value.trim();
+      applyFilters();
+    });
+
+    // فلتر "الكل"
+    document.querySelector('[data-filter="all"]').addEventListener('click', () => setFilter('all'));
+
+    // وظائف الوضع الليلي
+    function toggleTheme() {
+      const currentTheme = document.documentElement.getAttribute('data-theme');
+      const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+      
+      if (newTheme === 'dark') {
+        document.documentElement.setAttribute('data-theme', 'dark');
+      } else {
+        document.documentElement.removeAttribute('data-theme');
+      }
+      localStorage.setItem('itech_theme', newTheme);
+      
+      // تحديث أيقونة الزر
+      const themeBtn = document.querySelector('.theme-toggle');
+      if (themeBtn) {
+        themeBtn.textContent = newTheme === 'dark' ? '🌞' : '🌙';
+      }
+    }
+    
+    function initializeTheme() {
+      const savedTheme = localStorage.getItem('itech_theme') || 'light';
+      document.documentElement.setAttribute('data-theme', savedTheme === 'dark' ? 'dark' : '');
+      
+      const themeBtn = document.querySelector('.theme-toggle');
+      if (themeBtn) {
+        themeBtn.textContent = savedTheme === 'dark' ? '🌞' : '🌙';
+      }
+    }
+    
+    // تحميل البيانات عند تحميل الصفحة
+    document.addEventListener('DOMContentLoaded', () => {
+      initializeTheme();
+      loadTenders();
+    });
+    
+    // قائمة الموبايل
+    const burger = document.querySelector('.burger');
+    const menu = document.querySelector('.menu');
+    if (burger && menu) {
+      burger.addEventListener('click', () => {
+        menu.classList.toggle('open');
+      });
+    }
+  </script>
+</body>
+</html>

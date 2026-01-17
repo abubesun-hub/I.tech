@@ -1,0 +1,1096 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>إضافة مناقصة جديدة | I.TECH</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./css/main.css" />
+  <style>
+    .form-container {
+      max-width: 800px;
+      margin: 0 auto;
+      background: white;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    .form-group {
+      margin-bottom: 20px;
+    }
+    .form-group label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: 600;
+      color: #2c3e50;
+    }
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 14px;
+      font-family: 'Cairo', sans-serif;
+    }
+    .form-group textarea {
+      min-height: 100px;
+      resize: vertical;
+    }
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+    @media (max-width: 768px) {
+      .form-row {
+        grid-template-columns: 1fr;
+      }
+    }
+    .btn-submit {
+      background: #27ae60;
+      color: white;
+      border: none;
+      padding: 15px 30px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: 600;
+      width: 100%;
+      margin-top: 20px;
+    }
+    .btn-submit:hover {
+      background: #219a52;
+    }
+    .btn-submit:disabled {
+      background: #95a5a6;
+      cursor: not-allowed;
+    }
+    .status-message {
+      padding: 15px;
+      border-radius: 6px;
+      margin: 20px 0;
+      text-align: center;
+      font-weight: 600;
+      display: none;
+    }
+    .status-success {
+      background: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+    .status-error {
+      background: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    }
+    .status-info {
+      background: #d1ecf1;
+      color: #0c5460;
+      border: 1px solid #bee5eb;
+    }
+    .github-settings {
+      background: #f8f9fa;
+      padding: 20px;
+      border-radius: 6px;
+      margin-bottom: 30px;
+    }
+    .github-settings h3 {
+      margin-top: 0;
+      color: #2c3e50;
+    }
+    .toggle-settings {
+      background: #3498db;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-bottom: 15px;
+    }
+    .settings-content {
+      display: none;
+    }
+    .settings-content.active {
+      display: block;
+    }
+    .test-connection {
+      background: #f39c12;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+    .preview-section {
+      background: #f8f9fa;
+      padding: 20px;
+      border-radius: 6px;
+      margin-top: 30px;
+    }
+    .tender-preview {
+      background: white;
+      padding: 20px;
+      border-radius: 6px;
+      border: 1px solid #ddd;
+    }
+  </style>
+</head>
+<body>
+  <header class="nav">
+    <div class="brand">
+      <div class="logo-circle">
+        <img src="./assets/images/I-Tech logo.png" alt="شعار ايتك I.TECH" />
+      </div>
+      <div class="names">
+        <div class="ar">ايتك</div>
+        <div class="en">I.TECH</div>
+      </div>
+    </div>
+    <nav class="menu">
+      <a href="index.html">الرئيسية</a>
+      <a href="tenders-new.html">مناقصات العراق</a>
+      <a href="add-tender.html" class="active">إضافة مناقصة</a>
+      <a href="about.html">من نحن</a>
+      <a href="contact.html">تواصل معنا</a>
+    </nav>
+    <button class="burger" aria-label="فتح القائمة">☰</button>
+  </header>
+
+  <main class="container">
+    <div class="form-container">
+      <h1>إضافة مناقصة جديدة</h1>
+      <p>املأ البيانات أدناه لإضافة مناقصة جديدة إلى الموقع</p>
+
+      <!-- إعدادات GitHub -->
+      <div class="github-settings">
+        <button class="toggle-settings" onclick="toggleGitHubSettings()">⚙️ إعدادات النشر على GitHub</button>
+        <div id="githubSettingsContent" class="settings-content">
+          <h3>إعدادات GitHub للنشر المباشر</h3>
+          <p>هذه الإعدادات مطلوبة للنشر المباشر على الموقع</p>
+          
+          <div class="form-row">
+            <div class="form-group">
+              <label>GitHub Owner</label>
+              <input type="text" id="githubOwner" placeholder="abubesun-hub" value="abubesun-hub">
+            </div>
+            <div class="form-group">
+              <label>GitHub Repository</label>
+              <input type="text" id="githubRepo" placeholder="I.tech" value="I.tech">
+            </div>
+          </div>
+          
+          <div class="form-row">
+            <div class="form-group">
+              <label>Branch</label>
+              <input type="text" id="githubBranch" placeholder="main" value="main">
+            </div>
+            <div class="form-group">
+              <label>ملف البيانات</label>
+              <input type="text" id="githubPath" placeholder="assets/data/tenders.json" value="assets/data/tenders.json">
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label>GitHub Token (Personal Access Token)</label>
+            <input type="password" id="githubToken" placeholder="ghp_xxxxxxxxxxxx">
+            <small style="color: #7f8c8d;">يحتاج صلاحية contents:write للمستودع</small>
+          </div>
+          
+          <div>
+            <label>
+              <input type="checkbox" id="saveSettings"> حفظ الإعدادات محلياً
+            </label>
+          </div>
+          
+          <div style="margin: 15px 0; padding: 10px; background: #f8f9fa; border-radius: 4px;">
+            <strong>إحصائيات أرقام الإعلانات:</strong>
+            <div style="display: flex; gap: 15px; margin-top: 8px; flex-wrap: wrap;">
+              <button type="button" onclick="getCounterStats()" class="btn-edit" style="font-size: 11px; padding: 4px 8px;">📊 عرض الإحصائيات</button>
+              <button type="button" onclick="resetCounters()" class="btn-delete" style="font-size: 11px; padding: 4px 8px;">🔄 إعادة تعيين العدادات</button>
+            </div>
+            <small style="color: #7f8c8d; display: block; margin-top: 5px;">
+              العدادات: حكومية (GOV-TN)، شركات (CMP-TN)، جامعات (UNI-TN)، منظمات (NGO-TN)
+            </small>
+          </div>
+          
+          <button class="test-connection" onclick="testConnection()">اختبار الاتصال</button>
+        </div>
+      </div>
+
+      <!-- نموذج إضافة المناقصة -->
+      <form id="tenderForm">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="tenderId">رقم المناقصة *</label>
+            <input type="text" id="tenderId" required placeholder="2025-001">
+          </div>
+          <div class="form-group">
+            <label for="tenderStatus">الحالة</label>
+            <select id="tenderStatus">
+              <option value="مفتوح">مفتوح</option>
+              <option value="مغلق">مغلق</option>
+              <option value="منتهي">منتهي</option>
+              <option value="ملغي">ملغي</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="tenderTitle">عنوان المناقصة *</label>
+          <input type="text" id="tenderTitle" required placeholder="توريد معدات حاسوب">
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="tenderEntity">الجهة المعلنة *</label>
+            <input type="text" id="tenderEntity" required placeholder="وزارة التعليم العالي">
+          </div>
+          <div class="form-group">
+            <label for="tenderCategory">التصنيف</label>
+            <select id="tenderCategory">
+              <option value="حكومية">حكومية</option>
+              <option value="شركات">شركات</option>
+              <option value="جامعات">جامعات</option>
+              <option value="منظمات">منظمات</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="tenderCity">المدينة</label>
+            <input type="text" id="tenderCity" placeholder="بغداد">
+          </div>
+          <div class="form-group">
+            <label for="tenderAdNumber">رقم الإعلان <span style="color: #27ae60; font-size: 12px;">(تلقائي)</span></label>
+            <input type="text" id="tenderAdNumber" readonly placeholder="سيتم إنشاء الرقم تلقائياً" style="background-color: #f8f9fa; cursor: not-allowed;">
+            <small style="color: #7f8c8d; font-size: 11px;">يتم توليد هذا الرقم تلقائياً حسب التصنيف</small>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="tenderPostedDate">تاريخ النشر</label>
+            <input type="date" id="tenderPostedDate">
+          </div>
+          <div class="form-group">
+            <label for="tenderDeadline">الموعد النهائي *</label>
+            <input type="date" id="tenderDeadline" required>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="tenderDescription">وصف المناقصة</label>
+          <textarea id="tenderDescription" placeholder="وصف تفصيلي للمناقصة ومتطلباتها"></textarea>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="tenderDocPrice">سعر الكراس</label>
+            <input type="number" id="tenderDocPrice" placeholder="25000">
+          </div>
+          <div class="form-group">
+            <label for="tenderCurrency">العملة</label>
+            <select id="tenderCurrency">
+              <option value="IQD">دينار عراقي (IQD)</option>
+              <option value="USD">دولار أمريكي (USD)</option>
+              <option value="EUR">يورو (EUR)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="tenderPickupLocation">مكان استلام الكراس</label>
+          <input type="text" id="tenderPickupLocation" placeholder="مكتب المشتريات - الطابق الأول">
+        </div>
+
+        <div class="form-group">
+          <label for="tenderSubmissionPlace">مكان تقديم العروض</label>
+          <input type="text" id="tenderSubmissionPlace" placeholder="صندوق العروض - الاستعلامات">
+        </div>
+
+        <div class="form-group">
+          <label for="tenderRequirements">متطلبات التقديم (منفصلة بفاصلة منقوطة)</label>
+          <textarea id="tenderRequirements" placeholder="هوية الضريبة; كتاب عدم ممانعة; سجل تجاري ساري"></textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="tenderNotes">ملاحظات إضافية</label>
+          <textarea id="tenderNotes" placeholder="أي ملاحظات أو شروط إضافية"></textarea>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="tenderPhone">هاتف التواصل</label>
+            <input type="tel" id="tenderPhone" placeholder="+964-770-0000000">
+          </div>
+          <div class="form-group">
+            <label for="tenderEmail">البريد الإلكتروني</label>
+            <input type="email" id="tenderEmail" placeholder="info@ministry.gov.iq">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="tenderLink">رابط المصدر الأصلي</label>
+          <input type="url" id="tenderLink" placeholder="https://example.com/tender-details">
+        </div>
+
+        <button type="submit" class="btn-submit" id="submitBtn">
+          📤 نشر المناقصة على الموقع
+        </button>
+      </form>
+
+      <div id="statusMessage" class="status-message"></div>
+
+      <!-- معاينة المناقصة -->
+      <div class="preview-section">
+        <h3>معاينة المناقصة</h3>
+        <div id="tenderPreview" class="tender-preview">
+          <p style="color: #7f8c8d; text-align: center;">املأ البيانات أعلاه لمعاينة المناقصة</p>
+        </div>
+      </div>
+
+      <!-- جدول المناقصات المعلنة -->
+      <div class="tenders-table-section">
+        <div class="table-header">
+          <h3>المناقصات المعلنة</h3>
+          <button onclick="loadTendersTable()" class="btn-refresh">🔄 تحديث</button>
+        </div>
+        <div id="tendersTableContainer">
+          <div class="empty-state">📊 جاري تحميل المناقصات...</div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    // تحميل الإعدادات المحفوظة
+    function loadSavedSettings() {
+      try {
+        const settings = JSON.parse(localStorage.getItem('github_settings') || '{}');
+        if (settings.owner) document.getElementById('githubOwner').value = settings.owner;
+        if (settings.repo) document.getElementById('githubRepo').value = settings.repo;
+        if (settings.branch) document.getElementById('githubBranch').value = settings.branch;
+        if (settings.path) document.getElementById('githubPath').value = settings.path;
+        if (settings.token) {
+          document.getElementById('githubToken').value = settings.token;
+          document.getElementById('saveSettings').checked = true;
+        }
+      } catch (e) {
+        console.log('لا توجد إعدادات محفوظة');
+      }
+    }
+
+    // حفظ الإعدادات
+    function saveSettings() {
+      if (document.getElementById('saveSettings').checked) {
+        const settings = {
+          owner: document.getElementById('githubOwner').value,
+          repo: document.getElementById('githubRepo').value,
+          branch: document.getElementById('githubBranch').value,
+          path: document.getElementById('githubPath').value,
+          token: document.getElementById('githubToken').value
+        };
+        localStorage.setItem('github_settings', JSON.stringify(settings));
+      }
+    }
+
+    // إظهار/إخفاء إعدادات GitHub
+    function toggleGitHubSettings() {
+      const content = document.getElementById('githubSettingsContent');
+      content.classList.toggle('active');
+    }
+
+    // اختبار الاتصال مع GitHub
+    async function testConnection() {
+      const owner = document.getElementById('githubOwner').value;
+      const repo = document.getElementById('githubRepo').value;
+      const token = document.getElementById('githubToken').value;
+
+      if (!owner || !repo || !token) {
+        showStatus('يرجى ملء جميع الحقول المطلوبة', 'error');
+        return;
+      }
+
+      try {
+        showStatus('جاري اختبار الاتصال...', 'info');
+        
+        const response = await fetch(`https://api.github.com/repos/${owner}/${repo}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Accept': 'application/vnd.github+json'
+          }
+        });
+
+        if (response.ok) {
+          showStatus('✅ الاتصال ناجح! يمكنك الآن نشر المناقصات', 'success');
+        } else if (response.status === 401) {
+          showStatus('❌ Token غير صحيح أو منتهي الصلاحية', 'error');
+        } else if (response.status === 404) {
+          showStatus('❌ المستودع غير موجود أو لا يمكن الوصول إليه', 'error');
+        } else {
+          showStatus(`❌ خطأ: ${response.status}`, 'error');
+        }
+      } catch (error) {
+        showStatus('❌ فشل في الاتصال: ' + error.message, 'error');
+      }
+    }
+
+    // إنشاء كائن المناقصة
+    function createTenderObject() {
+      const requirements = document.getElementById('tenderRequirements').value
+        .split(';')
+        .map(r => r.trim())
+        .filter(r => r.length > 0);
+
+      return {
+        id: document.getElementById('tenderId').value,
+        title: document.getElementById('tenderTitle').value,
+        entity: document.getElementById('tenderEntity').value,
+        category: document.getElementById('tenderCategory').value,
+        city: document.getElementById('tenderCity').value,
+        adNumber: document.getElementById('tenderAdNumber').value,
+        deadline: document.getElementById('tenderDeadline').value,
+        postedDate: document.getElementById('tenderPostedDate').value || new Date().toISOString().split('T')[0],
+        status: document.getElementById('tenderStatus').value,
+        link: document.getElementById('tenderLink').value || '#',
+        description: document.getElementById('tenderDescription').value,
+        documentPrice: parseInt(document.getElementById('tenderDocPrice').value) || 0,
+        currency: document.getElementById('tenderCurrency').value,
+        pickupLocation: document.getElementById('tenderPickupLocation').value,
+        submissionPlace: document.getElementById('tenderSubmissionPlace').value,
+        submissionRequirements: requirements,
+        notes: document.getElementById('tenderNotes').value,
+        files: [],
+        contact: {
+          phone: document.getElementById('tenderPhone').value,
+          email: document.getElementById('tenderEmail').value
+        }
+      };
+    }
+
+    // معاينة المناقصة
+    function updatePreview() {
+      const tender = createTenderObject();
+      const preview = document.getElementById('tenderPreview');
+      
+      if (!tender.title && !tender.entity) {
+        preview.innerHTML = '<p style="color: #7f8c8d; text-align: center;">املأ البيانات أعلاه لمعاينة المناقصة</p>';
+        return;
+      }
+
+      const formatDate = (dateStr) => {
+        if (!dateStr) return 'غير محدد';
+        return new Date(dateStr).toLocaleDateString('ar-IQ');
+      };
+
+      preview.innerHTML = `
+        <h4 style="color: #2c3e50; margin-bottom: 15px;">${tender.title || 'بدون عنوان'}</h4>
+        <div style="margin-bottom: 10px;">
+          <strong>الجهة:</strong> ${tender.entity || 'غير محدد'} | 
+          <strong>التصنيف:</strong> ${tender.category} | 
+          <strong>المدينة:</strong> ${tender.city || 'غير محدد'}
+        </div>
+        ${tender.deadline ? `<div style="margin-bottom: 10px;"><strong>الموعد النهائي:</strong> ${formatDate(tender.deadline)}</div>` : ''}
+        ${tender.adNumber ? `<div style="margin-bottom: 10px;"><strong>رقم الإعلان:</strong> ${tender.adNumber}</div>` : ''}
+        ${tender.description ? `<div style="margin-bottom: 15px; color: #34495e;">${tender.description}</div>` : ''}
+      `;
+    }
+
+    // عرض رسالة الحالة
+    function showStatus(message, type) {
+      const statusDiv = document.getElementById('statusMessage');
+      statusDiv.textContent = message;
+      statusDiv.className = `status-message status-${type}`;
+      statusDiv.style.display = 'block';
+      
+      // إخفاء الرسالة بعد 5 ثواني للرسائل العادية
+      if (type === 'success' || type === 'info') {
+        setTimeout(() => {
+          statusDiv.style.display = 'none';
+        }, 5000);
+      }
+    }
+
+    // نشر المناقصة على GitHub
+    async function publishToGitHub(tender) {
+      const owner = document.getElementById('githubOwner').value;
+      const repo = document.getElementById('githubRepo').value;
+      const branch = document.getElementById('githubBranch').value;
+      const path = document.getElementById('githubPath').value;
+      const token = document.getElementById('githubToken').value;
+
+      showStatus('جلب البيانات الحالية...', 'info');
+      
+      // جلب البيانات الحالية
+      let currentData = [];
+      try {
+        const rawUrl = `https://raw.githubusercontent.com/${owner}/${repo}/${branch}/${path}`;
+        const response = await fetch(rawUrl);
+        if (response.ok) {
+          currentData = await response.json();
+        }
+      } catch (e) {
+        console.log('لا توجد بيانات سابقة');
+      }
+
+      // التحقق من وجود نفس الرقم
+      const existingIndex = currentData.findIndex(t => t.id === tender.id);
+      if (existingIndex >= 0) {
+        if (!confirm('يوجد مناقصة بنفس الرقم. هل تريد استبدالها؟')) {
+          throw new Error('تم إلغاء العملية');
+        }
+        currentData[existingIndex] = tender;
+      } else {
+        currentData.push(tender);
+      }
+
+      showStatus('رفع البيانات المحدثة...', 'info');
+
+      // الحصول على SHA للملف الحالي
+      let sha = null;
+      try {
+        const fileResponse = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Accept': 'application/vnd.github+json'
+          }
+        });
+        if (fileResponse.ok) {
+          const fileData = await fileResponse.json();
+          sha = fileData.sha;
+        }
+      } catch (e) {
+        console.log('ملف جديد سيتم إنشاؤه');
+      }
+
+      // رفع الملف المحدث
+      const newContent = JSON.stringify(currentData, null, 2);
+      const base64Content = btoa(unescape(encodeURIComponent(newContent)));
+
+      const updateData = {
+        message: `Add tender: ${tender.id}`,
+        content: base64Content,
+        branch: branch
+      };
+
+      if (sha) {
+        updateData.sha = sha;
+      }
+
+      const updateResponse = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Accept': 'application/vnd.github+json',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(updateData)
+      });
+
+      if (!updateResponse.ok) {
+        const errorText = await updateResponse.text();
+        throw new Error(`GitHub API Error: ${updateResponse.status} - ${errorText}`);
+      }
+
+      return await updateResponse.json();
+    }
+
+    // إرسال النموذج
+    document.getElementById('tenderForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const submitBtn = document.getElementById('submitBtn');
+      const originalText = submitBtn.textContent;
+      
+      try {
+        submitBtn.disabled = true;
+        submitBtn.textContent = '⏳ جاري النشر...';
+        
+        const tender = createTenderObject();
+        
+        // التحقق من صحة البيانات
+        if (!tender.id || !tender.title || !tender.entity || !tender.deadline) {
+          throw new Error('يرجى ملء جميع الحقول المطلوبة (*)');
+        }
+
+        // حفظ الإعدادات
+        saveSettings();
+        
+        // نشر على GitHub
+        await publishToGitHub(tender);
+        
+        showStatus('🎉 تم نشر المناقصة بنجاح! ستظهر على الموقع خلال دقائق قليلة.', 'success');
+        
+        // إعادة تعيين النموذج
+        document.getElementById('tenderForm').reset();
+        updatePreview();
+        
+        // إعادة تعيين التاريخ الافتراضي
+        document.getElementById('tenderPostedDate').value = new Date().toISOString().split('T')[0];
+        
+      } catch (error) {
+        console.error('خطأ في النشر:', error);
+        showStatus('❌ فشل في النشر: ' + error.message, 'error');
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalText;
+      }
+    });
+
+    // تحديث المعاينة عند تغيير البيانات
+    document.querySelectorAll('input, select, textarea').forEach(element => {
+      element.addEventListener('input', updatePreview);
+      element.addEventListener('change', updatePreview);
+    });
+
+    // قائمة الموبايل
+    const burger = document.querySelector('.burger');
+    const menu = document.querySelector('.menu');
+    if (burger && menu) {
+      burger.addEventListener('click', () => {
+        menu.classList.toggle('open');
+      });
+    }
+
+    // تهيئة الصفحة
+    document.addEventListener('DOMContentLoaded', () => {
+      loadSavedSettings();
+      
+      // تعيين التاريخ الحالي كافتراضي لتاريخ النشر
+      document.getElementById('tenderPostedDate').value = new Date().toISOString().split('T')[0];
+      
+      updatePreview();
+      
+      // تحميل جدول المناقصات
+      loadTendersTable();
+      
+      // ربط تغيير التصنيف بتوليد رقم الإعلان
+      document.getElementById('tenderCategory').addEventListener('change', generateAdNumber);
+      
+      // إنشاء رقم إعلان افتراضي
+      generateAdNumber();
+    });
+
+    // === نظام الترقيم التلقائي لرقم الإعلان ===
+    
+    // أنماط الترقيم لكل نوع جهة
+    const numberingPatterns = {
+      'حكومية': { prefix: 'GOV-TN', key: 'gov_counter' },
+      'شركات': { prefix: 'CMP-TN', key: 'company_counter' },
+      'جامعات': { prefix: 'UNI-TN', key: 'university_counter' },
+      'منظمات': { prefix: 'NGO-TN', key: 'ngo_counter' }
+    };
+    
+    // توليد رقم الإعلان التلقائي
+    function generateAdNumber() {
+      const category = document.getElementById('tenderCategory').value;
+      const pattern = numberingPatterns[category];
+      
+      if (!pattern) {
+        document.getElementById('tenderAdNumber').value = 'غير محدد';
+        return;
+      }
+      
+      // الحصول على العداد الحالي أو البدء من 1
+      let counter = parseInt(localStorage.getItem(pattern.key) || '0') + 1;
+      
+      // تحديث العداد في localStorage
+      localStorage.setItem(pattern.key, counter.toString());
+      
+      // تنسيق الرقم: PREFIX-YEAR-NUMBER
+      const currentYear = new Date().getFullYear();
+      const formattedNumber = counter.toString().padStart(3, '0');
+      const adNumber = `${pattern.prefix}-${currentYear}-${formattedNumber}`;
+      
+      // تحديث الحقل
+      document.getElementById('tenderAdNumber').value = adNumber;
+      
+      console.log(`تم إنشاء رقم إعلان جديد: ${adNumber} للفئة: ${category}`);
+      
+      // تحديث المعاينة
+      updatePreview();
+    }
+    
+    // دالة لاسترداد العداد السابق (في حالة التعديل أو الحذف)
+    function revertCounter(category) {
+      const pattern = numberingPatterns[category];
+      if (!pattern) return;
+      
+      let counter = parseInt(localStorage.getItem(pattern.key) || '1');
+      if (counter > 1) {
+        counter--;
+        localStorage.setItem(pattern.key, counter.toString());
+        console.log(`تم تقليل عداد ${category} إلى: ${counter}`);
+      }
+    }
+    
+    // دالة لإعادة تعيين العدادات (للمطورين فقط)
+    function resetCounters() {
+      if (confirm('هل أنت متأكد من إعادة تعيين جميع العدادات؟ هذا الإجراء لا يمكن التراجع عنه.')) {
+        Object.values(numberingPatterns).forEach(pattern => {
+          localStorage.removeItem(pattern.key);
+        });
+        console.log('تم إعادة تعيين جميع العدادات');
+        generateAdNumber(); // إعادة إنشاء الرقم
+      }
+    }
+    
+    // دالة للحصول على إحصائيات العدادات
+    function getCounterStats() {
+      const stats = {};
+      Object.entries(numberingPatterns).forEach(([category, pattern]) => {
+        stats[category] = parseInt(localStorage.getItem(pattern.key) || '0');
+      });
+      console.table(stats);
+      return stats;
+    }
+
+    // === وظائف حفظ وإدارة البيانات ===
+    
+    const UPDATED_TENDERS_KEY = 'updated_tenders_data';
+    
+    // حفظ البيانات المحدثة في localStorage
+    function saveUpdatedTenders(tenders) {
+      try {
+        localStorage.setItem(UPDATED_TENDERS_KEY, JSON.stringify({
+          data: tenders,
+          lastUpdate: new Date().toISOString(),
+          version: Date.now()
+        }));
+        console.log('✅ تم حفظ البيانات المحدثة في localStorage');
+        return true;
+      } catch (error) {
+        console.error('❌ خطأ في حفظ البيانات:', error);
+        return false;
+      }
+    }
+    
+    // تحميل البيانات المحدثة من localStorage
+    function getUpdatedTenders() {
+      try {
+        const stored = localStorage.getItem(UPDATED_TENDERS_KEY);
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          console.log('✅ تم تحميل البيانات المحدثة من localStorage');
+          return parsed.data;
+        }
+        return null;
+      } catch (error) {
+        console.error('❌ خطأ في تحميل البيانات المحدثة:', error);
+        return null;
+      }
+    }
+    
+    // محاولة حفظ البيانات عبر GitHub API
+    async function saveToGitHub(tenders) {
+      const owner = document.getElementById('githubOwner')?.value?.trim();
+      const repo = document.getElementById('githubRepo')?.value?.trim();
+      const branch = document.getElementById('githubBranch')?.value?.trim();
+      const path = document.getElementById('githubPath')?.value?.trim();
+      const token = document.getElementById('githubToken')?.value?.trim();
+      
+      if (!owner || !repo || !branch || !path || !token) {
+        console.warn('⚠️ إعدادات GitHub غير مكتملة - لن يتم الحفظ عبر GitHub');
+        return false;
+      }
+      
+      try {
+        // الحصول على SHA للملف الحالي
+        let sha = null;
+        const fileResponse = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Accept': 'application/vnd.github+json'
+          }
+        });
+        
+        if (fileResponse.ok) {
+          const fileData = await fileResponse.json();
+          sha = fileData.sha;
+        }
+        
+        // رفع الملف المحدث
+        const newContent = JSON.stringify(tenders, null, 2);
+        const base64Content = btoa(unescape(encodeURIComponent(newContent)));
+        
+        const updateData = {
+          message: `Update tenders data - ${new Date().toISOString()}`,
+          content: base64Content,
+          branch: branch
+        };
+        
+        if (sha) {
+          updateData.sha = sha;
+        }
+        
+        const updateResponse = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}`, {
+          method: 'PUT',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Accept': 'application/vnd.github+json',
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(updateData)
+        });
+        
+        if (updateResponse.ok) {
+          console.log('✅ تم حفظ البيانات عبر GitHub بنجاح');
+          return true;
+        } else {
+          console.error('❌ خطأ في حفظ البيانات عبر GitHub:', updateResponse.status);
+          return false;
+        }
+        
+      } catch (error) {
+        console.error('❌ خطأ في حفظ البيانات عبر GitHub:', error);
+        return false;
+      }
+    }
+    
+    // حفظ شامل (محلي + GitHub)
+    async function saveData(tenders) {
+      // حفظ في localStorage أولاً (سريع ومضمون)
+      const localSaved = saveUpdatedTenders(tenders);
+      
+      // محاولة حفظ عبر GitHub
+      const githubSaved = await saveToGitHub(tenders);
+      
+      return { localSaved, githubSaved };
+    }
+
+    // === وظائف جدول المناقصات ===
+    
+    // تحميل وعرض جدول المناقصات
+    async function loadTendersTable() {
+      const container = document.getElementById('tendersTableContainer');
+      container.innerHTML = '<div class="empty-state">🔄 جاري تحميل المناقصات...</div>';
+      
+      try {
+        let tenders = null;
+        
+        // محاولة تحميل البيانات المحدثة من localStorage أولاً
+        tenders = getUpdatedTenders();
+        
+        if (!tenders) {
+          // إذا لم توجد بيانات محدثة، تحميل من ملف JSON
+          console.log('📁 تحميل من ملف JSON الأصلي...');
+          const response = await fetch('./assets/data/tenders.json?v=' + Date.now());
+          
+          if (!response.ok) {
+            throw new Error(`خطأ في التحميل: ${response.status}`);
+          }
+          
+          tenders = await response.json();
+        } else {
+          console.log('💾 تم استخدام البيانات المحدثة من localStorage');
+        }
+        
+        if (!Array.isArray(tenders) || tenders.length === 0) {
+          container.innerHTML = '<div class="empty-state">📝 لا توجد مناقصات معلنة حتى الآن</div>';
+          return;
+        }
+        
+        // إنشاء الجدول
+        container.innerHTML = `
+          <table class="tenders-table">
+            <thead>
+              <tr>
+                <th>العنوان</th>
+                <th>الجهة</th>
+                <th>المدينة</th>
+                <th>الموعد النهائي</th>
+                <th>الحالة</th>
+                <th>الإجراءات</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${tenders.map(tender => createTenderRow(tender)).join('')}
+            </tbody>
+          </table>
+        `;
+        
+        console.log(`تم تحميل ${tenders.length} مناقصة في الجدول`);
+        
+      } catch (error) {
+        console.error('خطأ في تحميل المناقصات:', error);
+        container.innerHTML = `
+          <div class="empty-state">
+            ❌ خطأ في تحميل البيانات: ${error.message}
+            <br><button onclick="loadTendersTable()" class="btn-refresh" style="margin-top: 10px;">🔄 إعادة المحاولة</button>
+          </div>
+        `;
+      }
+    }
+    
+    // إنشاء صف في الجدول للمناقصة
+    function createTenderRow(tender) {
+      const formatDate = (dateStr) => {
+        if (!dateStr) return 'غير محدد';
+        try {
+          return new Date(dateStr).toLocaleDateString('ar-IQ');
+        } catch {
+          return dateStr;
+        }
+      };
+      
+      const getStatus = (tender) => {
+        if (!tender.deadline) return '❓ غير محدد';
+        
+        const deadline = new Date(tender.deadline);
+        const now = new Date();
+        
+        if (deadline < now) return '❌ منتهية';
+        
+        const daysLeft = Math.ceil((deadline - now) / (1000 * 60 * 60 * 24));
+        if (daysLeft <= 3) return `⚠️ ${daysLeft} أيام`;
+        
+        return '✅ نشطة';
+      };
+      
+      return `
+        <tr>
+          <td style="max-width: 200px; overflow: hidden; text-overflow: ellipsis;" title="${tender.title || 'بدون عنوان'}">
+            ${(tender.title || 'بدون عنوان').substring(0, 50)}${tender.title && tender.title.length > 50 ? '...' : ''}
+          </td>
+          <td>${tender.entity || 'غير محدد'}</td>
+          <td>${tender.city || 'غير محدد'}</td>
+          <td>${formatDate(tender.deadline)}</td>
+          <td>${getStatus(tender)}</td>
+          <td>
+            <div class="action-buttons">
+              <button onclick="editTender('${tender.id}')" class="btn-edit" title="تعديل">✏️</button>
+              <button onclick="deleteTender('${tender.id}')" class="btn-delete" title="حذف">🗑️</button>
+            </div>
+          </td>
+        </tr>
+      `;
+    }
+    
+    // تعديل مناقصة
+    function editTender(tenderId) {
+      if (!tenderId) {
+        showStatus('❌ معرف المناقصة غير صحيح', 'error');
+        return;
+      }
+      
+      // تحميل بيانات المناقصة في النموذج
+      loadTenderForEdit(tenderId);
+    }
+    
+    // تحميل مناقصة للتعديل
+    async function loadTenderForEdit(tenderId) {
+      try {
+        const response = await fetch('./assets/data/tenders.json?v=' + Date.now());
+        const tenders = await response.json();
+        
+        const tender = tenders.find(t => t.id === tenderId);
+        if (!tender) {
+          showStatus('❌ لم يتم العثور على المناقصة', 'error');
+          return;
+        }
+        
+        // ملء النموذج ببيانات المناقصة
+        document.getElementById('tenderId').value = tender.id || '';
+        document.getElementById('tenderTitle').value = tender.title || '';
+        document.getElementById('tenderEntity').value = tender.entity || '';
+        document.getElementById('tenderCategory').value = tender.category || '';
+        document.getElementById('tenderCity').value = tender.city || '';
+        // رقم الإعلان يُملأ مباشرة من البيانات المحفوظة (لا نغيره أثناء التعديل)
+        document.getElementById('tenderAdNumber').value = tender.adNumber || '';
+        document.getElementById('tenderDeadline').value = tender.deadline || '';
+        document.getElementById('tenderPostedDate').value = tender.postedDate || tender.publishDate || '';
+        document.getElementById('tenderStatus').value = tender.status || 'نشط';
+        document.getElementById('tenderLink').value = tender.link || '';
+        document.getElementById('tenderDescription').value = tender.description || '';
+        document.getElementById('tenderDocPrice').value = tender.documentPrice || '';
+        document.getElementById('tenderCurrency').value = tender.currency || 'IQD';
+        document.getElementById('tenderPickupLocation').value = tender.pickupLocation || '';
+        document.getElementById('tenderSubmissionPlace').value = tender.submissionPlace || '';
+        document.getElementById('tenderRequirements').value = (tender.submissionRequirements || []).join('; ');
+        document.getElementById('tenderNotes').value = tender.notes || '';
+        document.getElementById('tenderPhone').value = tender.contact?.phone || '';
+        document.getElementById('tenderEmail').value = tender.contact?.email || '';
+        
+        // تحديث المعاينة
+        updatePreview();
+        
+        // التمرير إلى أعلى النموذج
+        document.getElementById('tenderForm').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        
+        showStatus('✅ تم تحميل بيانات المناقصة للتعديل', 'success');
+        
+      } catch (error) {
+        console.error('خطأ في تحميل بيانات المناقصة:', error);
+        showStatus('❌ خطأ في تحميل بيانات المناقصة: ' + error.message, 'error');
+      }
+    }
+    
+    // حذف مناقصة
+    async function deleteTender(tenderId) {
+      if (!tenderId) {
+        showStatus('❌ معرف المناقصة غير صحيح', 'error');
+        return;
+      }
+      
+      if (!confirm('هل أنت متأكد من حذف هذه المناقصة؟ لا يمكن التراجع عن هذا الإجراء.')) {
+        return;
+      }
+      
+      try {
+        showStatus('🔄 جاري حذف المناقصة...', 'info');
+        
+        // جلب البيانات الحالية (من localStorage أو الملف الأصلي)
+        let tenders = getUpdatedTenders();
+        
+        if (!tenders) {
+          const response = await fetch('./assets/data/tenders.json?v=' + Date.now());
+          tenders = await response.json();
+        }
+        
+        // البحث عن المناقصة
+        const tenderIndex = tenders.findIndex(t => t.id === tenderId);
+        if (tenderIndex === -1) {
+          showStatus('❌ لم يتم العثور على المناقصة', 'error');
+          return;
+        }
+        
+        // حذف المناقصة من المصفوفة
+        const deletedTender = tenders[tenderIndex];
+        tenders.splice(tenderIndex, 1);
+        
+        // حفظ البيانات المحدثة
+        const saveResult = await saveData(tenders);
+        
+        let statusMessage = '';
+        if (saveResult.localSaved && saveResult.githubSaved) {
+          statusMessage = `✅ تم حذف المناقصة "${deletedTender.title}" نهائياً من الموقع ومن GitHub`;
+        } else if (saveResult.localSaved && !saveResult.githubSaved) {
+          statusMessage = `✅ تم حذف المناقصة "${deletedTender.title}" من الموقع. تحذير: لم يتم التحديث على GitHub`;
+        } else {
+          statusMessage = `❌ فشل في حفظ التغييرات للمناقصة "${deletedTender.title}"`;
+        }
+        
+        showStatus(statusMessage, saveResult.localSaved ? 'success' : 'error');
+        
+        // إعادة تحميل الجدول
+        loadTendersTable();
+        
+        console.log('🗑️ تم حذف المناقصة:', {
+          id: deletedTender.id,
+          title: deletedTender.title,
+          localSaved: saveResult.localSaved,
+          githubSaved: saveResult.githubSaved
+        });
+        
+      } catch (error) {
+        console.error('خطأ في حذف المناقصة:', error);
+        showStatus('❌ خطأ في حذف المناقصة: ' + error.message, 'error');
+      }
+    }
+  </script>
+</body>
+</html>

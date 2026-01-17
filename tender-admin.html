@@ -9,6 +9,16 @@
   <link rel="stylesheet" href="./css/main.css" />
 </head>
 <body class="page-controll">
+  <script>
+    (function(){
+      try {
+        const t = sessionStorage.getItem('itech_token');
+        if(!t){ location.href = 'controll.html'; }
+      } catch { /* إذا تعطلت الجلسة سنعيد المستخدم لصفحة الدخول */
+        location.href = 'controll.html';
+      }
+    })();
+  </script>
   <header class="nav">
     <div class="brand">
       <div class="logo-circle"><img src="./assets/images/I-Tech logo.png" alt="I.TECH"/></div>
@@ -16,7 +26,9 @@
     </div>
     <nav class="menu" aria-label="التنقل">
       <a href="index.html">الرئيسية</a>
-      <a href="tenders.html">مناقصات العراق</a>
+      <a href="tenders-new.html">مناقصات العراق</a>
+      <a href="tender-admin-simple.html">إضافة بسيطة</a>
+      <a href="#" id="btnLogout">تسجيل الخروج</a>
     </nav>
     <button class="burger" aria-label="فتح القائمة" aria-expanded="false">☰</button>
   </header>
@@ -71,7 +83,7 @@
             <input id="f_phone"/>
             <label>البريد الإلكتروني</label>
             <input id="f_email"/>
-            <div id="publishStatus" style="margin-top:10px;color:var(--text-muted);"></div>
+            <div id="publishStatus" style="margin-top:15px;padding:12px;border-radius:5px;display:none;font-weight:600;"></div>
 
             <hr style="margin:18px 0; opacity:.3;">
             <h2 style="margin:6px 0 10px;">نشر مباشر على GitHub Pages (بدون Backend)</h2>
@@ -95,6 +107,7 @@
               </div>
               <div class="actions" style="margin-top:12px;">
                 <button class="btn primary" id="btnPublishGithub">نشر مباشر على صفحة المناقصات (GitHub)</button>
+                <button class="btn" id="btnTestConnection" style="margin-right: 10px;">اختبار الاتصال</button>
               </div>
             </div>
           </div>
@@ -114,6 +127,11 @@
   <script>
   // Ensure initialization runs whether DOMContentLoaded has fired or not
   function initAdminPage(){
+    // زر خروج بسيط يمسح الـ Token
+    try{
+      const lo = document.getElementById('btnLogout');
+      if (lo) lo.addEventListener('click', (e)=>{ e.preventDefault(); try{ sessionStorage.removeItem('itech_token'); } catch {} location.href = 'controll.html'; });
+    }catch{}
 
     const $ = (id)=>document.getElementById(id);
     // تهيئة بسيطة
@@ -153,29 +171,118 @@
     }
     async function githubGetFileSha(owner, repo, branch, path, token){
       const url = `https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/contents/${encodePathSegments(path)}?ref=${encodeURIComponent(branch)}`;
-      const r = await fetch(url, { headers: { 'Accept':'application/vnd.github+json', 'Authorization': token ? `Bearer ${token}` : '' } });
-      if (r.status === 404) return null; // file not found
-      if (!r.ok) throw new Error('GitHub API (get sha) failed: '+r.status);
+      console.log('طلب SHA من:', url);
+      
+      const headers = { 
+        'Accept':'application/vnd.github+json', 
+        'Authorization': `Bearer ${token}`,
+        'User-Agent': 'I.TECH-Admin/1.0'
+      };
+      
+      const r = await fetch(url, { headers });
+      console.log('استجابة SHA:', r.status, r.statusText);
+      
+      if (r.status === 404) {
+        console.log('الملف غير موجود، سيتم إنشاؤه');
+        return null; // file not found
+      }
+      
+      if (!r.ok) {
+        const errorText = await r.text();
+        console.error('خطأ في طلب SHA:', errorText);
+        throw new Error('GitHub API (get sha) failed: '+r.status + ' - ' + errorText);
+      }
+      
       const j = await r.json();
+      console.log('SHA response:', j);
       return j && j.sha ? j.sha : null;
     }
     async function githubPutFile(owner, repo, branch, path, contentBase64, message, shaOrNull, token){
       const url = `https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/contents/${encodePathSegments(path)}`;
-      const body = { message, content: contentBase64, branch };
+      console.log('رفع ملف إلى:', url);
+      
+      const body = { 
+        message, 
+        content: contentBase64, 
+        branch 
+      };
       if (shaOrNull) body.sha = shaOrNull;
-      const r = await fetch(url, { method:'PUT', headers: { 'Accept':'application/vnd.github+json', 'Content-Type':'application/json', 'Authorization': token ? `Bearer ${token}` : '' }, body: JSON.stringify(body) });
+      
+      console.log('محتوى الطلب:', { 
+        message: body.message, 
+        branch: body.branch, 
+        contentLength: contentBase64.length,
+        hasSha: !!shaOrNull 
+      });
+      
+      const headers = {
+        'Accept': 'application/vnd.github+json', 
+        'Content-Type': 'application/json', 
+        'Authorization': `Bearer ${token}`,
+        'User-Agent': 'I.TECH-Admin/1.0'
+      };
+      
+      const r = await fetch(url, { 
+        method: 'PUT', 
+        headers, 
+        body: JSON.stringify(body) 
+      });
+      
+      console.log('استجابة الرفع:', r.status, r.statusText);
+      
       if (!r.ok) {
-        const t = await r.text().catch(()=> '');
-        throw new Error('GitHub API (put file) failed: '+r.status+' '+t);
+        const errorText = await r.text();
+        console.error('خطأ في رفع الملف:', errorText);
+        
+        // رسائل خطأ مفصلة حسب نوع المشكلة
+        if (r.status === 401) {
+          throw new Error('خطأ في التوثيق: GitHub Token غير صحيح أو منتهي الصلاحية. يرجى التحقق من الرمز.');
+        } else if (r.status === 403) {
+          throw new Error('ممنوع: لا توجد صلاحية للكتابة في هذا المستودع. تحقق من أن Token لديه صلاحية contents:write');
+        } else if (r.status === 404) {
+          throw new Error('المستودع غير موجود أو لا يمكن الوصول إليه. تحقق من اسم المالك والمستودع.');
+        } else if (r.status === 409) {
+          throw new Error('تضارب في الملف. يرجى تحديث الصفحة والمحاولة مرة أخرى.');
+        } else {
+          throw new Error(`GitHub API خطأ ${r.status}: ${errorText}`);
+        }
       }
-      return await r.json();
+      
+      const result = await r.json();
+      console.log('نجح الرفع:', result);
+      return result;
     }
     async function fetchCurrentTendersRaw(owner, repo, branch, path){
       const rawUrl = `https://raw.githubusercontent.com/${owner}/${repo}/${encodeURIComponent(branch)}/${path}`;
-      const r = await fetch(rawUrl);
-      if (r.status === 404) return [];
-      if (!r.ok) throw new Error('Fetch raw failed: '+r.status);
-      try { return await r.json(); } catch { return []; }
+      console.log('جلب البيانات الحالية من:', rawUrl);
+      
+      const r = await fetch(rawUrl, {
+        cache: 'no-store', // تجنب الكاش للحصول على أحدث نسخة
+        headers: {
+          'Accept': 'application/json'
+        }
+      });
+      
+      console.log('حالة جلب البيانات:', r.status);
+      
+      if (r.status === 404) {
+        console.log('الملف غير موجود، سيبدأ بمصفوفة فارغة');
+        return [];
+      }
+      
+      if (!r.ok) {
+        console.error('فشل جلب البيانات:', r.status, r.statusText);
+        throw new Error('Fetch raw failed: '+r.status);
+      }
+      
+      try { 
+        const data = await r.json();
+        console.log('تم جلب البيانات بنجاح، عدد العناصر:', Array.isArray(data) ? data.length : 'ليس مصفوفة');
+        return Array.isArray(data) ? data : [];
+      } catch (parseError) { 
+        console.error('خطأ في تحليل JSON:', parseError);
+        return []; 
+      }
     }
 
     // Prefill from LocalStorage
@@ -190,17 +297,46 @@
     const elPublishGh = $('#btnPublishGithub');
     if (elPublishGh) elPublishGh.addEventListener('click', async ()=>{
       const statusEl = $('#publishStatus');
-      function setStatus(msg, color){ if (statusEl) { statusEl.textContent = msg; statusEl.style.color = color || 'var(--text-muted)'; } }
+      function setStatus(msg, color){ 
+        if (statusEl) { 
+          statusEl.textContent = msg; 
+          statusEl.style.color = color || 'var(--text-muted)';
+          statusEl.style.display = 'block';
+          statusEl.style.padding = '10px';
+          statusEl.style.border = '1px solid ' + (color || '#ddd');
+          statusEl.style.borderRadius = '5px';
+          statusEl.style.backgroundColor = color === 'green' ? '#d4edda' : color === 'red' ? '#f8d7da' : '#d1ecf1';
+        }
+        console.log('Status:', msg); // للتشخيص
+      }
+      
+      // التحقق من وجود البيانات المطلوبة
+      const tender = buildItem();
+      if (!tender.title || !tender.entity) {
+        setStatus('خطأ: يرجى ملء العنوان والجهة على الأقل', 'red');
+        alert('يرجى ملء العنوان والجهة على الأقل');
+        return;
+      }
+      
       // visual feedback immediately
-      setStatus('بدء عملية النشر إلى GitHub...', 'var(--text-muted)');
+      setStatus('بدء عملية النشر إلى GitHub...', 'blue');
       elPublishGh.disabled = true;
+      console.log('بدء عملية النشر...', tender);
+      
       try {
         const owner = ($('#gh_owner').value||'').trim();
         const repo = ($('#gh_repo').value||'').trim();
         const branch = ($('#gh_branch').value||'main').trim();
         const path = ($('#gh_path').value||'assets/data/tenders.json').trim();
         const token = ($('#gh_token').value||'').trim();
-        if (!owner || !repo || !branch || !path || !token) { alert('أكمل حقول GitHub وادخل الرمز (PAT).'); return; }
+        
+        console.log('إعدادات GitHub:', { owner, repo, branch, path, tokenLength: token.length });
+        
+        if (!owner || !repo || !branch || !path || !token) { 
+          setStatus('خطأ: أكمل جميع حقول GitHub وادخل الرمز (PAT)', 'red');
+          alert('أكمل حقول GitHub وادخل الرمز (PAT).');
+          return; 
+        }
 
         // persist preferences
         try {
@@ -211,42 +347,153 @@
           const remember = $('#gh_remember_token').checked; if (remember) localStorage.setItem('itech_gh_token', token); else localStorage.removeItem('itech_gh_token');
         } catch {}
 
-        setStatus('جلب الملف الحالي من GitHub...', 'var(--text-muted)');
-        const arr = await fetchCurrentTendersRaw(owner, repo, branch, path);
-        const item = buildItem();
+        setStatus('جلب الملف الحالي من GitHub...', 'blue');
+        console.log('جلب البيانات من GitHub...');
+        
+        let arr = [];
+        try {
+          arr = await fetchCurrentTendersRaw(owner, repo, branch, path);
+          console.log('البيانات الحالية:', arr);
+        } catch (fetchError) {
+          console.log('تعذر جلب البيانات الحالية، سيتم إنشاء ملف جديد:', fetchError);
+          arr = [];
+        }
+        
+        const item = tender;
+        console.log('المناقصة الجديدة:', item);
+        
         // منع تكرار id إن وجد
         const exists = Array.isArray(arr) && arr.some(x => String(x.id||'') === String(item.id||''));
         if (exists) {
-          if (!confirm('يوجد عنصر بنفس رقم المناقصة. متابعة واستبدال القديم؟')) return;
+          const confirmed = confirm('يوجد عنصر بنفس رقم المناقصة. متابعة واستبدال القديم؟');
+          setStatus(confirmed ? 'سيتم استبدال المناقصة الموجودة...' : 'تم إلغاء العملية', confirmed ? 'orange' : 'red');
+          if (!confirmed) return;
           for (let i=0;i<arr.length;i++){ if (String(arr[i].id||'') === String(item.id||'')) { arr[i] = item; break; } }
         } else {
           arr.push(item);
         }
 
         const newJson = JSON.stringify(arr, null, 2) + '\n';
-        setStatus('الحصول على SHA للملف من GitHub...', 'var(--text-muted)');
-        const sha = await githubGetFileSha(owner, repo, branch, path, token);
-        setStatus('رفع التحديث عبر GitHub API (قد يستغرق ثواني)...', 'var(--text-muted)');
+        console.log('JSON الجديد جاهز، الحجم:', newJson.length);
+        
+        setStatus('الحصول على SHA للملف من GitHub...', 'blue');
+        let sha = null;
+        try {
+          sha = await githubGetFileSha(owner, repo, branch, path, token);
+          console.log('SHA:', sha);
+        } catch (shaError) {
+          console.log('تعذر الحصول على SHA، ملف جديد سيتم إنشاؤه:', shaError);
+        }
+        
+        setStatus('رفع التحديث عبر GitHub API (قد يستغرق ثواني)...', 'blue');
+        console.log('بدء رفع الملف...');
+        
         const res = await githubPutFile(owner, repo, branch, path, utf8ToBase64(newJson), `Add tender ${item.id}`, sha, token);
+        console.log('نتيجة الرفع:', res);
         const commitUrl = (res && res.commit && res.commit.html_url) ? res.commit.html_url : '';
         const fileUrl = (res && res.content && res.content.html_url) ? res.content.html_url : '';
-        setStatus('تم النشر بنجاح إلى GitHub ✔ — قد يستغرق تفعيل GitHub Pages دقيقة.' + (commitUrl ? ` (\u0625\u0636\u063a\u0637 \u0644\u0644\u0645\u0639\u0627\u064a\u0646\u0629: ${commitUrl})` : ''), 'green');
+        
+        setStatus('تم النشر بنجاح إلى GitHub ✔ — قد يستغرق تفعيل GitHub Pages دقيقة.' + (commitUrl ? ` (رابط الـ Commit: ${commitUrl})` : ''), 'green');
+        
+        console.log('تم النشر بنجاح!', {
+          commitUrl,
+          fileUrl,
+          response: res
+        });
+        
         try { localStorage.removeItem('itech_tenders_cache'); } catch {}
-        alert('تم النشر بنجاح ✔' + (commitUrl ? '\nعرض الـ Commit: ' + commitUrl : ''));
+        
+        alert('تم النشر بنجاح ✔\n\nالمناقصة متاحة الآن على الموقع!' + (commitUrl ? '\n\nرابط التأكيد: ' + commitUrl : ''));
+        
         // تفريغ الحقول لإضافة مناقصة جديدة
         try {
           const ids = ['f_id','f_title','f_entity','f_city','f_adNumber','f_deadline','f_postedDate','f_status','f_link','f_description','f_documentPrice','f_currency','f_pickupLocation','f_submissionPlace','f_requirements','f_notes','f_phone','f_email'];
           ids.forEach(i => { const el = document.getElementById(i); if (el) el.value = ''; });
           const cat = document.getElementById('f_category'); if (cat) cat.selectedIndex = 0;
         } catch {}
+        
         // إعادة تحميل الجدول أسفل الصفحة
-        try { await renderAdminList(); } catch {}
+        try { 
+          console.log('إعادة تحميل القائمة...');
+          await renderAdminList(); 
+        } catch (listError) {
+          console.log('خطأ في إعادة تحميل القائمة:', listError);
+        }
+        
       } catch (e){
+        console.error('خطأ في النشر:', e);
         const msg = 'فشل النشر إلى GitHub: ' + (e && e.message ? e.message : String(e));
         setStatus(msg, 'red');
-        alert(msg);
+        alert('حدث خطأ في النشر:\n\n' + msg + '\n\nيرجى التحقق من:\n- صحة GitHub Token\n- أن لديك صلاحيات كتابة للمستودع\n- الاتصال بالإنترنت');
       } finally {
         elPublishGh.disabled = false;
+      }
+    });
+
+    // زر اختبار الاتصال
+    const elTestConnection = $('#btnTestConnection');
+    if (elTestConnection) elTestConnection.addEventListener('click', async () => {
+      const statusEl = $('#publishStatus');
+      function setStatus(msg, color){ 
+        if (statusEl) { 
+          statusEl.textContent = msg; 
+          statusEl.style.color = color || 'var(--text-muted)';
+          statusEl.style.display = 'block';
+          statusEl.style.padding = '10px';
+          statusEl.style.border = '1px solid ' + (color || '#ddd');
+          statusEl.style.borderRadius = '5px';
+          statusEl.style.backgroundColor = color === 'green' ? '#d4edda' : color === 'red' ? '#f8d7da' : '#d1ecf1';
+        }
+      }
+      
+      elTestConnection.disabled = true;
+      setStatus('جاري اختبار الاتصال...', 'blue');
+      
+      try {
+        const owner = ($('#gh_owner').value||'').trim();
+        const repo = ($('#gh_repo').value||'').trim();
+        const token = ($('#gh_token').value||'').trim();
+        
+        if (!owner || !repo || !token) {
+          setStatus('خطأ: يرجى ملء Owner, Repo, و Token', 'red');
+          return;
+        }
+        
+        // اختبار الوصول للمستودع
+        const repoUrl = `https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}`;
+        const response = await fetch(repoUrl, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Accept': 'application/vnd.github+json',
+            'User-Agent': 'I.TECH-Admin/1.0'
+          }
+        });
+        
+        if (response.ok) {
+          const repoInfo = await response.json();
+          setStatus(`✅ الاتصال ناجح! المستودع: ${repoInfo.full_name} - ${repoInfo.private ? 'خاص' : 'عام'}`, 'green');
+          
+          // اختبار الصلاحيات
+          const permissions = repoInfo.permissions;
+          if (permissions && !permissions.push) {
+            setStatus('⚠️ تحذير: قد لا تمتلك صلاحية الكتابة في هذا المستودع', 'orange');
+          }
+        } else if (response.status === 401) {
+          setStatus('❌ فشل التوثيق: Token غير صحيح أو منتهي الصلاحية', 'red');
+        } else if (response.status === 403) {
+          setStatus('❌ ممنوع: لا توجد صلاحية للوصول لهذا المستودع', 'red');
+        } else if (response.status === 404) {
+          setStatus('❌ المستودع غير موجود أو لا يمكن الوصول إليه', 'red');
+        } else {
+          const errorText = await response.text();
+          setStatus(`❌ خطأ ${response.status}: ${errorText}`, 'red');
+        }
+        
+      } catch (error) {
+        console.error('خطأ في اختبار الاتصال:', error);
+        setStatus('❌ فشل الاختبار: ' + error.message, 'red');
+      } finally {
+        elTestConnection.disabled = false;
       }
     });
 
@@ -261,11 +508,19 @@
       const path = ($('#gh_path').value||'assets/data/tenders.json').trim();
       const token = ($('#gh_token').value||'').trim();
       const wrap = document.getElementById('adminList');
-      if (!wrap || !owner || !repo || !branch || !path) return;
+      if (!wrap) return;
+      if (!owner || !repo || !branch || !path) {
+        wrap.innerHTML = '<div class="muted">أكمل إعدادات GitHub (المالك، المستودع، الفرع، والمسار) يسار الصفحة، ثم اضغط "تحديث القائمة".</div>';
+        return;
+      }
       wrap.innerHTML = '<div class="muted">جلب القائمة...</div>';
       try {
         const arr = await fetchCurrentTendersRaw(owner, repo, branch, path);
-        if (!Array.isArray(arr) || arr.length === 0) { wrap.innerHTML = '<div class="muted">لا توجد عناصر حالياً.</div>'; return; }
+        const rawUrl = `https://raw.githubusercontent.com/${owner}/${repo}/${encodeURIComponent(branch)}/${path}`;
+        if (!Array.isArray(arr) || arr.length === 0) {
+          wrap.innerHTML = '<div class="muted">لا توجد عناصر حالياً. تحقق من المسار داخل المستودع — غالباً: <strong>assets/data/tenders.json</strong>.<br>رابط التحقق المباشر: <a href="'+rawUrl+'" target="_blank" rel="noopener">'+rawUrl+'</a></div>';
+          return;
+        }
         const table = document.createElement('table');
         table.className = 'table';
         table.style.width = '100%';

@@ -22,7 +22,7 @@
     </div>
     <nav class="menu" aria-label="التنقل الرئيسي">
       <a href="index.html">الرئيسية</a>
-      <a href="tenders.html" class="active">مناقصات العراق</a>
+      <a href="tenders-new.html" class="active">مناقصات العراق</a>
       <a href="about.html">من نحن</a>
       <a href="services.html">الخدمات</a>
       <a href="programs.html">البرامج</a>
@@ -35,7 +35,7 @@
     <section class="card tenders-hero">
       <div class="intro">
         <h1>مناقصات العراق</h1>
-        <p>تعرض الصفحة المناقصات مباشرة من ملف JSON ضمن الموقع. أضف مناقصة عبر صفحة الإدارة فتظهر هنا فور تحديث الملف.</p>
+        <p>تعرض الصفحة المناقصات من مصادر متعددة: ملف JSON الأصلي أو البيانات المحفوظة محلياً. <a href="tender-admin-simple.html">أضف مناقصة جديدة هنا</a></p>
         <div class="tenders-search">
           <input id="tenderSearch" type="text" placeholder="ابحث عن مناقصة (جهة، عنوان، مدينة)" />
           <button id="searchBtn" class="btn">بحث</button>
@@ -63,7 +63,12 @@
     <section class="card">
       <h2>قائمة المناقصات</h2>
       <div class="tenders-list" id="tendersList"></div>
-      <p class="muted">المصدر: assets/data/tenders.json — التحديث فوري بعد النشر من صفحة الإدارة.</p>
+      <p class="muted">المصدر: assets/data/tenders.json أو البيانات المحلية — يمكن إضافة مناقصات جديدة من <a href="tender-admin-online.html">صفحة النشر الأونلاين</a></p>
+      <div style="margin: 10px 0;">
+        <button onclick="window.open('./assets/data/tenders.json', '_blank')" class="btn" style="font-size: 12px;">فحص ملف JSON</button>
+        <button onclick="localStorage.removeItem('itech_tenders_cache'); location.reload();" class="btn" style="font-size: 12px;">إعادة تحميل بدون كاش</button>
+        <button onclick="console.clear(); location.reload();" class="btn" style="font-size: 12px;">مسح Console وإعادة تحميل</button>
+      </div>
       <div class="actions">
         <a class="btn" href="index.html">العودة إلى الرئيسية</a>
       </div>

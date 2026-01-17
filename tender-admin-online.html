@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>إدارة المناقصات - نشر أونلاين | I.TECH</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./css/main.css" />
+</head>
+<body class="page-controll">
+  <header class="nav">
+    <div class="brand">
+      <div class="logo-circle"><img src="./assets/images/I-Tech logo.png" alt="I.TECH"/></div>
+      <div class="names"><div class="ar">ايتك</div><div class="en">I.TECH</div></div>
+    </div>
+    <nav class="menu">
+      <a href="index.html">الرئيسية</a>
+      <a href="tenders-new.html">مناقصات العراق</a>
+      <a href="github-setup-guide.html">دليل الإعداد</a>
+    </nav>
+    <button class="burger" aria-label="فتح القائمة">☰</button>
+  </header>
+
+  <main class="container">
+    <section class="card">
+      <h1>إدارة المناقصات - النشر الأونلاين</h1>
+      <p>اختر طريقة النشر المناسبة لك:</p>
+      
+      <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+        <button class="btn" id="btnSelectGitHub" onclick="selectMethod('github')">GitHub API (موصى به)</button>
+        <button class="btn" id="btnSelectJSONBin" onclick="selectMethod('jsonbin')">JSONBin (بسيط)</button>
+      </div>
+
+      <div class="grid-2">
+        <div>
+          <!-- نموذج إضافة المناقصة -->
+          <div class="form">
+            <h2>إضافة مناقصة جديدة</h2>
+            
+            <label>رقم المناقصة (id)</label>
+            <input id="f_id" placeholder="مثال: 2025-007"/>
+            
+            <label>العنوان</label>
+            <input id="f_title" required/>
+            
+            <label>الجهة</label>
+            <input id="f_entity" required/>
+            
+            <label>التصنيف</label>
+            <select id="f_category">
+              <option>حكومية</option>
+              <option>شركات</option>
+              <option>جامعات</option>
+              <option>منظمات</option>
+            </select>
+            
+            <label>المدينة</label>
+            <input id="f_city"/>
+            
+            <label>رقم الإعلان</label>
+            <input id="f_adNumber"/>
+            
+            <label>تاريخ النشر</label>
+            <input id="f_postedDate" type="date"/>
+            
+            <label>الموعد النهائي</label>
+            <input id="f_deadline" type="date"/>
+            
+            <label>الحالة</label>
+            <input id="f_status" placeholder="مفتوح"/>
+            
+            <label>رابط المصدر</label>
+            <input id="f_link" placeholder="#"/>
+            
+            <label>الوصف</label>
+            <textarea id="f_description" rows="3"></textarea>
+            
+            <label>سعر الكراس</label>
+            <input id="f_documentPrice" type="number"/>
+            
+            <label>العملة</label>
+            <input id="f_currency" value="IQD"/>
+            
+            <label>مكان استلام الكراس</label>
+            <input id="f_pickupLocation"/>
+            
+            <label>مكان التقديم</label>
+            <input id="f_submissionPlace"/>
+            
+            <label>متطلبات التقديم (افصل بـ ;)</label>
+            <textarea id="f_requirements" rows="2" placeholder="هوية الضريبة; كتاب عدم ممانعة"></textarea>
+            
+            <label>ملاحظات</label>
+            <textarea id="f_notes" rows="2"></textarea>
+            
+            <label>هاتف الاتصال</label>
+            <input id="f_phone"/>
+            
+            <label>البريد الإلكتروني</label>
+            <input id="f_email"/>
+          </div>
+
+          <!-- إعدادات النشر -->
+          <div id="publishSettings" style="margin-top: 30px;">
+            <!-- GitHub Settings -->
+            <div id="githubSettings" class="form" style="display: none;">
+              <h3>إعدادات GitHub</h3>
+              <label>GitHub Owner</label>
+              <input id="gh_owner" placeholder="مثال: abubesun-hub"/>
+              
+              <label>GitHub Repo</label>
+              <input id="gh_repo" placeholder="مثال: I.tech"/>
+              
+              <label>Branch</label>
+              <input id="gh_branch" value="main"/>
+              
+              <label>Path داخل المستودع</label>
+              <input id="gh_path" value="assets/data/tenders.json"/>
+              
+              <label>GitHub Token (PAT)</label>
+              <input id="gh_token" type="password" placeholder="ghp_xxx أو fine-grained token"/>
+              
+              <label>
+                <input type="checkbox" id="gh_remember"/> حفظ الإعدادات محلياً
+              </label>
+            </div>
+
+            <!-- JSONBin Settings -->
+            <div id="jsonbinSettings" class="form" style="display: none;">
+              <h3>إعدادات JSONBin</h3>
+              <p class="muted">إذا لم يكن لديك حساب، <a href="https://jsonbin.io/signup" target="_blank">سجل مجاناً في JSONBin.io</a></p>
+              
+              <label>JSONBin API Key</label>
+              <input id="jsonbin_key" type="password" placeholder="$2a$10$xxx..."/>
+              
+              <label>Bin ID</label>
+              <input id="jsonbin_id" placeholder="67xxx..."/>
+              
+              <div style="background: #f8f9fa; padding: 15px; border-radius: 5px; margin: 10px 0;">
+                <h4>كيفية الحصول على Bin ID:</h4>
+                <ol>
+                  <li>اذهب إلى <a href="https://jsonbin.io/me/bins" target="_blank">JSONBin Dashboard</a></li>
+                  <li>انشئ Bin جديد</li>
+                  <li>ضع المحتوى الأولي: <code>[]</code></li>
+                  <li>احفظ واحصل على الـ ID</li>
+                </ol>
+              </div>
+              
+              <label>
+                <input type="checkbox" id="jsonbin_remember"/> حفظ الإعدادات محلياً
+              </label>
+            </div>
+          </div>
+
+          <div class="actions" style="margin-top: 20px;">
+            <button class="btn primary" id="btnPublish">نشر المناقصة أونلاين</button>
+            <button class="btn" id="btnClear">مسح النموذج</button>
+          </div>
+          
+          <div id="status" style="margin-top: 15px; padding: 10px; border-radius: 5px; display: none;"></div>
+        </div>
+
+        <div>
+          <h2>المناقصات المنشورة</h2>
+          <div class="actions" style="margin-bottom: 10px;">
+            <button class="btn" id="btnRefresh">تحديث القائمة</button>
+          </div>
+          <div id="tendersList" style="max-height: 500px; overflow-y: auto;"></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+    let currentMethod = 'github';
+
+    // اختيار طريقة النشر
+    window.selectMethod = function(method) {
+      currentMethod = method;
+      
+      // إخفاء جميع الإعدادات
+      document.querySelectorAll('#publishSettings > div').forEach(div => {
+        div.style.display = 'none';
+      });
+      
+      // إظهار الإعدادات المطلوبة
+      if (method === 'github') {
+        $('githubSettings').style.display = 'block';
+        $('btnSelectGitHub').classList.add('primary');
+        $('btnSelectJSONBin').classList.remove('primary');
+        loadGitHubSettings();
+      } else if (method === 'jsonbin') {
+        $('jsonbinSettings').style.display = 'block';
+        $('btnSelectJSONBin').classList.add('primary');
+        $('btnSelectGitHub').classList.remove('primary');
+        loadJSONBinSettings();
+      }
+    };
+
+    // تحميل إعدادات GitHub المحفوظة
+    function loadGitHubSettings() {
+      try {
+        const saved = localStorage.getItem('itech_github_settings');
+        if (saved) {
+          const settings = JSON.parse(saved);
+          if (settings.owner) $('gh_owner').value = settings.owner;
+          if (settings.repo) $('gh_repo').value = settings.repo;
+          if (settings.branch) $('gh_branch').value = settings.branch;
+          if (settings.path) $('gh_path').value = settings.path;
+          if (settings.token) {
+            $('gh_token').value = settings.token;
+            $('gh_remember').checked = true;
+          }
+        }
+      } catch (e) {
+        console.log('تعذر تحميل إعدادات GitHub');
+      }
+    }
+
+    // تحميل إعدادات JSONBin المحفوظة
+    function loadJSONBinSettings() {
+      try {
+        const saved = localStorage.getItem('itech_jsonbin_settings');
+        if (saved) {
+          const settings = JSON.parse(saved);
+          if (settings.key) {
+            $('jsonbin_key').value = settings.key;
+            $('jsonbin_remember').checked = true;
+          }
+          if (settings.id) $('jsonbin_id').value = settings.id;
+        }
+      } catch (e) {
+        console.log('تعذر تحميل إعدادات JSONBin');
+      }
+    }
+
+    // حفظ الإعدادات
+    function saveSettings() {
+      if (currentMethod === 'github' && $('gh_remember').checked) {
+        const settings = {
+          owner: $('gh_owner').value,
+          repo: $('gh_repo').value,
+          branch: $('gh_branch').value,
+          path: $('gh_path').value,
+          token: $('gh_token').value
+        };
+        localStorage.setItem('itech_github_settings', JSON.stringify(settings));
+      } else if (currentMethod === 'jsonbin' && $('jsonbin_remember').checked) {
+        const settings = {
+          key: $('jsonbin_key').value,
+          id: $('jsonbin_id').value
+        };
+        localStorage.setItem('itech_jsonbin_settings', JSON.stringify(settings));
+      }
+    }
+
+    // إنشاء كائن مناقصة
+    function buildTender() {
+      const reqs = ($('f_requirements').value || '').split(';').map(s => s.trim()).filter(Boolean);
+      return {
+        id: $('f_id').value || ('TMP-' + Date.now()),
+        title: $('f_title').value,
+        entity: $('f_entity').value,
+        category: $('f_category').value,
+        city: $('f_city').value,
+        adNumber: $('f_adNumber').value,
+        deadline: $('f_deadline').value,
+        postedDate: $('f_postedDate').value || new Date().toISOString().split('T')[0],
+        status: $('f_status').value || 'مفتوح',
+        link: $('f_link').value || '#',
+        description: $('f_description').value,
+        documentPrice: parseInt($('f_documentPrice').value || '0', 10),
+        currency: $('f_currency').value || 'IQD',
+        pickupLocation: $('f_pickupLocation').value,
+        submissionPlace: $('f_submissionPlace').value,
+        submissionRequirements: reqs,
+        notes: $('f_notes').value,
+        files: [],
+        contact: { 
+          phone: $('f_phone').value, 
+          email: $('f_email').value 
+        }
+      };
+    }
+
+    // عرض رسالة حالة
+    function showStatus(message, type = 'info') {
+      const status = $('status');
+      status.textContent = message;
+      status.style.display = 'block';
+      status.style.backgroundColor = type === 'success' ? '#d4edda' : type === 'error' ? '#f8d7da' : '#d1ecf1';
+      status.style.color = type === 'success' ? '#155724' : type === 'error' ? '#721c24' : '#0c5460';
+      status.style.border = `1px solid ${type === 'success' ? '#c3e6cb' : type === 'error' ? '#f5c6cb' : '#bee5eb'}`;
+    }
+
+    // مسح النموذج
+    function clearForm() {
+      const fields = ['f_id', 'f_title', 'f_entity', 'f_city', 'f_adNumber', 'f_deadline', 'f_postedDate', 'f_status', 'f_link', 'f_description', 'f_documentPrice', 'f_currency', 'f_pickupLocation', 'f_submissionPlace', 'f_requirements', 'f_notes', 'f_phone', 'f_email'];
+      fields.forEach(field => {
+        const el = $(field);
+        if (el) el.value = '';
+      });
+      $('f_category').selectedIndex = 0;
+    }
+
+    // النشر عبر GitHub API
+    async function publishViaGitHub(tender) {
+      const owner = $('gh_owner').value.trim();
+      const repo = $('gh_repo').value.trim();
+      const branch = $('gh_branch').value.trim() || 'main';
+      const path = $('gh_path').value.trim() || 'assets/data/tenders.json';
+      const token = $('gh_token').value.trim();
+
+      if (!owner || !repo || !token) {
+        throw new Error('يرجى ملء جميع حقول GitHub المطلوبة');
+      }
+
+      // جلب البيانات الحالية
+      showStatus('جلب البيانات الحالية من GitHub...', 'info');
+      const rawUrl = `https://raw.githubusercontent.com/${owner}/${repo}/${branch}/${path}`;
+      let currentData = [];
+      
+      try {
+        const response = await fetch(rawUrl);
+        if (response.ok) {
+          currentData = await response.json();
+        }
+      } catch (e) {
+        console.log('لا توجد بيانات سابقة، سيتم إنشاء ملف جديد');
+      }
+
+      // إضافة أو تحديث المناقصة
+      const existingIndex = currentData.findIndex(t => t.id === tender.id);
+      if (existingIndex >= 0) {
+        currentData[existingIndex] = tender;
+      } else {
+        currentData.push(tender);
+      }
+
+      // الحصول على SHA للملف
+      showStatus('تحضير التحديث...', 'info');
+      const apiUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${path}`;
+      let sha = null;
+      
+      try {
+        const response = await fetch(apiUrl, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Accept': 'application/vnd.github+json'
+          }
+        });
+        if (response.ok) {
+          const data = await response.json();
+          sha = data.sha;
+        }
+      } catch (e) {
+        console.log('ملف جديد سيتم إنشاؤه');
+      }
+
+      // رفع الملف المحدث
+      showStatus('نشر التحديث على GitHub...', 'info');
+      const newContent = JSON.stringify(currentData, null, 2);
+      const base64Content = btoa(unescape(encodeURIComponent(newContent)));
+
+      const updateData = {
+        message: `Add/Update tender: ${tender.id}`,
+        content: base64Content,
+        branch: branch
+      };
+
+      if (sha) {
+        updateData.sha = sha;
+      }
+
+      const updateResponse = await fetch(apiUrl, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Accept': 'application/vnd.github+json',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(updateData)
+      });
+
+      if (!updateResponse.ok) {
+        const errorText = await updateResponse.text();
+        throw new Error(`GitHub API Error: ${updateResponse.status} - ${errorText}`);
+      }
+
+      return await updateResponse.json();
+    }
+
+    // النشر عبر JSONBin
+    async function publishViaJSONBin(tender) {
+      const apiKey = $('jsonbin_key').value.trim();
+      const binId = $('jsonbin_id').value.trim();
+
+      if (!apiKey || !binId) {
+        throw new Error('يرجى ملء API Key و Bin ID');
+      }
+
+      // جلب البيانات الحالية
+      showStatus('جلب البيانات الحالية من JSONBin...', 'info');
+      const getUrl = `https://api.jsonbin.io/v3/b/${binId}/latest`;
+      
+      let currentData = [];
+      try {
+        const response = await fetch(getUrl, {
+          headers: {
+            'X-Master-Key': apiKey
+          }
+        });
+        if (response.ok) {
+          const result = await response.json();
+          currentData = result.record || [];
+        }
+      } catch (e) {
+        console.log('لا توجد بيانات سابقة');
+      }
+
+      // إضافة أو تحديث المناقصة
+      const existingIndex = currentData.findIndex(t => t.id === tender.id);
+      if (existingIndex >= 0) {
+        currentData[existingIndex] = tender;
+      } else {
+        currentData.push(tender);
+      }
+
+      // رفع البيانات المحدثة
+      showStatus('نشر التحديث على JSONBin...', 'info');
+      const updateUrl = `https://api.jsonbin.io/v3/b/${binId}`;
+      
+      const updateResponse = await fetch(updateUrl, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Master-Key': apiKey
+        },
+        body: JSON.stringify(currentData)
+      });
+
+      if (!updateResponse.ok) {
+        const errorText = await updateResponse.text();
+        throw new Error(`JSONBin API Error: ${updateResponse.status} - ${errorText}`);
+      }
+
+      return await updateResponse.json();
+    }
+
+    // تحديث إعدادات تحميل البيانات في الموقع
+    function updateDataSource() {
+      if (currentMethod === 'jsonbin') {
+        const binId = $('jsonbin_id').value.trim();
+        if (binId) {
+          const newUrl = `https://api.jsonbin.io/v3/b/${binId}/latest`;
+          localStorage.setItem('itech_json_url', newUrl);
+          localStorage.setItem('itech_data_source_type', 'jsonbin');
+        }
+      } else {
+        // GitHub raw URL
+        const owner = $('gh_owner').value.trim();
+        const repo = $('gh_repo').value.trim();
+        const branch = $('gh_branch').value.trim() || 'main';
+        const path = $('gh_path').value.trim() || 'assets/data/tenders.json';
+        
+        if (owner && repo) {
+          const newUrl = `https://raw.githubusercontent.com/${owner}/${repo}/${branch}/${path}`;
+          localStorage.setItem('itech_json_url', newUrl);
+          localStorage.setItem('itech_data_source_type', 'github');
+        }
+      }
+    }
+
+    // الأحداث
+    $('btnPublish').addEventListener('click', async () => {
+      const tender = buildTender();
+      
+      if (!tender.title || !tender.entity) {
+        showStatus('يرجى ملء العنوان والجهة على الأقل', 'error');
+        return;
+      }
+
+      try {
+        $('btnPublish').disabled = true;
+        
+        let result;
+        if (currentMethod === 'github') {
+          result = await publishViaGitHub(tender);
+        } else {
+          result = await publishViaJSONBin(tender);
+        }
+
+        saveSettings();
+        updateDataSource();
+        
+        showStatus(`تم نشر المناقصة بنجاح! المناقصة متاحة الآن على الموقع.`, 'success');
+        clearForm();
+        
+        // مسح الكاش لإظهار البيانات الجديدة
+        localStorage.removeItem('itech_tenders_cache');
+        
+      } catch (error) {
+        showStatus(`خطأ في النشر: ${error.message}`, 'error');
+      } finally {
+        $('btnPublish').disabled = false;
+      }
+    });
+
+    $('btnClear').addEventListener('click', clearForm);
+
+    // تهيئة الصفحة
+    document.addEventListener('DOMContentLoaded', () => {
+      selectMethod('github'); // اختيار GitHub كطريقة افتراضية
+    });
+  </script>
+  <script src="./js/main.js" defer></script>
+</body>
+</html>

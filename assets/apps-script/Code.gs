@@ -2,10 +2,13 @@
 // Fill these constants, then deploy as a Web App (execute as you, accessible to anyone).
 const SHEET_ID = '1BQHnfvDajpaewzDFf6AAlrSFcReXyIyaSTf3xETqT4M';
 const SHEET_NAME = 'Tenders'; // or the name of your sheet tab
-const SECRET_KEY = '1985'; // optional; set '' to disable
-// Basic login user (server-side check). Replace as needed.
-const ADMIN_USER = 'Abubesun';
-const ADMIN_PASS = 'Ahmed1985';
+// Secrets are read from Script Properties so they are NOT exposed in this repo
+function getSecret_(key, fallback){
+  try { var v = PropertiesService.getScriptProperties().getProperty(key); return v != null ? String(v) : fallback; } catch(e) { return fallback; }
+}
+var SECRET_KEY = getSecret_('SECRET_KEY', ''); // HMAC signing key for tokens; keep non-empty in production
+var ADMIN_USER = getSecret_('ADMIN_USER', ''); // e.g. set in Script Properties
+var ADMIN_PASS = getSecret_('ADMIN_PASS', ''); // e.g. set in Script Properties
 
 function getSheet() {
   return SpreadsheetApp.openById(SHEET_ID).getSheetByName(SHEET_NAME);
@@ -57,7 +60,7 @@ function verifyToken(tok) {
 }
 
 function hasAccess(e) {
-  if (!SECRET_KEY) return true; // if no secret configured, allow
+  if (!SECRET_KEY) return true; // if no secret configured, allow (dev only)
   var p = e && e.parameter || {};
   if (p.key && String(p.key) === SECRET_KEY) return true;
   return verifyToken(p.token);
@@ -77,7 +80,7 @@ function asOutput(obj, e) {
 function handleLogin(e) {
   var u = e && e.parameter && e.parameter.user ? String(e.parameter.user) : '';
   var p = e && e.parameter && e.parameter.pass ? String(e.parameter.pass) : '';
-  if (u === ADMIN_USER && p === ADMIN_PASS) {
+  if (ADMIN_USER && ADMIN_PASS && u === ADMIN_USER && p === ADMIN_PASS) {
     var token = signToken(u);
     return { ok: true, token: token, user: u, expiresIn: 2 * 60 * 60 }; // seconds
   }

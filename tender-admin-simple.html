@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>إضافة مناقصة بسيطة | I.TECH</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./css/main.css" />
+</head>
+<body class="page-controll">
+  <header class="nav">
+    <div class="brand">
+      <div class="logo-circle"><img src="./assets/images/I-Tech logo.png" alt="I.TECH"/></div>
+      <div class="names"><div class="ar">ايتك</div><div class="en">I.TECH</div></div>
+    </div>
+    <nav class="menu" aria-label="التنقل">
+      <a href="index.html">الرئيسية</a>
+      <a href="tenders-new.html">مناقصات العراق</a>
+      <a href="tender-admin.html">الإدارة المتقدمة</a>
+    </nav>
+    <button class="burger" aria-label="فتح القائمة" aria-expanded="false">☰</button>
+  </header>
+
+  <main class="container">
+    <section class="card">
+      <h1>إضافة مناقصة بسيطة</h1>
+      <p>هذه نسخة مبسطة لإضافة المناقصات تقوم بتحديث ملف JSON محلياً فقط. <a href="tender-admin.html">للنشر على GitHub اذهب للصفحة المتقدمة</a></p>
+      
+      <div class="grid-2">
+        <div>
+          <div class="form">
+            <label>رقم المناقصة (id)</label>
+            <input id="f_id" placeholder="مثال: 2025-006"/>
+            
+            <label>العنوان</label>
+            <input id="f_title"/>
+            
+            <label>الجهة</label>
+            <input id="f_entity"/>
+            
+            <label>التصنيف</label>
+            <select id="f_category">
+              <option>حكومية</option>
+              <option>شركات</option>
+              <option>جامعات</option>
+              <option>منظمات</option>
+            </select>
+            
+            <label>المدينة</label>
+            <input id="f_city"/>
+            
+            <label>رقم الإعلان</label>
+            <input id="f_adNumber"/>
+            
+            <label>تاريخ النشر</label>
+            <input id="f_postedDate" type="date"/>
+            
+            <label>الموعد النهائي</label>
+            <input id="f_deadline" type="date"/>
+            
+            <label>الحالة</label>
+            <input id="f_status" placeholder="مفتوح"/>
+            
+            <label>رابط المصدر</label>
+            <input id="f_link" placeholder="#"/>
+            
+            <label>الوصف</label>
+            <textarea id="f_description" rows="4"></textarea>
+            
+            <label>سعر الكراس</label>
+            <input id="f_documentPrice" type="number"/>
+            
+            <label>العملة</label>
+            <input id="f_currency" value="IQD"/>
+            
+            <label>مكان استلام الكراس</label>
+            <input id="f_pickupLocation"/>
+            
+            <label>مكان التقديم</label>
+            <input id="f_submissionPlace"/>
+            
+            <label>متطلبات التقديم (افصل بـ ;)</label>
+            <textarea id="f_requirements" rows="3" placeholder="هوية الضريبة; كتاب عدم ممانعة"></textarea>
+            
+            <label>ملاحظات</label>
+            <textarea id="f_notes" rows="2"></textarea>
+            
+            <label>هاتف الاتصال</label>
+            <input id="f_phone"/>
+            
+            <label>البريد الإلكتروني</label>
+            <input id="f_email"/>
+            
+            <div class="actions" style="margin-top:20px;">
+              <button class="btn primary" id="btnSave">حفظ المناقصة محلياً</button>
+              <button class="btn" id="btnDownload">تنزيل ملف JSON</button>
+              <button class="btn" id="btnClear">مسح النموذج</button>
+            </div>
+            
+            <div id="status" style="margin-top:10px; padding:10px; display:none;"></div>
+          </div>
+        </div>
+        
+        <div>
+          <h2>المناقصات المحفوظة</h2>
+          <div class="actions" style="margin-bottom:8px;">
+            <button class="btn" id="btnRefresh">تحديث القائمة</button>
+            <button class="btn" id="btnLoadFromFile">تحميل من ملف</button>
+            <input type="file" id="fileInput" accept=".json" style="display:none;">
+          </div>
+          <div id="tendersList" class="card" style="padding:12px; max-height:400px; overflow-y:auto;"></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="./js/main.js" defer></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const $ = (id) => document.getElementById(id);
+      const storageKey = 'itech_tenders_local';
+      
+      // الحصول على البيانات من localStorage
+      function getTenders() {
+        try {
+          return JSON.parse(localStorage.getItem(storageKey) || '[]');
+        } catch {
+          return [];
+        }
+      }
+      
+      // حفظ البيانات في localStorage
+      function saveTenders(data) {
+        try {
+          localStorage.setItem(storageKey, JSON.stringify(data, null, 2));
+          return true;
+        } catch {
+          return false;
+        }
+      }
+      
+      // إنشاء كائن مناقصة من النموذج
+      function buildTender() {
+        const reqs = ($('f_requirements').value || '').split(';').map(s => s.trim()).filter(Boolean);
+        return {
+          id: $('f_id').value || ('TMP-' + Date.now()),
+          title: $('f_title').value,
+          entity: $('f_entity').value,
+          category: $('f_category').value,
+          city: $('f_city').value,
+          adNumber: $('f_adNumber').value,
+          deadline: $('f_deadline').value,
+          postedDate: $('f_postedDate').value,
+          status: $('f_status').value || 'مفتوح',
+          link: $('f_link').value || '#',
+          description: $('f_description').value,
+          documentPrice: parseInt($('f_documentPrice').value || '0', 10),
+          currency: $('f_currency').value || 'IQD',
+          pickupLocation: $('f_pickupLocation').value,
+          submissionPlace: $('f_submissionPlace').value,
+          submissionRequirements: reqs,
+          notes: $('f_notes').value,
+          files: [],
+          contact: { 
+            phone: $('f_phone').value, 
+            email: $('f_email').value 
+          }
+        };
+      }
+      
+      // عرض رسالة حالة
+      function showStatus(message, type = 'info') {
+        const status = $('status');
+        status.textContent = message;
+        status.style.display = 'block';
+        status.style.backgroundColor = type === 'success' ? '#d4edda' : type === 'error' ? '#f8d7da' : '#d1ecf1';
+        status.style.color = type === 'success' ? '#155724' : type === 'error' ? '#721c24' : '#0c5460';
+        status.style.border = `1px solid ${type === 'success' ? '#c3e6cb' : type === 'error' ? '#f5c6cb' : '#bee5eb'}`;
+        status.style.borderRadius = '4px';
+      }
+      
+      // مسح النموذج
+      function clearForm() {
+        const fields = ['f_id', 'f_title', 'f_entity', 'f_city', 'f_adNumber', 'f_deadline', 'f_postedDate', 'f_status', 'f_link', 'f_description', 'f_documentPrice', 'f_currency', 'f_pickupLocation', 'f_submissionPlace', 'f_requirements', 'f_notes', 'f_phone', 'f_email'];
+        fields.forEach(field => {
+          const el = $(field);
+          if (el) el.value = '';
+        });
+        $('f_category').selectedIndex = 0;
+      }
+      
+      // عرض قائمة المناقصات
+      function renderTendersList() {
+        const data = getTenders();
+        const list = $('tendersList');
+        
+        if (data.length === 0) {
+          list.innerHTML = '<div style="color: #666;">لا توجد مناقصات محفوظة</div>';
+          return;
+        }
+        
+        const table = document.createElement('table');
+        table.style.width = '100%';
+        table.style.borderCollapse = 'collapse';
+        table.innerHTML = `
+          <thead>
+            <tr style="background: #f8f9fa;">
+              <th style="padding: 8px; border: 1px solid #ddd; text-align: right;">الرقم</th>
+              <th style="padding: 8px; border: 1px solid #ddd; text-align: right;">العنوان</th>
+              <th style="padding: 8px; border: 1px solid #ddd; text-align: right;">الجهة</th>
+              <th style="padding: 8px; border: 1px solid #ddd; text-align: center;">إجراءات</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        `;
+        
+        const tbody = table.querySelector('tbody');
+        data.forEach((tender, index) => {
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td style="padding: 8px; border: 1px solid #ddd;">${tender.id || ''}</td>
+            <td style="padding: 8px; border: 1px solid #ddd;">${tender.title || ''}</td>
+            <td style="padding: 8px; border: 1px solid #ddd;">${tender.entity || ''}</td>
+            <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">
+              <button onclick="editTender(${index})" style="margin: 2px; padding: 4px 8px; background: #007bff; color: white; border: none; border-radius: 3px; cursor: pointer;">تحرير</button>
+              <button onclick="deleteTender(${index})" style="margin: 2px; padding: 4px 8px; background: #dc3545; color: white; border: none; border-radius: 3px; cursor: pointer;">حذف</button>
+            </td>
+          `;
+          tbody.appendChild(row);
+        });
+        
+        list.innerHTML = '';
+        list.appendChild(table);
+      }
+      
+      // تحرير مناقصة
+      window.editTender = function(index) {
+        const data = getTenders();
+        const tender = data[index];
+        if (!tender) return;
+        
+        $('f_id').value = tender.id || '';
+        $('f_title').value = tender.title || '';
+        $('f_entity').value = tender.entity || '';
+        $('f_category').value = tender.category || 'حكومية';
+        $('f_city').value = tender.city || '';
+        $('f_adNumber').value = tender.adNumber || '';
+        $('f_deadline').value = tender.deadline || '';
+        $('f_postedDate').value = tender.postedDate || '';
+        $('f_status').value = tender.status || 'مفتوح';
+        $('f_link').value = tender.link || '';
+        $('f_description').value = tender.description || '';
+        $('f_documentPrice').value = tender.documentPrice || '';
+        $('f_currency').value = tender.currency || 'IQD';
+        $('f_pickupLocation').value = tender.pickupLocation || '';
+        $('f_submissionPlace').value = tender.submissionPlace || '';
+        $('f_requirements').value = Array.isArray(tender.submissionRequirements) ? tender.submissionRequirements.join('; ') : '';
+        $('f_notes').value = tender.notes || '';
+        $('f_phone').value = tender.contact?.phone || '';
+        $('f_email').value = tender.contact?.email || '';
+        
+        showStatus('تم تحميل بيانات المناقصة للتعديل', 'info');
+      };
+      
+      // حذف مناقصة
+      window.deleteTender = function(index) {
+        if (!confirm('هل أنت متأكد من حذف هذه المناقصة؟')) return;
+        
+        const data = getTenders();
+        data.splice(index, 1);
+        
+        if (saveTenders(data)) {
+          showStatus('تم حذف المناقصة بنجاح', 'success');
+          renderTendersList();
+        } else {
+          showStatus('فشل في حذف المناقصة', 'error');
+        }
+      };
+      
+      // حفظ المناقصة
+      $('btnSave').addEventListener('click', function() {
+        const tender = buildTender();
+        
+        if (!tender.title || !tender.entity) {
+          showStatus('يجب ملء العنوان والجهة على الأقل', 'error');
+          return;
+        }
+        
+        const data = getTenders();
+        const existingIndex = data.findIndex(t => t.id === tender.id);
+        
+        if (existingIndex >= 0) {
+          data[existingIndex] = tender;
+          showStatus('تم تحديث المناقصة بنجاح', 'success');
+        } else {
+          data.push(tender);
+          showStatus('تم إضافة المناقصة بنجاح', 'success');
+        }
+        
+        if (saveTenders(data)) {
+          renderTendersList();
+          clearForm();
+        } else {
+          showStatus('فشل في حفظ البيانات', 'error');
+        }
+      });
+      
+      // تنزيل ملف JSON
+      $('btnDownload').addEventListener('click', function() {
+        const data = getTenders();
+        const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'tenders.json';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        
+        showStatus('تم تنزيل ملف JSON بنجاح', 'success');
+      });
+      
+      // مسح النموذج
+      $('btnClear').addEventListener('click', clearForm);
+      
+      // تحديث القائمة
+      $('btnRefresh').addEventListener('click', renderTendersList);
+      
+      // تحميل من ملف
+      $('btnLoadFromFile').addEventListener('click', function() {
+        $('fileInput').click();
+      });
+      
+      $('fileInput').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          try {
+            const data = JSON.parse(e.target.result);
+            if (Array.isArray(data)) {
+              if (saveTenders(data)) {
+                showStatus(`تم تحميل ${data.length} مناقصة من الملف`, 'success');
+                renderTendersList();
+              } else {
+                showStatus('فشل في حفظ البيانات المحملة', 'error');
+              }
+            } else {
+              showStatus('صيغة الملف غير صحيحة', 'error');
+            }
+          } catch {
+            showStatus('فشل في قراءة الملف', 'error');
+          }
+        };
+        reader.readAsText(file);
+      });
+      
+      // تحميل البيانات الموجودة في الملف الأصلي
+      async function loadOriginalData() {
+        try {
+          const response = await fetch('./assets/data/tenders.json');
+          if (response.ok) {
+            const data = await response.json();
+            const existing = getTenders();
+            if (existing.length === 0 && Array.isArray(data) && data.length > 0) {
+              if (saveTenders(data)) {
+                showStatus(`تم تحميل ${data.length} مناقصة من الملف الأصلي`, 'success');
+                renderTendersList();
+              }
+            }
+          }
+        } catch (e) {
+          console.log('تعذر تحميل البيانات الأصلية:', e);
+        }
+      }
+      
+      // تهيئة الصفحة
+      renderTendersList();
+      loadOriginalData();
+    });
+  </script>
+</body>
+</html>
