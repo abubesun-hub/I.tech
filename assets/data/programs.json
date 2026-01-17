@@ -58,5 +58,20 @@
       "https://vimeo.com/76979871"
     ],
     "link": "#"
+  },
+  {
+    "id": "محاسبتك-1768638989497",
+    "name": "محاسبتك",
+    "logo": "https://github.com/abubesun-hub/mypic/blob/main/I-Tech%20logo.png",
+    "image": "https://github.com/abubesun-hub/mypic/blob/main/I-Tech%20logo.png",
+    "shortDescription": "برنامج محاسبي متكامل",
+    "price": 300,
+    "currency": "IQD",
+    "images": [
+      "https://github.com/abubesun-hub/mypic/blob/main/I-Tech%20logo.png",
+      "https://github.com/abubesun-hub/mypic/blob/main/I-Tech%20logo.png"
+    ],
+    "videos": [],
+    "link": "#"
   }
 ]
