@@ -736,7 +736,8 @@ async function loadProgramsData() {
     grid.innerHTML = '';
     items.forEach(p => {
       const card = document.createElement('article');
-      card.className = 'card program-card reveal';
+      // اجعل البطاقات ظاهرة فوراً حتى لا تعتمد على الـ IntersectionObserver
+      card.className = 'card program-card reveal active';
       const features = Array.isArray(p.features) ? p.features.slice(0, 3) : [];
       const images = Array.isArray(p.images) ? p.images.filter(Boolean).slice(0, 10) : [];
       const videos = Array.isArray(p.videos) ? p.videos.filter(Boolean).slice(0, 2) : [];
