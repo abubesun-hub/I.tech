@@ -360,9 +360,11 @@
         let sha = null; try { sha = await githubGetFileSha(owner, repo, branch, path, token); } catch { sha = null; }
         setPgStatus('رفع التحديث إلى GitHub...', 'blue');
         const res = await githubPutFile(owner, repo, branch, path, utf8ToBase64(newJson), `Add program ${item.id}`, sha, token);
-        setPgStatus('تم النشر بنجاح ✔', 'green');
+        const commitUrl = (res && res.commit && res.commit.html_url) ? res.commit.html_url : '';
+        const fileUrl = (res && res.content && res.content.html_url) ? res.content.html_url : '';
+        setPgStatus('تم النشر بنجاح ✔' + (commitUrl ? ` — رابط التأكيد: ${commitUrl}` : ''), 'green');
         try { localStorage.removeItem('itech_programs_cache'); } catch {}
-        alert('تم نشر البرنامج بنجاح ✔\nسيظهر في صفحة البرامج بعد تحديث GitHub Pages.');
+        alert('تم نشر البرنامج بنجاح ✔\nسيظهر في صفحة البرامج بعد تحديث GitHub Pages.' + (commitUrl ? '\n\nرابط الـ Commit: '+commitUrl : ''));
 
         // clear fields
         try {

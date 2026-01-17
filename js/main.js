@@ -375,9 +375,13 @@ async function loadProgramsData() {
   try {
     const cacheKey = 'itech_programs_cache';
     const ttlMs = 15 * 60 * 1000;
+    const params = new URLSearchParams(location.search);
+    const nocache = params.get('nocache');
+    if (nocache === '1') { try { localStorage.removeItem(cacheKey); } catch {} }
+    const overrideUrl = params.get('progjson') || params.get('json');
     const cache = (() => { try { return JSON.parse(localStorage.getItem(cacheKey) || 'null'); } catch { return null; } })();
     if (cache && (Date.now() - cache.ts < ttlMs) && Array.isArray(cache.data)) return cache.data;
-    const r = await fetch('./assets/data/programs.json');
+    const r = await fetch(overrideUrl || './assets/data/programs.json', { cache: 'no-store' });
     const j = await r.json();
     localStorage.setItem(cacheKey, JSON.stringify({ ts: Date.now(), data: j }));
     return j;
