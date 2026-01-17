@@ -60,14 +60,15 @@
     "link": "#"
   },
   {
-    "id": "محاسب-تيك-1768638741195",
-    "name": "محاسب تيك",
+    "id": "محاسبتك-1768638989497",
+    "name": "محاسبتك",
     "logo": "https://github.com/abubesun-hub/mypic/blob/main/I-Tech%20logo.png",
     "image": "https://github.com/abubesun-hub/mypic/blob/main/I-Tech%20logo.png",
-    "shortDescription": "برنامج محاسبي متكامل \n\nلوحة تحكم: إحصاءات فورية للإيرادات، المصروفات، الرصيد المتبقي، الرواتب المدفوعة/المستحقة، ونمو شهري مع معاملات حديثة.\nرأس المال والإيرادات والمصروفات: إدخال وتتبع العمليات بالـUSD وIQD مع إجماليات دقيقة ودعم الاستردادات.\nالرواتب: تتبّع المدفوعات والمستحقات والسُلف وربطها بالأشهر والموظفين لتقليل الالتباس.\nالتقارير والطباعة: توليد تقارير موجزة وقابلة للطباعة لملفات الأقسام المالية.",
+    "shortDescription": "برنامج محاسبي متكامل",
     "price": 300,
-    "currency": "$",
+    "currency": "IQD",
     "images": [
+      "https://github.com/abubesun-hub/mypic/blob/main/I-Tech%20logo.png",
       "https://github.com/abubesun-hub/mypic/blob/main/I-Tech%20logo.png"
     ],
     "videos": [],
