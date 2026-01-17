@@ -744,14 +744,41 @@ async function loadProgramsData() {
             .filter(u => typeof u === 'string' && u.trim().length > 0)
             .slice(0, 10)
         : [];
-      const videos = Array.isArray(p.videos) ? p.videos.filter(Boolean).slice(0, 2) : [];
+      const videos = Array.isArray(p.videos)
+        ? p.videos
+            .filter(u => typeof u === 'string' && /^https?:\/\//i.test(u.trim()))
+            .slice(0, 2)
+        : [];
       const fmtCur = (c) => (c==='USD' ? 'دولار' : c==='IQD' ? 'دينار' : (c||''));
-      const priceBadge = (p.price!=null) ? `<span class="badge" style="background:#fff7ed;border:1px solid #fed7aa;color:var(--primary)">سعر البرنامج: ${p.price} ${fmtCur(p.currency||'IQD')}</span>` : '';
+      const priceBadge = (p.price!=null) ? `<div class="badge" style="background:#fff7ed;border:1px solid #fed7aa;color:var(--primary);display:inline-block;margin-top:6px;">سعر البرنامج: ${p.price} ${fmtCur(p.currency||'IQD')}</div>` : '';
+
+      const makeVideoEmbed = (u) => {
+        try {
+          const url = new URL(u);
+          const host = url.hostname.replace('www.', '');
+          if (host === 'youtu.be') {
+            const id = url.pathname.split('/').filter(Boolean)[0];
+            if (id) return `<div class="video-embed" style="margin-top:10px"><iframe src="https://www.youtube.com/embed/${id}" title="YouTube video" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen style="width:100%;height:220px;border:0;border-radius:8px"></iframe></div>`;
+          }
+          if (host === 'youtube.com' || host === 'm.youtube.com') {
+            const id = url.searchParams.get('v');
+            if (id) return `<div class="video-embed" style="margin-top:10px"><iframe src="https://www.youtube.com/embed/${id}" title="YouTube video" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen style="width:100%;height:220px;border:0;border-radius:8px"></iframe></div>`;
+          }
+          if (host === 'vimeo.com') {
+            const id = url.pathname.split('/').filter(Boolean)[0];
+            if (id) return `<div class="video-embed" style="margin-top:10px"><iframe src="https://player.vimeo.com/video/${id}" title="Vimeo video" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen style="width:100%;height:220px;border:0;border-radius:8px"></iframe></div>`;
+          }
+          return '';
+        } catch { return ''; }
+      };
+      const firstVideoEmbed = videos.length ? makeVideoEmbed(videos[0]) : '';
 
       const gallery = images.length
         ? `<div class="files-list">${images.map(u=>`<img src="${u}" alt="صورة البرنامج" style="width:120px;height:90px;object-fit:cover;border-radius:8px;border:1px solid var(--border)" loading="lazy" onerror="this.remove()">`).join(' ')}</div>`
         : '';
-      const videoLinks = videos.length ? `<div class="files-list">${videos.map(u=>`<a class="btn" href="${u}" target="_blank" rel="noopener">مشاهدة فيديو</a>`).join(' ')}</div>` : '';
+      const videoLinks = videos.length > 1
+        ? `<div class="files-list">${videos.slice(1).map(u=>`<a class="btn" href="${u}" target="_blank" rel="noopener">مشاهدة فيديو</a>`).join(' ')}</div>`
+        : '';
 
       card.innerHTML = `
         ${p.image ? `<img src="${p.image}" alt="${p.name}" class="card-img" loading="lazy" onerror="this.remove()" />` : ''}
@@ -760,9 +787,10 @@ async function loadProgramsData() {
         ${p.shortDescription ? `<p class="tender-desc">${p.shortDescription}</p>` : ''}
         ${features.length ? `<ul>${features.map(f=>`<li>${f}</li>`).join('')}</ul>` : ''}
         ${gallery}
+        ${firstVideoEmbed}
         ${videoLinks}
         <div class="actions">
-          <a class="btn link" href="${p.link||'#'}">تفاصيل لاحقًا</a>
+          <a class="btn link" href="program.html?id=${encodeURIComponent(p.id)}">تفاصيل</a>
         </div>
       `;
       grid.appendChild(card);
@@ -786,4 +814,48 @@ async function loadProgramsData() {
       msg.textContent = 'تعذر تحميل بيانات البرامج.';
       grid.parentElement.insertBefore(msg, grid);
     });
+})();
+
+// Program details page
+(function(){
+  const container = document.getElementById('programDetail');
+  if (!container) return;
+  const params = new URLSearchParams(location.search);
+  const id = params.get('id');
+  const fmtCur = (c) => (c==='USD' ? 'دولار' : c==='IQD' ? 'دينار' : (c||''));
+  const makeVideoEmbed = (u) => {
+    try {
+      const url = new URL(u);
+      const host = url.hostname.replace('www.', '');
+      if (host === 'youtu.be') { const id = url.pathname.split('/').filter(Boolean)[0]; if (id) return `<iframe src="https://www.youtube.com/embed/${id}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen style="width:100%;height:360px;border:0;border-radius:8px"></iframe>`; }
+      if (host === 'youtube.com' || host === 'm.youtube.com') { const id = url.searchParams.get('v'); if (id) return `<iframe src="https://www.youtube.com/embed/${id}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen style="width:100%;height:360px;border:0;border-radius:8px"></iframe>`; }
+      if (host === 'vimeo.com') { const id = url.pathname.split('/').filter(Boolean)[0]; if (id) return `<iframe src="https://player.vimeo.com/video/${id}" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen style="width:100%;height:360px;border:0;border-radius:8px"></iframe>`; }
+      return '';
+    } catch { return ''; }
+  };
+  loadProgramsData()
+    .then(arr => {
+      const item = Array.isArray(arr) ? arr.find(x => String(x.id||'') === String(id||'')) : null;
+      if (!item) { container.innerHTML = '<p class="under-construction">لم يتم العثور على البرنامج المطلوب.</p>'; return; }
+      const images = Array.isArray(item.images) ? item.images.filter(u=>typeof u==='string'&&u.trim()).slice(0,20) : [];
+      const videos = Array.isArray(item.videos) ? item.videos.filter(u=>typeof u==='string'&&/^https?:\/\//i.test(u.trim())).slice(0,5) : [];
+      const priceBadge = (item.price!=null) ? `<div class="badge" style="background:#fff7ed;border:1px solid #fed7aa;color:var(--primary);display:inline-block;margin-top:6px;">سعر البرنامج: ${item.price} ${fmtCur(item.currency||'IQD')}</div>` : '';
+      const gallery = images.length ? `<div class="files-list">${images.map(u=>`<img src="${u}" alt="صورة البرنامج" style="width:160px;height:120px;object-fit:cover;border-radius:8px;border:1px solid var(--border)" loading="lazy" onerror="this.remove()">`).join(' ')}</div>` : '';
+      const embeds = videos.map(makeVideoEmbed).filter(Boolean).join('');
+      const links = videos.filter(u=>!makeVideoEmbed(u)).map(u=>`<a class="btn" href="${u}" target="_blank" rel="noopener">مشاهدة فيديو</a>`).join(' ');
+      const features = Array.isArray(item.features) ? `<ul>${item.features.map(f=>`<li>${f}</li>`).join('')}</ul>` : '';
+      container.innerHTML = `
+        <h1>${item.name||'برنامج'}</h1>
+        ${priceBadge}
+        ${item.shortDescription ? `<p class="tender-desc">${item.shortDescription}</p>` : ''}
+        ${features}
+        ${gallery}
+        ${embeds}
+        ${links ? `<div class="files-list">${links}</div>` : ''}
+        <div class="actions" style="margin-top:12px;">
+          <a class="btn" href="programs.html">العودة إلى البرامج</a>
+        </div>
+      `;
+    })
+    .catch(()=>{ container.innerHTML = '<p class="under-construction">تعذر تحميل تفاصيل البرنامج.</p>'; });
 })();
