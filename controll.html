@@ -112,8 +112,11 @@
             <input id="p_image" placeholder="https://..." />
             <label>سعر البرنامج</label>
             <input id="p_price" type="number" placeholder="مثال: 250" />
-            <label>العملة (اختياري)</label>
-            <input id="p_currency" value="IQD" />
+            <label>العملة</label>
+            <select id="p_currency">
+              <option value="IQD" selected>دينار</option>
+              <option value="USD">دولار</option>
+            </select>
             <input id="p_id" type="hidden" />
 
             <h2 style="margin:14px 0 10px;">ميزات البرنامج (افصل بـ ;)</h2>
