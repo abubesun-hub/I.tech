@@ -458,7 +458,7 @@ async function loadProgramsData() {
       console.log(`📄 مناقصة ${index + 1}:`, { id: t.id, title: t.title, entity: t.entity });
       
       const card = document.createElement('div');
-      card.className = 'card tender-card reveal';
+      card.className = 'card tender-card reveal active';
       const dleft = t.deadline ? daysLeft(t.deadline) : NaN;
       const deadlineBadge = isNaN(dleft) ? '' : (dleft < 0 ? '<span class="badge expired">منتهي</span>' : `<span class="badge deadline">متبقٍ ${dleft} يوم</span>`);
       const favs = getFavs();
