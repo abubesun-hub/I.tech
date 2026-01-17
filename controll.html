@@ -116,6 +116,9 @@
             <input id="p_currency" value="IQD" />
             <input id="p_id" type="hidden" />
 
+            <h2 style="margin:14px 0 10px;">ميزات البرنامج (افصل بـ ;)</h2>
+            <textarea id="p_features" rows="3" placeholder="مثال: تقارير مالية; صلاحيات مستخدمين; تصدير PDF"></textarea>
+
             <hr style="margin:14px 0; opacity:.3;">
             <h2 style="margin:6px 0 10px;">صور إضافية (حتى 10 روابط)</h2>
             <div class="grid-2">
@@ -269,6 +272,10 @@
       for(let i=1;i<=2;i++){ const v = (document.getElementById('p_vid'+i).value||'').trim(); if (v) vids.push(v); }
       const existingId = (document.getElementById('p_id').value||'').trim();
       const id = existingId || ((name ? name.replace(/\s+/g,'-').toLowerCase() : 'program') + '-' + Date.now());
+      const features = (document.getElementById('p_features').value||'')
+        .split(';')
+        .map(s=>s.trim())
+        .filter(Boolean);
       return {
         id,
         name,
@@ -279,6 +286,7 @@
         currency,
         images: imgs,
         videos: vids,
+        features,
         link: '#'
       };
     }
@@ -311,6 +319,7 @@
               document.getElementById('p_image').value = item.image||'';
               document.getElementById('p_price').value = item.price!=null?String(item.price):'';
               document.getElementById('p_currency').value = item.currency||'IQD';
+              document.getElementById('p_features').value = Array.isArray(item.features)? item.features.join('; ') : '';
               // fill images/videos
               for(let i=1;i<=10;i++){
                 const val = (Array.isArray(item.images) && item.images[i-1]) ? item.images[i-1] : '';
@@ -415,7 +424,7 @@
 
         // clear fields
         try {
-          ['p_name','p_desc','p_logo','p_image','p_price','p_currency','p_vid1','p_vid2','p_id'].forEach(id=>{ const el=document.getElementById(id); if (el) el.value=''; });
+          ['p_name','p_desc','p_logo','p_image','p_price','p_currency','p_vid1','p_vid2','p_id','p_features'].forEach(id=>{ const el=document.getElementById(id); if (el) el.value=''; });
           for(let i=1;i<=10;i++){ const el=document.getElementById('p_img'+i); if (el) el.value=''; }
         } catch {}
 
