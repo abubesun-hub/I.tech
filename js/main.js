@@ -780,20 +780,35 @@ async function loadProgramsData() {
         ? `<div class="files-list">${videos.slice(1).map(u=>`<a class="btn" href="${u}" target="_blank" rel="noopener">مشاهدة فيديو</a>`).join(' ')}</div>`
         : '';
 
+      const videoBadge = videos.length ? `<span class="badge" style="margin-right:6px;background:#e6f0ff;border:1px solid #bcd3ff;color:#1e40af">فيديو</span>` : '';
       card.innerHTML = `
         ${p.image ? `<img src="${p.image}" alt="${p.name}" class="card-img" loading="lazy" onerror="this.remove()" />` : ''}
-        <h2>${p.logo ? `<img src="${p.logo}" alt="لوغو ${p.name}" style="width:32px;height:32px;object-fit:contain;margin-left:8px;vertical-align:middle">` : ''}${p.name||'برنامج'}</h2>
+        <h2>${p.logo ? `<img src="${p.logo}" alt="لوغو ${p.name}" style="width:32px;height:32px;object-fit:contain;margin-left:8px;vertical-align:middle">` : ''}${p.name||'برنامج'} ${videoBadge}</h2>
         ${priceBadge}
         ${p.shortDescription ? `<p class="tender-desc">${p.shortDescription}</p>` : ''}
         ${features.length ? `<ul>${features.map(f=>`<li>${f}</li>`).join('')}</ul>` : ''}
         ${gallery}
-        ${firstVideoEmbed}
+        ${firstVideoEmbed ? firstVideoEmbed.replace('<div class="video-embed"', `<div class="video-embed" id="vid-${p.id}" style="display:none"`) : ''}
         ${videoLinks}
         <div class="actions">
           <a class="btn link" href="program.html?id=${encodeURIComponent(p.id)}">تفاصيل</a>
+          ${videos.length ? `<button class="btn" data-vid="vid-${p.id}">مشاهدة فيديو</button>` : ''}
         </div>
       `;
       grid.appendChild(card);
+      // زر إظهار/إخفاء الفيديو المضمن
+      const vbtn = card.querySelector('[data-vid]');
+      if (vbtn) {
+        vbtn.addEventListener('click', () => {
+          const targetId = vbtn.getAttribute('data-vid');
+          const el = card.querySelector('#'+CSS.escape(targetId));
+          if (el) {
+            const isHidden = el.style.display === 'none' || !el.style.display;
+            el.style.display = isHidden ? 'block' : 'none';
+            if (isHidden) { try { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch {} }
+          }
+        });
+      }
     });
   }
 
