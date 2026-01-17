@@ -10,6 +10,15 @@
       "تكامل مع الباركود",
       "تصدير تقارير XLS/PDF"
     ],
+    "price": 250,
+    "currency": "IQD",
+    "images": [
+      "https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=600&auto=format&fit=crop",
+      "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=600&auto=format&fit=crop"
+    ],
+    "videos": [
+      "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+    ],
     "link": "#"
   },
   {
@@ -23,6 +32,12 @@
       "إدارة عملاء وموردين",
       "طباعة سريعة وتصدير"
     ],
+    "price": 300,
+    "currency": "IQD",
+    "images": [
+      "https://images.unsplash.com/photo-1526378722484-b1ce58e1c3f3?w=600&auto=format&fit=crop"
+    ],
+    "videos": [],
     "link": "#"
   },
   {
@@ -35,6 +50,12 @@
       "لوحات كانبان",
       "تنبيهات وإشعارات",
       "واجهة عربية متجاوبة"
+    ],
+    "price": 220,
+    "currency": "IQD",
+    "images": [],
+    "videos": [
+      "https://vimeo.com/76979871"
     ],
     "link": "#"
   }

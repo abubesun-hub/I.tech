@@ -734,11 +734,21 @@ async function loadProgramsData() {
       const card = document.createElement('article');
       card.className = 'card program-card reveal';
       const features = Array.isArray(p.features) ? p.features.slice(0, 3) : [];
+      const images = Array.isArray(p.images) ? p.images.filter(Boolean).slice(0, 10) : [];
+      const videos = Array.isArray(p.videos) ? p.videos.filter(Boolean).slice(0, 2) : [];
+      const priceBadge = (p.price!=null) ? `<span class="badge" style="background:#fff7ed;border:1px solid #fed7aa;color:var(--primary)">سعر البرنامج: ${p.price} ${p.currency||'IQD'}</span>` : '';
+
+      const gallery = images.length ? `<div class="files-list">${images.map(u=>`<img src="${u}" alt="صورة البرنامج" style="width:120px;height:90px;object-fit:cover;border-radius:8px;border:1px solid var(--border)" loading="lazy">`).join(' ')}</div>` : '';
+      const videoLinks = videos.length ? `<div class="files-list">${videos.map(u=>`<a class="btn" href="${u}" target="_blank" rel="noopener">مشاهدة فيديو</a>`).join(' ')}</div>` : '';
+
       card.innerHTML = `
         ${p.image ? `<img src="${p.image}" alt="${p.name}" class="card-img" loading="lazy" />` : ''}
         <h2>${p.logo ? `<img src="${p.logo}" alt="لوغو ${p.name}" style="width:32px;height:32px;object-fit:contain;margin-left:8px;vertical-align:middle">` : ''}${p.name||'برنامج'}</h2>
+        ${priceBadge}
         ${p.shortDescription ? `<p class="tender-desc">${p.shortDescription}</p>` : ''}
         ${features.length ? `<ul>${features.map(f=>`<li>${f}</li>`).join('')}</ul>` : ''}
+        ${gallery}
+        ${videoLinks}
         <div class="actions">
           <a class="btn link" href="${p.link||'#'}">تفاصيل لاحقًا</a>
         </div>

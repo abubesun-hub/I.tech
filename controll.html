@@ -94,6 +94,89 @@
       </div>
       <p class="muted">هذه نسخة أولية بدون خادم. تُخزَّن الأرقام محلياً في المتصفح.</p>
     </section>
+
+    <!-- إدخال البرامج: داخل لوحة التحكم -->
+    <section class="card" id="programAdmin">
+      <h1>إضافة برنامج جديد</h1>
+      <p>املأ بيانات البرنامج ثم اضغط "نشر على GitHub" ليُحدّث الملف <strong>assets/data/programs.json</strong> مباشرة ويظهر في صفحة "البرامج".</p>
+      <div class="grid-2">
+        <div>
+          <div class="form">
+            <label>اسم البرنامج</label>
+            <input id="p_name" placeholder="مثال: نظام المخزون" />
+            <label>معلومات عن البرنامج</label>
+            <textarea id="p_desc" rows="3" placeholder="وصف موجز"></textarea>
+            <label>رابط لوغو البرنامج</label>
+            <input id="p_logo" placeholder="https://..." />
+            <label>الصورة الرئيسية</label>
+            <input id="p_image" placeholder="https://..." />
+            <label>سعر البرنامج</label>
+            <input id="p_price" type="number" placeholder="مثال: 250" />
+            <label>العملة (اختياري)</label>
+            <input id="p_currency" value="IQD" />
+
+            <hr style="margin:14px 0; opacity:.3;">
+            <h2 style="margin:6px 0 10px;">صور إضافية (حتى 10 روابط)</h2>
+            <div class="grid-2">
+              <input id="p_img1" placeholder="https://..." />
+              <input id="p_img2" placeholder="https://..." />
+              <input id="p_img3" placeholder="https://..." />
+              <input id="p_img4" placeholder="https://..." />
+              <input id="p_img5" placeholder="https://..." />
+              <input id="p_img6" placeholder="https://..." />
+              <input id="p_img7" placeholder="https://..." />
+              <input id="p_img8" placeholder="https://..." />
+              <input id="p_img9" placeholder="https://..." />
+              <input id="p_img10" placeholder="https://..." />
+            </div>
+
+            <h2 style="margin:14px 0 10px;">روابط فيديو (حتى 2)</h2>
+            <div class="grid-2">
+              <input id="p_vid1" placeholder="https://..." />
+              <input id="p_vid2" placeholder="https://..." />
+            </div>
+
+            <div id="programPublishStatus" style="margin-top:15px;padding:12px;border-radius:5px;display:none;font-weight:600;"></div>
+
+            <hr style="margin:18px 0; opacity:.3;">
+            <h2 style="margin:6px 0 10px;">نشر مباشر على GitHub</h2>
+            <p class="muted">يتطلب رمز وصول شخصي (PAT) بصلاحية contents:write للمستودع.
+              سيتم تعديل الملف <strong>assets/data/programs.json</strong> مباشرة عبر GitHub API.
+            </p>
+            <div class="form">
+              <label>GitHub Owner</label>
+              <input id="pg_owner" placeholder="مثال: abubesun-hub" />
+              <label>GitHub Repo</label>
+              <input id="pg_repo" placeholder="مثال: I.tech" />
+              <label>Branch</label>
+              <input id="pg_branch" value="main" />
+              <label>Path داخل المستودع</label>
+              <input id="pg_path" value="assets/data/programs.json" />
+              <label>GitHub Token (PAT)</label>
+              <input id="pg_token" type="password" placeholder="ghp_xxx" />
+              <div style="display:flex;align-items:center;gap:10px;margin-top:8px;">
+                <label style="display:flex;align-items:center;gap:6px;">
+                  <input type="checkbox" id="pg_remember_token" />
+                  حفظ الرمز محليًا (اختياري)
+                </label>
+              </div>
+              <div class="actions" style="margin-top:12px;">
+                <button class="btn primary" id="btnPublishProgram">نشر على GitHub</button>
+                <button class="btn" id="btnTestPgConnection" style="margin-right:10px;">اختبار الاتصال</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div>
+          <h2>البرامج الحالية</h2>
+          <div class="actions" style="margin-bottom:8px;">
+            <button class="btn" id="btnRefreshPrograms">تحديث القائمة</button>
+            <button class="btn" id="btnClearProgramsCache">مسح كاش البرامج</button>
+          </div>
+          <div id="programsAdminList" class="card" style="padding:12px;"></div>
+        </div>
+      </div>
+    </section>
   </main>
 
   <footer class="footer">
@@ -127,5 +210,178 @@
   </footer>
 
   <script src="./js/main.js" defer></script>
+  <script>
+    // --- Helpers (مشابهة لإدارة المناقصات) ---
+    function utf8ToBase64(str){ try { return btoa(unescape(encodeURIComponent(str))); } catch(e){ return btoa(str); } }
+    function encodePathSegments(p){ try { return (p||'').split('/').map(encodeURIComponent).join('/'); } catch { return p; } }
+    async function githubGetFileSha(owner, repo, branch, path, token){
+      const url = `https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/contents/${encodePathSegments(path)}?ref=${encodeURIComponent(branch)}`;
+      const headers = { 'Accept':'application/vnd.github+json','Authorization':`Bearer ${token}`,'User-Agent':'I.TECH-Admin/1.0' };
+      const r = await fetch(url, { headers });
+      if (r.status === 404) return null; if (!r.ok) throw new Error('GitHub API (get sha) failed: '+r.status+' - '+await r.text());
+      const j = await r.json(); return j && j.sha ? j.sha : null;
+    }
+    async function githubPutFile(owner, repo, branch, path, contentBase64, message, shaOrNull, token){
+      const url = `https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/contents/${encodePathSegments(path)}`;
+      const body = { message, content: contentBase64, branch }; if (shaOrNull) body.sha = shaOrNull;
+      const headers = { 'Accept':'application/vnd.github+json','Content-Type':'application/json','Authorization':`Bearer ${token}`,'User-Agent':'I.TECH-Admin/1.0' };
+      const r = await fetch(url, { method:'PUT', headers, body: JSON.stringify(body) });
+      if (!r.ok) throw new Error('GitHub API error '+r.status+': '+await r.text());
+      return await r.json();
+    }
+    async function fetchCurrentProgramsRaw(owner, repo, branch, path){
+      const rawUrl = `https://raw.githubusercontent.com/${owner}/${repo}/${encodeURIComponent(branch)}/${path}`;
+      const r = await fetch(rawUrl, { cache:'no-store', headers:{ 'Accept':'application/json' } });
+      if (r.status === 404) return []; if (!r.ok) throw new Error('Fetch raw failed: '+r.status);
+      try { return await r.json(); } catch { return []; }
+    }
+
+    // Prefill GitHub fields from LocalStorage
+    (function(){
+      try {
+        const owner = localStorage.getItem('itech_pg_owner'); if (owner) document.getElementById('pg_owner').value = owner;
+        const repo = localStorage.getItem('itech_pg_repo'); if (repo) document.getElementById('pg_repo').value = repo;
+        const branch = localStorage.getItem('itech_pg_branch'); if (branch) document.getElementById('pg_branch').value = branch;
+        const path = localStorage.getItem('itech_pg_path'); if (path) document.getElementById('pg_path').value = path;
+        const tok = localStorage.getItem('itech_pg_token'); if (tok) { document.getElementById('pg_token').value = tok; document.getElementById('pg_remember_token').checked = true; }
+      } catch {}
+    })();
+
+    function setPgStatus(msg, color){
+      const statusEl = document.getElementById('programPublishStatus');
+      if (!statusEl) return; statusEl.textContent = msg; statusEl.style.color = color || 'var(--text-muted)';
+      statusEl.style.display = 'block'; statusEl.style.padding = '10px';
+      statusEl.style.border = '1px solid ' + (color || '#ddd'); statusEl.style.borderRadius = '5px';
+      statusEl.style.backgroundColor = color === 'green' ? '#d4edda' : color === 'red' ? '#f8d7da' : '#d1ecf1';
+    }
+
+    function buildProgramItem(){
+      const name = (document.getElementById('p_name').value||'').trim();
+      const desc = (document.getElementById('p_desc').value||'').trim();
+      const logo = (document.getElementById('p_logo').value||'').trim();
+      const image = (document.getElementById('p_image').value||'').trim();
+      const price = (document.getElementById('p_price').value||'').trim();
+      const currency = (document.getElementById('p_currency').value||'IQD').trim();
+      const imgs = [];
+      for(let i=1;i<=10;i++){ const v = (document.getElementById('p_img'+i).value||'').trim(); if (v) imgs.push(v); }
+      const vids = [];
+      for(let i=1;i<=2;i++){ const v = (document.getElementById('p_vid'+i).value||'').trim(); if (v) vids.push(v); }
+      const id = (name ? name.replace(/\s+/g,'-').toLowerCase() : 'program') + '-' + Date.now();
+      return {
+        id,
+        name,
+        logo,
+        image,
+        shortDescription: desc,
+        price: price ? Number(price) : undefined,
+        currency,
+        images: imgs,
+        videos: vids,
+        link: '#'
+      };
+    }
+
+    async function renderProgramsAdminList(){
+      const owner = (document.getElementById('pg_owner').value||'').trim();
+      const repo = (document.getElementById('pg_repo').value||'').trim();
+      const branch = (document.getElementById('pg_branch').value||'main').trim();
+      const path = (document.getElementById('pg_path').value||'assets/data/programs.json').trim();
+      const wrap = document.getElementById('programsAdminList');
+      if (!wrap) return;
+      if (!owner || !repo || !branch || !path){ wrap.innerHTML = '<div class="muted">أكمل إعدادات GitHub ثم اضغط "تحديث القائمة".</div>'; return; }
+      wrap.innerHTML = '<div class="muted">جلب القائمة...</div>';
+      try {
+        const arr = await fetchCurrentProgramsRaw(owner, repo, branch, path);
+        const rawUrl = `https://raw.githubusercontent.com/${owner}/${repo}/${encodeURIComponent(branch)}/${path}`;
+        if (!Array.isArray(arr) || arr.length === 0){ wrap.innerHTML = '<div class="muted">لا توجد برامج حالياً.<br>رابط التحقق: <a href="'+rawUrl+'" target="_blank" rel="noopener">'+rawUrl+'</a></div>'; return; }
+        const table = document.createElement('table'); table.className='table'; table.style.width='100%';
+        table.innerHTML = '<thead><tr><th>الاسم</th><th>السعر</th><th>صور</th></tr></thead><tbody></tbody>';
+        const tbody = table.querySelector('tbody');
+        arr.forEach(item=>{
+          const tr = document.createElement('tr');
+          tr.innerHTML = `<td>${item.name||''}</td><td>${item.price!=null?item.price+(item.currency?' '+item.currency:''):''}</td><td>${Array.isArray(item.images)?item.images.length:0}</td>`;
+          tbody.appendChild(tr);
+        });
+        wrap.innerHTML=''; wrap.appendChild(table);
+      } catch (e){ wrap.innerHTML = '<div class="muted">تعذر جلب القائمة: '+(e&&e.message?e.message:String(e))+'</div>'; }
+    }
+
+    document.getElementById('btnRefreshPrograms').addEventListener('click', renderProgramsAdminList);
+    document.getElementById('btnClearProgramsCache').addEventListener('click', () => { try { localStorage.removeItem('itech_programs_cache'); alert('تم مسح كاش البرامج ✔ افتح صفحة البرامج بـ ?nocache=1 لقراءة أحدث نسخة.'); } catch {} });
+
+    document.getElementById('btnTestPgConnection').addEventListener('click', async ()=>{
+      setPgStatus('جاري اختبار الاتصال...', 'blue');
+      try {
+        const owner = (document.getElementById('pg_owner').value||'').trim();
+        const repo = (document.getElementById('pg_repo').value||'').trim();
+        const token = (document.getElementById('pg_token').value||'').trim();
+        if (!owner || !repo || !token){ setPgStatus('يرجى ملء Owner, Repo, و Token', 'red'); return; }
+        const repoUrl = `https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}`;
+        const response = await fetch(repoUrl, { headers: { 'Authorization':`Bearer ${token}`,'Accept':'application/vnd.github+json','User-Agent':'I.TECH-Admin/1.0' } });
+        if (response.ok){ const info = await response.json(); setPgStatus(`✅ الاتصال ناجح: ${info.full_name}`, 'green'); }
+        else if (response.status===401){ setPgStatus('❌ Token غير صحيح أو منتهي', 'red'); }
+        else if (response.status===403){ setPgStatus('❌ لا توجد صلاحية للوصول/الكتابة', 'red'); }
+        else { setPgStatus('❌ خطأ '+response.status+': '+await response.text(), 'red'); }
+      } catch (e){ setPgStatus('❌ فشل الاختبار: '+(e&&e.message?e.message:String(e)), 'red'); }
+    });
+
+    document.getElementById('btnPublishProgram').addEventListener('click', async ()=>{
+      setPgStatus('بدء النشر إلى GitHub...', 'blue');
+      const name = (document.getElementById('p_name').value||'').trim();
+      if (!name){ setPgStatus('يرجى إدخال اسم البرنامج', 'red'); alert('اسم البرنامج مطلوب'); return; }
+      const item = buildProgramItem();
+      const owner = (document.getElementById('pg_owner').value||'').trim();
+      const repo = (document.getElementById('pg_repo').value||'').trim();
+      const branch = (document.getElementById('pg_branch').value||'main').trim();
+      const path = (document.getElementById('pg_path').value||'assets/data/programs.json').trim();
+      const token = (document.getElementById('pg_token').value||'').trim();
+      if (!owner || !repo || !branch || !path || !token){ setPgStatus('أكمل إعدادات GitHub والرمز (PAT)', 'red'); alert('أكمل إعدادات GitHub والرمز'); return; }
+      try {
+        // remember preferences
+        try {
+          localStorage.setItem('itech_pg_owner', owner);
+          localStorage.setItem('itech_pg_repo', repo);
+          localStorage.setItem('itech_pg_branch', branch);
+          localStorage.setItem('itech_pg_path', path);
+          const remember = document.getElementById('pg_remember_token').checked; if (remember) localStorage.setItem('itech_pg_token', token); else localStorage.removeItem('itech_pg_token');
+        } catch {}
+
+        // fetch current
+        setPgStatus('جلب الملف الحالي...', 'blue');
+        let arr = [];
+        try { arr = await fetchCurrentProgramsRaw(owner, repo, branch, path); } catch { arr = []; }
+
+        // add item (no duplicate check on id; IDs are timestamped)
+        arr.push(item);
+        const newJson = JSON.stringify(arr, null, 2) + '\n';
+
+        // get sha and publish
+        setPgStatus('الحصول على SHA...', 'blue');
+        let sha = null; try { sha = await githubGetFileSha(owner, repo, branch, path, token); } catch { sha = null; }
+        setPgStatus('رفع التحديث إلى GitHub...', 'blue');
+        const res = await githubPutFile(owner, repo, branch, path, utf8ToBase64(newJson), `Add program ${item.id}`, sha, token);
+        setPgStatus('تم النشر بنجاح ✔', 'green');
+        try { localStorage.removeItem('itech_programs_cache'); } catch {}
+        alert('تم نشر البرنامج بنجاح ✔\nسيظهر في صفحة البرامج بعد تحديث GitHub Pages.');
+
+        // clear fields
+        try {
+          ['p_name','p_desc','p_logo','p_image','p_price','p_currency','p_vid1','p_vid2'].forEach(id=>{ const el=document.getElementById(id); if (el) el.value=''; });
+          for(let i=1;i<=10;i++){ const el=document.getElementById('p_img'+i); if (el) el.value=''; }
+        } catch {}
+
+        // refresh admin list
+        try { await renderProgramsAdminList(); } catch {}
+      } catch (e){ setPgStatus('فشل النشر: '+(e&&e.message?e.message:String(e)), 'red'); alert('خطأ: '+(e&&e.message?e.message:String(e))); }
+    });
+
+    // auto-render if fields prefilled
+    try {
+      const owner = (document.getElementById('pg_owner').value||'').trim();
+      const repo = (document.getElementById('pg_repo').value||'').trim();
+      const path = (document.getElementById('pg_path').value||'').trim();
+      if (owner && repo && path) renderProgramsAdminList();
+    } catch {}
+  </script>
 </body>
 </html>
