@@ -114,6 +114,7 @@
             <input id="p_price" type="number" placeholder="مثال: 250" />
             <label>العملة (اختياري)</label>
             <input id="p_currency" value="IQD" />
+            <input id="p_id" type="hidden" />
 
             <hr style="margin:14px 0; opacity:.3;">
             <h2 style="margin:6px 0 10px;">صور إضافية (حتى 10 روابط)</h2>
@@ -266,7 +267,8 @@
       for(let i=1;i<=10;i++){ const v = (document.getElementById('p_img'+i).value||'').trim(); if (v) imgs.push(v); }
       const vids = [];
       for(let i=1;i<=2;i++){ const v = (document.getElementById('p_vid'+i).value||'').trim(); if (v) vids.push(v); }
-      const id = (name ? name.replace(/\s+/g,'-').toLowerCase() : 'program') + '-' + Date.now();
+      const existingId = (document.getElementById('p_id').value||'').trim();
+      const id = existingId || ((name ? name.replace(/\s+/g,'-').toLowerCase() : 'program') + '-' + Date.now());
       return {
         id,
         name,
@@ -295,11 +297,51 @@
         const rawUrl = `https://raw.githubusercontent.com/${owner}/${repo}/${encodeURIComponent(branch)}/${path}`;
         if (!Array.isArray(arr) || arr.length === 0){ wrap.innerHTML = '<div class="muted">لا توجد برامج حالياً.<br>رابط التحقق: <a href="'+rawUrl+'" target="_blank" rel="noopener">'+rawUrl+'</a></div>'; return; }
         const table = document.createElement('table'); table.className='table'; table.style.width='100%';
-        table.innerHTML = '<thead><tr><th>الاسم</th><th>السعر</th><th>صور</th></tr></thead><tbody></tbody>';
+        table.innerHTML = '<thead><tr><th>الاسم</th><th>السعر</th><th>صور</th><th>إجراءات</th></tr></thead><tbody></tbody>';
         const tbody = table.querySelector('tbody');
         arr.forEach(item=>{
           const tr = document.createElement('tr');
-          tr.innerHTML = `<td>${item.name||''}</td><td>${item.price!=null?item.price+(item.currency?' '+item.currency:''):''}</td><td>${Array.isArray(item.images)?item.images.length:0}</td>`;
+          tr.innerHTML = `<td>${item.name||''}</td><td>${item.price!=null?item.price+(item.currency?' '+item.currency:''):''}</td><td>${Array.isArray(item.images)?item.images.length:0}</td><td><button class="btn" data-act="edit">تحرير</button> <button class="btn" data-act="del">حذف</button></td>`;
+          tr.querySelector('[data-act="edit"]').addEventListener('click', ()=>{
+            try {
+              document.getElementById('p_id').value = item.id||'';
+              document.getElementById('p_name').value = item.name||'';
+              document.getElementById('p_desc').value = item.shortDescription||'';
+              document.getElementById('p_logo').value = item.logo||'';
+              document.getElementById('p_image').value = item.image||'';
+              document.getElementById('p_price').value = item.price!=null?String(item.price):'';
+              document.getElementById('p_currency').value = item.currency||'IQD';
+              // fill images/videos
+              for(let i=1;i<=10;i++){
+                const val = (Array.isArray(item.images) && item.images[i-1]) ? item.images[i-1] : '';
+                const el = document.getElementById('p_img'+i); if (el) el.value = val||'';
+              }
+              for(let i=1;i<=2;i++){
+                const val = (Array.isArray(item.videos) && item.videos[i-1]) ? item.videos[i-1] : '';
+                const el = document.getElementById('p_vid'+i); if (el) el.value = val||'';
+              }
+              setPgStatus('تم تحميل بيانات البرنامج في النموذج. عدّل ثم اضغط نشر.', 'blue');
+            } catch(e){ setPgStatus('تعذر تحميل بيانات التحرير: '+(e&&e.message?e.message:String(e)), 'red'); }
+          });
+          tr.querySelector('[data-act="del"]').addEventListener('click', async ()=>{
+            if (!confirm('تأكيد حذف البرنامج؟ سيتم تحديث الملف على GitHub.')) return;
+            try {
+              const owner = (document.getElementById('pg_owner').value||'').trim();
+              const repo = (document.getElementById('pg_repo').value||'').trim();
+              const branch = (document.getElementById('pg_branch').value||'main').trim();
+              const path = (document.getElementById('pg_path').value||'assets/data/programs.json').trim();
+              const token = (document.getElementById('pg_token').value||'').trim();
+              if (!owner||!repo||!branch||!path||!token){ setPgStatus('أكمل إعدادات GitHub أولاً', 'red'); return; }
+              const list = await fetchCurrentProgramsRaw(owner, repo, branch, path);
+              const next = Array.isArray(list) ? list.filter(x => String(x.id||'') !== String(item.id||'')) : [];
+              const newJson = JSON.stringify(next, null, 2) + '\n';
+              const sha = await githubGetFileSha(owner, repo, branch, path, token);
+              const res = await githubPutFile(owner, repo, branch, path, utf8ToBase64(newJson), `Delete program ${item.id}`, sha, token);
+              setPgStatus('تم حذف البرنامج ✔' + (res && res.commit && res.commit.html_url ? ` — ${res.commit.html_url}` : ''), 'green');
+              try { localStorage.removeItem('itech_programs_cache'); } catch {}
+              await renderProgramsAdminList();
+            } catch(e){ setPgStatus('فشل الحذف: '+(e&&e.message?e.message:String(e)), 'red'); }
+          });
           tbody.appendChild(tr);
         });
         wrap.innerHTML=''; wrap.appendChild(table);
@@ -350,16 +392,21 @@
         setPgStatus('جلب الملف الحالي...', 'blue');
         let arr = [];
         try { arr = await fetchCurrentProgramsRaw(owner, repo, branch, path); } catch { arr = []; }
-
-        // add item (no duplicate check on id; IDs are timestamped)
-        arr.push(item);
+        // add or update item by id
+        const idx = Array.isArray(arr) ? arr.findIndex(x => String(x.id||'') === String(item.id||'')) : -1;
+        if (idx >= 0) {
+          arr[idx] = item;
+          setPgStatus('سيتم تحديث البرنامج الموجود...', 'orange');
+        } else {
+          arr.push(item);
+        }
         const newJson = JSON.stringify(arr, null, 2) + '\n';
 
         // get sha and publish
         setPgStatus('الحصول على SHA...', 'blue');
         let sha = null; try { sha = await githubGetFileSha(owner, repo, branch, path, token); } catch { sha = null; }
         setPgStatus('رفع التحديث إلى GitHub...', 'blue');
-        const res = await githubPutFile(owner, repo, branch, path, utf8ToBase64(newJson), `Add program ${item.id}`, sha, token);
+        const res = await githubPutFile(owner, repo, branch, path, utf8ToBase64(newJson), `${idx>=0?'Update':'Add'} program ${item.id}`, sha, token);
         const commitUrl = (res && res.commit && res.commit.html_url) ? res.commit.html_url : '';
         const fileUrl = (res && res.content && res.content.html_url) ? res.content.html_url : '';
         setPgStatus('تم النشر بنجاح ✔' + (commitUrl ? ` — رابط التأكيد: ${commitUrl}` : ''), 'green');
@@ -368,7 +415,7 @@
 
         // clear fields
         try {
-          ['p_name','p_desc','p_logo','p_image','p_price','p_currency','p_vid1','p_vid2'].forEach(id=>{ const el=document.getElementById(id); if (el) el.value=''; });
+          ['p_name','p_desc','p_logo','p_image','p_price','p_currency','p_vid1','p_vid2','p_id'].forEach(id=>{ const el=document.getElementById(id); if (el) el.value=''; });
           for(let i=1;i<=10;i++){ const el=document.getElementById('p_img'+i); if (el) el.value=''; }
         } catch {}
 
