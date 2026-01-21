@@ -513,7 +513,7 @@
 
     function updateFeaturesTextarea() {
       const ta = document.getElementById('p_features');
-      if (ta) ta.value = featuresData.map(f => f.text).join('; ');
+      if (ta) ta.value = JSON.stringify(featuresData.map(f => ({ text: f.text, link: f.link, color: f.color, style: f.style })));
     }
 
     document.getElementById('btnAddFeature')?.addEventListener('click', () => {
@@ -596,27 +596,45 @@
       });
     }
 
-    function updateFeaturesTextarea() {
-      const ta = document.getElementById('p_features');
-      if (ta) ta.value = featuresData.map(f => f.text).join('; ');
-    }
-
     document.getElementById('btnAddFeature')?.addEventListener('click', () => {
-      const text = (document.getElementById('feat-text')?.value || '').trim();
+      const text = (document.getElementById('feat-text-rich')?.value || '').trim();
       if (!text) { alert('أدخل نص الميزة أولاً'); return; }
       const link = (document.getElementById('feat-link')?.value || '').trim();
       const color = (document.getElementById('feat-color')?.value || '');
-      featuresData.push({ text, link: link || null, color: color || null, bold: false });
-      document.getElementById('feat-text').value = '';
+      
+      const styleStr = `
+        font-weight: ${formatState.bold ? 'bold' : 'normal'};
+        font-style: ${formatState.italic ? 'italic' : 'normal'};
+        text-decoration: ${formatState.underline ? 'underline' : 'none'};
+        color: ${formatState.textColor};
+        background-color: ${formatState.bgColor === '#ffffff' ? 'transparent' : formatState.bgColor};
+        font-size: ${formatState.fontSize}px;
+        font-family: ${formatState.fontFamily};
+      `;
+      
+      featuresData.push({ text, link: link || null, color: color || null, style: styleStr });
+      
+      // إعادة تعيين
+      document.getElementById('feat-text-rich').value = '';
       document.getElementById('feat-link').value = '';
       document.getElementById('feat-color').value = '';
+      formatState.bold = false;
+      formatState.italic = false;
+      formatState.underline = false;
+      formatState.textColor = '#000000';
+      formatState.bgColor = '#ffffff';
+      formatState.fontSize = '14';
+      document.getElementById('fmt-size').value = '14';
+      
+      updateFormatButtons();
+      updatePreview();
       renderFeaturesPreview();
       updateFeaturesTextarea();
     });
-
+    
     // معالجة مفتاح Enter في حقل النص
-    document.getElementById('feat-text')?.addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') document.getElementById('btnAddFeature').click();
+    document.getElementById('feat-text-rich')?.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter' && e.ctrlKey) document.getElementById('btnAddFeature').click();
     });
 
     function setPgStatus(msg, color){
@@ -640,13 +658,14 @@
       for(let i=1;i<=2;i++){ const v = (document.getElementById('p_vid'+i).value||'').trim(); if (v) vids.push(v); }
       const existingId = (document.getElementById('p_id').value||'').trim();
       const id = existingId || ((name ? name.replace(/\s+/g,'-').toLowerCase() : 'program') + '-' + Date.now());
-      // استخدم البيانات من محرر الميزات أو اقرأ من textarea
+      // استخدم البيانات من محرر الميزات مع التنسيق أو اقرأ من textarea
       const features = featuresData.length > 0 
-        ? featuresData.map(f => f.text) 
+        ? featuresData 
         : (document.getElementById('p_features').value||'')
             .split(';')
             .map(s=>s.trim())
-            .filter(Boolean);
+            .filter(Boolean)
+            .map(text => ({ text, link: null, color: null, style: '' }));
       return {
         id,
         name,
@@ -695,7 +714,11 @@
               featuresData.length = 0;
               if (Array.isArray(item.features)) {
                 item.features.forEach(f => {
-                  featuresData.push({ text: f, link: null, color: null, style: '' });
+                  if (typeof f === 'object' && f.text) {
+                    featuresData.push(f);
+                  } else if (typeof f === 'string') {
+                    featuresData.push({ text: f, link: null, color: null, style: '' });
+                  }
                 });
               }
               renderFeaturesPreview();

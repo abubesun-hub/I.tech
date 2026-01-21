@@ -789,7 +789,11 @@ window.ITECH_IMAGE_MODAL = (() => {
         <h2 style="margin-bottom:8px;">${p.logo ? `<img src="${p.logo}" alt="لوغو ${p.name}" style="width:32px;height:32px;object-fit:contain;margin-left:8px;vertical-align:middle">` : ''}${p.name||'برنامج'}</h2>
         ${p.shortDescription ? `<p class="tender-desc" style="margin-bottom:8px;color:var(--text-muted);">${p.shortDescription}</p>` : ''}
         ${priceRow}
-        ${features.length ? `<ul style="margin-top:8px;">${features.map(f=>`<li>${f}</li>`).join('')}</ul>` : ''}
+        ${features.length ? `<ul style="margin-top:8px;">${features.map(f=>{
+          let text = f;
+          if (typeof f === 'object' && f.text) text = f.text;
+          return `<li style="padding:4px 0;">${text}</li>`;
+        }).join('')}</ul>` : ''}
         ${gallery}
         <div class="actions">
           <a class="btn link" href="program.html?id=${encodeURIComponent(p.id)}">تفاصيل المزيد</a>
@@ -881,7 +885,18 @@ window.ITECH_IMAGE_MODAL = (() => {
         <section style="margin-top:12px;">
           <h3>الميزات الرئيسية</h3>
           <ul style="display:grid;grid-template-columns:repeat(auto-fill, minmax(200px, 1fr));gap:8px;list-style:none;padding:0;">
-            ${item.features.map(f=>`<li style="padding:10px;background:var(--bg-hover);border-radius:6px;border-left:4px solid var(--primary);padding-left:12px;">✓ ${f}</li>`).join('')}
+            ${item.features.map(f=>{
+              let text = f;
+              let style = '';
+              let link = null;
+              if (typeof f === 'object' && f.text) {
+                text = f.text;
+                style = f.style || '';
+                link = f.link;
+              }
+              const content = `<span style="${style}">✓ ${text}</span>`;
+              return `<li style="padding:10px;background:var(--bg-hover);border-radius:6px;border-left:4px solid var(--primary);padding-left:12px;">${link ? `<a href="${link}" target="_blank" rel="noopener" style="color:inherit;text-decoration:none;">${content}</a>` : content}</li>`;
+            }).join('')}
           </ul>
         </section>
       ` : '';
