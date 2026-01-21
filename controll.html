@@ -158,6 +158,14 @@
                   <option value="18">18</option>
                   <option value="20">20</option>
                 </select>
+
+                <!-- تباعد الأسطر -->
+                <select id="fmt-lineheight" title="تباعد الأسطر" style="padding:6px;border:1px solid var(--border);border-radius:4px;font-size:12px;background:var(--surface);color:var(--text-main);margin-right:4px;">
+                  <option value="1.4">1.4</option>
+                  <option value="1.6" selected>1.6</option>
+                  <option value="1.8">1.8</option>
+                  <option value="2">2.0</option>
+                </select>
                 
                 <!-- فاصل -->
                 <div style="width:1px;height:20px;background:var(--border);margin:0 4px;"></div>
@@ -170,6 +178,21 @@
                   <option value="'Times New Roman', serif">Times</option>
                   <option value="'Courier New', monospace">Courier</option>
                 </select>
+
+                <!-- فاصل -->
+                <div style="width:1px;height:20px;background:var(--border);margin:0 4px;"></div>
+
+                <!-- محاذاة الفقرة -->
+                <button id="fmt-align-right" class="fmt-btn" title="محاذاة يمين" style="padding:6px 8px;background:var(--surface);border:1px solid var(--border);border-radius:4px;cursor:pointer;color:var(--text-main);">يمين</button>
+                <button id="fmt-align-center" class="fmt-btn" title="محاذاة وسط" style="padding:6px 8px;background:var(--surface);border:1px solid var(--border);border-radius:4px;cursor:pointer;color:var(--text-main);">وسط</button>
+                <button id="fmt-align-left" class="fmt-btn" title="محاذاة يسار" style="padding:6px 8px;background:var(--surface);border:1px solid var(--border);border-radius:4px;cursor:pointer;color:var(--text-main);">يسار</button>
+
+                <!-- فاصل -->
+                <div style="width:1px;height:20px;background:var(--border);margin:0 4px;"></div>
+
+                <!-- تعداد نقطي ورقمي -->
+                <button id="fmt-ul" class="fmt-btn" title="قائمة نقطية" style="padding:6px 8px;background:var(--surface);border:1px solid var(--border);border-radius:4px;cursor:pointer;color:var(--text-main);">• •</button>
+                <button id="fmt-ol" class="fmt-btn" title="قائمة رقمية" style="padding:6px 8px;background:var(--surface);border:1px solid var(--border);border-radius:4px;cursor:pointer;color:var(--text-main);">1.</button>
                 
                 <!-- فاصل -->
                 <div style="width:1px;height:20px;background:var(--border);margin:0 4px;"></div>
@@ -372,47 +395,148 @@
       textColor: '#000000',
       bgColor: '#ffffff',
       fontSize: '14',
-      fontFamily: "'Tjawal', sans-serif"
+      fontFamily: "'Tjawal', sans-serif",
+      lineHeight: '1.6',
+      align: 'right'
     };
+
+    // Helpers لاستخدام التحديد داخل مربع النص
+    function getTextAreaSelection() {
+      const ta = document.getElementById('feat-text-rich');
+      if (!ta) return null;
+      const start = typeof ta.selectionStart === 'number' ? ta.selectionStart : 0;
+      const end = typeof ta.selectionEnd === 'number' ? ta.selectionEnd : 0;
+      return { ta, start, end };
+    }
+
+    function wrapSelection(prefix, suffix) {
+      const info = getTextAreaSelection();
+      if (!info) return false;
+      const { ta, start, end } = info;
+      if (start === end) return false; // لا يوجد تحديد
+      const value = ta.value;
+      const before = value.slice(0, start);
+      const selected = value.slice(start, end);
+      const after = value.slice(end);
+      ta.value = before + prefix + selected + suffix + after;
+      const newStart = start + prefix.length;
+      const newEnd = newStart + selected.length;
+      ta.selectionStart = newStart;
+      ta.selectionEnd = newEnd;
+      ta.focus();
+      updatePreview();
+      return true;
+    }
+
+    function applySpanStyle(stylePart) {
+      const style = stylePart.endsWith(';') ? stylePart : stylePart + ';';
+      return wrapSelection(`<span style="${style}">`, `</span>`);
+    }
+
+    function applyList(type) {
+      const info = getTextAreaSelection();
+      if (!info) return;
+      const { ta, start, end } = info;
+      const value = ta.value;
+      const useAll = (start === end);
+      const selStart = useAll ? 0 : start;
+      const selEnd = useAll ? value.length : end;
+      const selected = value.slice(selStart, selEnd);
+      const lines = selected.split(/\r?\n/).filter(l => l.trim().length > 0);
+      if (!lines.length) return;
+      const items = lines.map(l => `<li>${l}</li>`).join('\n');
+      const listHtml = `<${type}>\n${items}\n</${type}>`;
+      ta.value = value.slice(0, selStart) + listHtml + value.slice(selEnd);
+      const pos = selStart + listHtml.length;
+      ta.selectionStart = pos;
+      ta.selectionEnd = pos;
+      ta.focus();
+      updatePreview();
+    }
     
     // معالجات الأزرار
     document.getElementById('fmt-bold')?.addEventListener('click', () => {
-      formatState.bold = !formatState.bold;
-      updateFormatButtons();
-      updatePreview();
+      // إذا كان هناك تحديد → طبق على الجزء المحدد، وإلا غيّر النمط الكامل
+      if (!wrapSelection('<strong>', '</strong>')) {
+        formatState.bold = !formatState.bold;
+        updateFormatButtons();
+        updatePreview();
+      }
     });
     
     document.getElementById('fmt-italic')?.addEventListener('click', () => {
-      formatState.italic = !formatState.italic;
-      updateFormatButtons();
-      updatePreview();
+      if (!wrapSelection('<em>', '</em>')) {
+        formatState.italic = !formatState.italic;
+        updateFormatButtons();
+        updatePreview();
+      }
     });
     
     document.getElementById('fmt-underline')?.addEventListener('click', () => {
-      formatState.underline = !formatState.underline;
-      updateFormatButtons();
-      updatePreview();
+      if (!wrapSelection('<u>', '</u>')) {
+        formatState.underline = !formatState.underline;
+        updateFormatButtons();
+        updatePreview();
+      }
     });
     
     document.getElementById('fmt-textcolor')?.addEventListener('change', (e) => {
-      formatState.textColor = e.target.value;
-      updatePreview();
+      const color = e.target.value;
+      if (!applySpanStyle(`color:${color}`)) {
+        formatState.textColor = color;
+        updatePreview();
+      }
     });
     
     document.getElementById('fmt-bgcolor')?.addEventListener('change', (e) => {
-      formatState.bgColor = e.target.value;
-      updatePreview();
+      const color = e.target.value;
+      if (!applySpanStyle(`background-color:${color}`)) {
+        formatState.bgColor = color;
+        updatePreview();
+      }
     });
     
     document.getElementById('fmt-size')?.addEventListener('change', (e) => {
-      formatState.fontSize = e.target.value;
+      const size = e.target.value;
+      if (!applySpanStyle(`font-size:${size}px`)) {
+        formatState.fontSize = size;
+        updatePreview();
+      }
+    });
+    
+    document.getElementById('fmt-lineheight')?.addEventListener('change', (e) => {
+      formatState.lineHeight = e.target.value || '1.6';
       updatePreview();
     });
     
     document.getElementById('fmt-font')?.addEventListener('change', (e) => {
-      formatState.fontFamily = e.target.value;
+      const font = e.target.value;
+      if (!applySpanStyle(`font-family:${font}`)) {
+        formatState.fontFamily = font;
+        updatePreview();
+      }
+    });
+
+    // محاذاة الفقرة
+    document.getElementById('fmt-align-right')?.addEventListener('click', () => {
+      formatState.align = 'right';
+      updateFormatButtons();
       updatePreview();
     });
+    document.getElementById('fmt-align-center')?.addEventListener('click', () => {
+      formatState.align = 'center';
+      updateFormatButtons();
+      updatePreview();
+    });
+    document.getElementById('fmt-align-left')?.addEventListener('click', () => {
+      formatState.align = 'left';
+      updateFormatButtons();
+      updatePreview();
+    });
+
+    // القوائم
+    document.getElementById('fmt-ul')?.addEventListener('click', () => applyList('ul'));
+    document.getElementById('fmt-ol')?.addEventListener('click', () => applyList('ol'));
     
     document.getElementById('fmt-emoji')?.addEventListener('click', () => {
       const emojis = ['✓', '✓✓', '★', '●', '→', '⚡', '🎯', '✨', '🔥', '💯', '🚀', '⭐'];
@@ -430,6 +554,8 @@
       formatState.textColor = '#000000';
       formatState.bgColor = '#ffffff';
       formatState.fontSize = '14';
+      formatState.lineHeight = '1.6';
+      formatState.align = 'right';
       updateFormatButtons();
       updatePreview();
     });
@@ -438,7 +564,10 @@
       const boldBtn = document.getElementById('fmt-bold');
       const italicBtn = document.getElementById('fmt-italic');
       const underlineBtn = document.getElementById('fmt-underline');
-      
+      const alignRightBtn = document.getElementById('fmt-align-right');
+      const alignCenterBtn = document.getElementById('fmt-align-center');
+      const alignLeftBtn = document.getElementById('fmt-align-left');
+
       if (boldBtn) {
         boldBtn.style.background = formatState.bold ? 'var(--primary)' : 'var(--surface)';
         boldBtn.style.color = formatState.bold ? 'white' : 'var(--text-main)';
@@ -451,6 +580,16 @@
         underlineBtn.style.background = formatState.underline ? 'var(--primary)' : 'var(--surface)';
         underlineBtn.style.color = formatState.underline ? 'white' : 'var(--text-main)';
       }
+
+      const makeAlignStyle = (btn, active) => {
+        if (!btn) return;
+        btn.style.background = active ? 'var(--primary)' : 'var(--surface)';
+        btn.style.color = active ? 'white' : 'var(--text-main)';
+      };
+
+      makeAlignStyle(alignRightBtn, formatState.align === 'right');
+      makeAlignStyle(alignCenterBtn, formatState.align === 'center');
+      makeAlignStyle(alignLeftBtn, formatState.align === 'left');
     }
     
     function updatePreview() {
@@ -464,8 +603,8 @@
         return;
       }
 
-      // تطبيق التنسيق على صندوق المعاينة نفسه مع الحفاظ على فواصل الأسطر
-      preview.textContent = text;
+      // تطبيق التنسيق على صندوق المعاينة نفسه مع دعم HTML جزئي وفواصل الأسطر
+      preview.innerHTML = text;
       preview.style.whiteSpace = 'pre-wrap';
       preview.style.fontWeight = formatState.bold ? 'bold' : 'normal';
       preview.style.fontStyle = formatState.italic ? 'italic' : 'normal';
@@ -474,6 +613,8 @@
       preview.style.backgroundColor = formatState.bgColor;
       preview.style.fontSize = formatState.fontSize + 'px';
       preview.style.fontFamily = formatState.fontFamily;
+      preview.style.lineHeight = formatState.lineHeight;
+      preview.style.textAlign = formatState.align;
       preview.style.padding = '4px 6px';
       preview.style.borderRadius = '3px';
     }
@@ -530,6 +671,8 @@
         background-color: ${formatState.bgColor === '#ffffff' ? 'transparent' : formatState.bgColor};
         font-size: ${formatState.fontSize}px;
         font-family: ${formatState.fontFamily};
+        line-height: ${formatState.lineHeight};
+        text-align: ${formatState.align};
       `;
       
       featuresData.push({ text, link: link || null, color: color || null, style: styleStr });
@@ -611,6 +754,8 @@
         background-color: ${formatState.bgColor === '#ffffff' ? 'transparent' : formatState.bgColor};
         font-size: ${formatState.fontSize}px;
         font-family: ${formatState.fontFamily};
+        line-height: ${formatState.lineHeight};
+        text-align: ${formatState.align};
       `;
       
       featuresData.push({ text, link: link || null, color: color || null, style: styleStr });
