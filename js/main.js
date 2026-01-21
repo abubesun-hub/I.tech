@@ -759,6 +759,14 @@ window.ITECH_IMAGE_MODAL = (() => {
   const grid = document.getElementById('programs');
   if (!grid) return;
 
+  // Helpers لتلخيص النص للبطاقات
+  const stripTags = (s) => (s || '').toString().replace(/<[^>]*>/g, '');
+  const summarize = (s, max) => {
+    const plain = stripTags(s).trim();
+    if (plain.length <= max) return plain;
+    return plain.slice(0, max).trim() + '…';
+  };
+
   function render(items) {
     grid.innerHTML = '';
     items.forEach(p => {
@@ -791,9 +799,16 @@ window.ITECH_IMAGE_MODAL = (() => {
         ${priceRow}
         ${features.length ? `<ul style="margin-top:8px;">${features.map(f=>{
           let text = f;
-          if (typeof f === 'object' && f.text) text = f.text;
-          text = (text || '').toString();
-          return `<li style="padding:4px 0;white-space:pre-wrap;">${text}</li>`;
+          let style = '';
+          if (typeof f === 'object' && f.text) {
+            text = f.text;
+            style = f.style || '';
+          }
+          const summary = summarize(text, 140);
+          const safeStyle = (style || '').replace(/color\s*:[^;]+;?/gi, '');
+          return `<li style="padding:4px 0;white-space:pre-wrap;">
+            <span style="${safeStyle};color:inherit;">${summary}</span>
+          </li>`;
         }).join('')}</ul>` : ''}
         ${gallery}
         <div class="actions">
