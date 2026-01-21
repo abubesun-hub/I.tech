@@ -457,26 +457,25 @@
       const ta = document.getElementById('feat-text-rich');
       const preview = document.getElementById('feat-preview-text');
       if (!ta || !preview) return;
-      
-      let text = ta.value;
+
+      const text = ta.value;
       if (!text) {
         preview.innerHTML = '<span style="color:var(--text-muted);">سيظهر النص المنسق هنا...</span>';
         return;
       }
-      
-      let style = `
-        font-weight: ${formatState.bold ? 'bold' : 'normal'};
-        font-style: ${formatState.italic ? 'italic' : 'normal'};
-        text-decoration: ${formatState.underline ? 'underline' : 'none'};
-        color: ${formatState.textColor};
-        background-color: ${formatState.bgColor};
-        font-size: ${formatState.fontSize}px;
-        font-family: ${formatState.fontFamily};
-        padding: 4px 6px;
-        border-radius: 3px;
-      `;
-      
-      preview.innerHTML = `<span style="${style}">${text}</span>`;
+
+      // تطبيق التنسيق على صندوق المعاينة نفسه مع الحفاظ على فواصل الأسطر
+      preview.textContent = text;
+      preview.style.whiteSpace = 'pre-wrap';
+      preview.style.fontWeight = formatState.bold ? 'bold' : 'normal';
+      preview.style.fontStyle = formatState.italic ? 'italic' : 'normal';
+      preview.style.textDecoration = formatState.underline ? 'underline' : 'none';
+      preview.style.color = formatState.textColor;
+      preview.style.backgroundColor = formatState.bgColor;
+      preview.style.fontSize = formatState.fontSize + 'px';
+      preview.style.fontFamily = formatState.fontFamily;
+      preview.style.padding = '4px 6px';
+      preview.style.borderRadius = '3px';
     }
     
     // تحديث المعاينة عند الكتابة
@@ -493,9 +492,10 @@
         const styleStr = feat.style || 'font-weight:normal;font-style:normal;text-decoration:none;';
         const color = feat.color ? `border-left:4px solid ${feat.color};background-color:${feat.color}15;` : 'background:var(--bg-hover);border-left:4px solid var(--primary);';
         const link = feat.link ? `<a href="${feat.link}" target="_blank" style="color:var(--primary);margin-left:8px;text-decoration:none;font-size:12px;">🔗</a>` : '';
+        const text = (feat.text || '').toString();
         return `
           <div style="padding:8px;margin-bottom:4px;border-radius:4px;${color}display:flex;justify-content:space-between;align-items:center;">
-            <span style="${styleStr}">${feat.text} ${link}</span>
+            <span style="${styleStr};white-space:pre-wrap;">${text} ${link}</span>
             <button data-idx="${idx}" class="btn-remove-feat" style="border:none;background:rgba(255,0,0,0.1);color:red;cursor:pointer;padding:2px 6px;border-radius:3px;font-size:12px;">حذف</button>
           </div>
         `;
@@ -577,9 +577,10 @@
         const style = feat.color ? `background-color:${feat.color}15;border-left:4px solid ${feat.color};` : 'background:var(--bg-hover);border-left:4px solid var(--primary);';
         const link = feat.link ? `<a href="${feat.link}" target="_blank" style="color:var(--primary);margin-left:8px;text-decoration:none;">🔗</a>` : '';
         const bold = feat.bold ? 'font-weight:700;' : '';
+        const text = (feat.text || '').toString();
         return `
           <div style="padding:8px;margin-bottom:4px;border-radius:4px;${style}${bold}display:flex;justify-content:space-between;align-items:center;">
-            <span>${feat.text} ${link}</span>
+            <span style="white-space:pre-wrap;">${text} ${link}</span>
             <button data-idx="${idx}" class="btn-remove-feat" style="border:none;background:rgba(255,0,0,0.1);color:red;cursor:pointer;padding:2px 6px;border-radius:3px;font-size:12px;">حذف</button>
           </div>
         `;

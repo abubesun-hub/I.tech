@@ -792,7 +792,8 @@ window.ITECH_IMAGE_MODAL = (() => {
         ${features.length ? `<ul style="margin-top:8px;">${features.map(f=>{
           let text = f;
           if (typeof f === 'object' && f.text) text = f.text;
-          return `<li style="padding:4px 0;">${text}</li>`;
+          text = (text || '').toString();
+          return `<li style="padding:4px 0;white-space:pre-wrap;">${text}</li>`;
         }).join('')}</ul>` : ''}
         ${gallery}
         <div class="actions">
@@ -894,7 +895,8 @@ window.ITECH_IMAGE_MODAL = (() => {
                 style = f.style || '';
                 link = f.link;
               }
-              const content = `<span style="${style}">✓ ${text}</span>`;
+              const txt = (text || '').toString();
+              const content = `<span style="${style};white-space:pre-wrap;">✓ ${txt}</span>`;
               return `<li style="padding:10px;background:var(--bg-hover);border-radius:6px;border-left:4px solid var(--primary);padding-left:12px;">${link ? `<a href="${link}" target="_blank" rel="noopener" style="color:inherit;text-decoration:none;">${content}</a>` : content}</li>`;
             }).join('')}
           </ul>
