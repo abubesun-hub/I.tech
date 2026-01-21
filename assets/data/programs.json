@@ -1,24 +1,5 @@
 [
   {
-    "id": "billing-accounting",
-    "name": "نظام الفواتير والمحاسبة",
-    "logo": "./assets/images/I-Tech logo.png",
-    "image": "https://images.unsplash.com/photo-1517433456452-f9633a875f6f?w=900&auto=format&fit=crop",
-    "shortDescription": "إدارة العملاء والموردين والفواتير مع تقارير مالية.",
-    "features": [
-      "تقارير ورسوم بيانية",
-      "إدارة عملاء وموردين",
-      "طباعة سريعة وتصدير"
-    ],
-    "price": 300,
-    "currency": "IQD",
-    "images": [
-      "https://images.unsplash.com/photo-1526378722484-b1ce58e1c3f3?w=600&auto=format&fit=crop"
-    ],
-    "videos": [],
-    "link": "#"
-  },
-  {
     "id": "tasks-platform",
     "name": "منصة إدارة المهام",
     "logo": "./assets/images/I-Tech logo.png",
