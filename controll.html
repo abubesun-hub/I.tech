@@ -135,12 +135,6 @@
                 <!-- فاصل -->
                 <div style="width:1px;height:20px;background:var(--border);margin:0 4px;"></div>
                 
-                <!-- لون النص -->
-                <label title="لون النص" style="display:flex;align-items:center;gap:4px;cursor:pointer;">
-                  <input type="color" id="fmt-textcolor" value="#000000" style="width:30px;height:30px;border:1px solid var(--border);border-radius:4px;cursor:pointer;">
-                  <span style="font-size:11px;color:var(--text-muted);">A</span>
-                </label>
-                
                 <!-- لون الخلفية -->
                 <label title="لون الخلفية" style="display:flex;align-items:center;gap:4px;cursor:pointer;">
                   <input type="color" id="fmt-bgcolor" value="#ffffff" style="width:30px;height:30px;border:1px solid var(--border);border-radius:4px;cursor:pointer;">
@@ -392,7 +386,6 @@
       bold: false,
       italic: false,
       underline: false,
-      textColor: '#000000',
       bgColor: '#ffffff',
       fontSize: '14',
       fontFamily: "'Tjawal', sans-serif",
@@ -480,14 +473,6 @@
       }
     });
     
-    document.getElementById('fmt-textcolor')?.addEventListener('change', (e) => {
-      const color = e.target.value;
-      if (!applySpanStyle(`color:${color}`)) {
-        formatState.textColor = color;
-        updatePreview();
-      }
-    });
-    
     document.getElementById('fmt-bgcolor')?.addEventListener('change', (e) => {
       const color = e.target.value;
       if (!applySpanStyle(`background-color:${color}`)) {
@@ -551,7 +536,6 @@
       formatState.bold = false;
       formatState.italic = false;
       formatState.underline = false;
-      formatState.textColor = '#000000';
       formatState.bgColor = '#ffffff';
       formatState.fontSize = '14';
       formatState.lineHeight = '1.6';
@@ -609,7 +593,6 @@
       preview.style.fontWeight = formatState.bold ? 'bold' : 'normal';
       preview.style.fontStyle = formatState.italic ? 'italic' : 'normal';
       preview.style.textDecoration = formatState.underline ? 'underline' : 'none';
-      preview.style.color = formatState.textColor;
       preview.style.backgroundColor = formatState.bgColor;
       preview.style.fontSize = formatState.fontSize + 'px';
       preview.style.fontFamily = formatState.fontFamily;
@@ -667,7 +650,6 @@
         font-weight: ${formatState.bold ? 'bold' : 'normal'};
         font-style: ${formatState.italic ? 'italic' : 'normal'};
         text-decoration: ${formatState.underline ? 'underline' : 'none'};
-        color: ${formatState.textColor};
         background-color: ${formatState.bgColor === '#ffffff' ? 'transparent' : formatState.bgColor};
         font-size: ${formatState.fontSize}px;
         font-family: ${formatState.fontFamily};
@@ -684,7 +666,6 @@
       formatState.bold = false;
       formatState.italic = false;
       formatState.underline = false;
-      formatState.textColor = '#000000';
       formatState.bgColor = '#ffffff';
       formatState.fontSize = '14';
       document.getElementById('fmt-size').value = '14';
@@ -750,7 +731,6 @@
         font-weight: ${formatState.bold ? 'bold' : 'normal'};
         font-style: ${formatState.italic ? 'italic' : 'normal'};
         text-decoration: ${formatState.underline ? 'underline' : 'none'};
-        color: ${formatState.textColor};
         background-color: ${formatState.bgColor === '#ffffff' ? 'transparent' : formatState.bgColor};
         font-size: ${formatState.fontSize}px;
         font-family: ${formatState.fontFamily};
@@ -767,7 +747,6 @@
       formatState.bold = false;
       formatState.italic = false;
       formatState.underline = false;
-      formatState.textColor = '#000000';
       formatState.bgColor = '#ffffff';
       formatState.fontSize = '14';
       document.getElementById('fmt-size').value = '14';
@@ -996,7 +975,6 @@
           formatState.bold = false;
           formatState.italic = false;
           formatState.underline = false;
-          formatState.textColor = '#000000';
           formatState.bgColor = '#ffffff';
           formatState.fontSize = '14';
           document.getElementById('fmt-size').value = '14';
