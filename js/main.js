@@ -759,6 +759,14 @@ window.ITECH_IMAGE_MODAL = (() => {
   const grid = document.getElementById('programs');
   if (!grid) return;
 
+  // تلخيص النصوص في بطاقات البرامج مع الاعتماد على تنسيق الموقع العام فقط
+  const stripTags = (s) => (s || '').toString().replace(/<[^>]*>/g, '');
+  const summarize = (s, max) => {
+    const plain = stripTags(s).trim();
+    if (plain.length <= max) return plain;
+    return plain.slice(0, max).trim() + '…';
+  };
+
   function render(items) {
     grid.innerHTML = '';
     items.forEach(p => {
@@ -791,17 +799,11 @@ window.ITECH_IMAGE_MODAL = (() => {
         ${priceRow}
         ${features.length ? `<ul style="margin-top:8px;">${features.map(f=>{
           let text = f;
-          let style = '';
-          let link = null;
           if (typeof f === 'object' && f.text) {
             text = f.text;
-            style = f.style || '';
-            link = f.link;
           }
-          const txt = (text || '').toString();
-          const safeStyle = (style || '').replace(/color\s*:[^;]+;?/gi, '');
-          const content = `<span style="${safeStyle};white-space:pre-wrap;color:inherit;">${txt}</span>`;
-          return `<li style="padding:4px 0;white-space:pre-wrap;">${link ? `<a href="${link}" target="_blank" rel="noopener" style="color:inherit;text-decoration:none;">${content}</a>` : content}</li>`;
+          const summary = summarize(text, 140);
+          return `<li style="padding:4px 0;white-space:pre-wrap;color:var(--text-main);font-size:0.95rem;">${summary}</li>`;
         }).join('')}</ul>` : ''}
         ${gallery}
         <div class="actions">
