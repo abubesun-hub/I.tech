@@ -5,7 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>لوحة التحكم | I.TECH</title>
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap" rel="preload" as="style" onload="this.rel='stylesheet'">
+  <link href="https://fonts.googleapis.com/css2?family=Tjawal:wght@300;400;500;700&display=swap" rel="preload" as="style" onload="this.rel='stylesheet'">
   <noscript><link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet"></noscript>
+  <noscript><link href="https://fonts.googleapis.com/css2?family=Tjawal:wght@300;400;500;700&display=swap" rel="stylesheet"></noscript>
   <link rel="stylesheet" href="./css/main.css" />
   <link rel="icon" type="image/png" href="./assets/images/I-Tech logo.png" />
 </head>
@@ -119,8 +121,107 @@
             </select>
             <input id="p_id" type="hidden" />
 
-            <h2 style="margin:14px 0 10px;">ميزات البرنامج (افصل بـ ;)</h2>
-            <textarea id="p_features" rows="3" placeholder="مثال: تقارير مالية; صلاحيات مستخدمين; تصدير PDF"></textarea>
+            <h2 style="margin:14px 0 10px;">ميزات البرنامج</h2>
+            <div style="background:var(--bg-hover);padding:12px;border-radius:8px;margin-bottom:12px;">
+              <p class="muted" style="margin-bottom:12px;font-size:12px;">💡 استخدم شريط التنسيق أدناه لإضافة ميزات منسقة. أو اكتب مباشرة بصيغة بسيطة (افصل بـ <strong>;</strong>)</p>
+              
+              <!-- شريط التنسيق النصي -->
+              <div id="textFormattingToolbar" style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:8px;margin-bottom:12px;display:flex;gap:2px;flex-wrap:wrap;align-items:center;">
+                <!-- مجموعة التنسيق الأساسي -->
+                <button id="fmt-bold" class="fmt-btn" title="عريض (Ctrl+B)" style="padding:6px 10px;background:var(--surface);border:1px solid var(--border);border-radius:4px;cursor:pointer;font-weight:bold;color:var(--text-main);">B</button>
+                <button id="fmt-italic" class="fmt-btn" title="مائل (Ctrl+I)" style="padding:6px 10px;background:var(--surface);border:1px solid var(--border);border-radius:4px;cursor:pointer;font-style:italic;color:var(--text-main);">I</button>
+                <button id="fmt-underline" class="fmt-btn" title="تسطير (Ctrl+U)" style="padding:6px 10px;background:var(--surface);border:1px solid var(--border);border-radius:4px;cursor:pointer;text-decoration:underline;color:var(--text-main);">U</button>
+                
+                <!-- فاصل -->
+                <div style="width:1px;height:20px;background:var(--border);margin:0 4px;"></div>
+                
+                <!-- لون النص -->
+                <label title="لون النص" style="display:flex;align-items:center;gap:4px;cursor:pointer;">
+                  <input type="color" id="fmt-textcolor" value="#000000" style="width:30px;height:30px;border:1px solid var(--border);border-radius:4px;cursor:pointer;">
+                  <span style="font-size:11px;color:var(--text-muted);">A</span>
+                </label>
+                
+                <!-- لون الخلفية -->
+                <label title="لون الخلفية" style="display:flex;align-items:center;gap:4px;cursor:pointer;">
+                  <input type="color" id="fmt-bgcolor" value="#ffffff" style="width:30px;height:30px;border:1px solid var(--border);border-radius:4px;cursor:pointer;">
+                  <span style="font-size:11px;color:var(--text-muted);">◼</span>
+                </label>
+                
+                <!-- فاصل -->
+                <div style="width:1px;height:20px;background:var(--border);margin:0 4px;"></div>
+                
+                <!-- حجم الخط -->
+                <select id="fmt-size" title="حجم الخط" style="padding:6px;border:1px solid var(--border);border-radius:4px;font-size:12px;background:var(--surface);color:var(--text-main);">
+                  <option value="12">12</option>
+                  <option value="14" selected>14</option>
+                  <option value="16">16</option>
+                  <option value="18">18</option>
+                  <option value="20">20</option>
+                </select>
+                
+                <!-- فاصل -->
+                <div style="width:1px;height:20px;background:var(--border);margin:0 4px;"></div>
+                
+                <!-- الخطوط -->
+                <select id="fmt-font" title="نوع الخط" style="padding:6px;border:1px solid var(--border);border-radius:4px;font-size:12px;background:var(--surface);color:var(--text-main);">
+                  <option value="'Tjawal', sans-serif" selected>Tjawal</option>
+                  <option value="'Cairo', sans-serif">Cairo</option>
+                  <option value="'Arial', sans-serif">Arial</option>
+                  <option value="'Times New Roman', serif">Times</option>
+                  <option value="'Courier New', monospace">Courier</option>
+                </select>
+                
+                <!-- فاصل -->
+                <div style="width:1px;height:20px;background:var(--border);margin:0 4px;"></div>
+                
+                <!-- مشاركات سريعة -->
+                <button id="fmt-emoji" class="fmt-btn" title="أيقونة" style="padding:6px 10px;background:var(--surface);border:1px solid var(--border);border-radius:4px;cursor:pointer;color:var(--text-main);">😊</button>
+                
+                <!-- زر مسح التنسيق -->
+                <button id="fmt-clear" class="fmt-btn" title="إزالة التنسيق" style="padding:6px 10px;background:#fee2e2;border:1px solid #fecaca;border-radius:4px;cursor:pointer;color:#dc2626;font-size:12px;">✕</button>
+              </div>
+              
+              <!-- حقل النص بمعاينة -->
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
+                <div>
+                  <label style="display:block;font-size:12px;font-weight:600;margin-bottom:4px;color:var(--text-main);">النص:</label>
+                  <textarea id="feat-text-rich" placeholder="أدخل النص هنا..." style="width:100%;padding:8px;border:1px solid var(--border);border-radius:4px;background:var(--surface);color:var(--text-main);font-family:'Tjawal', sans-serif;resize:vertical;min-height:80px;"></textarea>
+                </div>
+                <div>
+                  <label style="display:block;font-size:12px;font-weight:600;margin-bottom:4px;color:var(--text-main);">المعاينة:</label>
+                  <div id="feat-preview-text" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:4px;background:var(--surface);color:var(--text-main);min-height:80px;word-wrap:break-word;overflow-y:auto;"></div>
+                </div>
+              </div>
+              
+              <!-- الخيارات الإضافية -->
+              <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px;">
+                <div>
+                  <label style="display:block;font-size:12px;font-weight:600;margin-bottom:4px;color:var(--text-main);">الرابط (اختياري):</label>
+                  <input type="text" id="feat-link" placeholder="https://..." style="width:100%;padding:8px;border:1px solid var(--border);border-radius:4px;background:var(--surface);color:var(--text-main);">
+                </div>
+                <div>
+                  <label style="display:block;font-size:12px;font-weight:600;margin-bottom:4px;color:var(--text-main);">لون الشارة:</label>
+                  <select id="feat-color" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:4px;background:var(--surface);color:var(--text-main);">
+                    <option value="">بدون لون</option>
+                    <option value="#4ade80">🟢 أخضر</option>
+                    <option value="#60a5fa">🔵 أزرق</option>
+                    <option value="#fbbf24">🟡 أصفر</option>
+                    <option value="#f87171">🔴 أحمر</option>
+                    <option value="#a78bfa">🟣 بنفسجي</option>
+                  </select>
+                </div>
+                <div>
+                  <label style="display:block;font-size:12px;font-weight:600;margin-bottom:4px;color:var(--text-main);">&nbsp;</label>
+                  <button class="btn" id="btnAddFeature" style="width:100%;background:var(--primary);color:white;border:none;cursor:pointer;padding:8px;border-radius:4px;">➕ إضافة ميزة</button>
+                </div>
+              </div>
+              
+              <!-- قائمة الميزات المضافة -->
+              <div id="featuresPreview" style="border:1px solid var(--border);border-radius:4px;padding:12px;background:var(--surface);color:var(--text-main);min-height:60px;max-height:200px;overflow-y:auto;">
+                <p class="muted" style="margin:0;text-align:center;">معاينة الميزات</p>
+              </div>
+            </div>
+            <textarea id="p_features" rows="3" placeholder="مثال: تقارير مالية; صلاحيات مستخدمين; تصدير PDF" style="display:none;"></textarea>
 
             <hr style="margin:14px 0; opacity:.3;">
             <h2 style="margin:6px 0 10px;">صور إضافية (حتى 10 روابط)</h2>
@@ -262,6 +363,270 @@
       statusEl.style.backgroundColor = color === 'green' ? '#d4edda' : color === 'red' ? '#f8d7da' : '#d1ecf1';
     }
 
+    // --- محرر الميزات المتقدم مع شريط التنسيق ---
+    const featuresData = [];
+    const formatState = {
+      bold: false,
+      italic: false,
+      underline: false,
+      textColor: '#000000',
+      bgColor: '#ffffff',
+      fontSize: '14',
+      fontFamily: "'Tjawal', sans-serif"
+    };
+    
+    // معالجات الأزرار
+    document.getElementById('fmt-bold')?.addEventListener('click', () => {
+      formatState.bold = !formatState.bold;
+      updateFormatButtons();
+      updatePreview();
+    });
+    
+    document.getElementById('fmt-italic')?.addEventListener('click', () => {
+      formatState.italic = !formatState.italic;
+      updateFormatButtons();
+      updatePreview();
+    });
+    
+    document.getElementById('fmt-underline')?.addEventListener('click', () => {
+      formatState.underline = !formatState.underline;
+      updateFormatButtons();
+      updatePreview();
+    });
+    
+    document.getElementById('fmt-textcolor')?.addEventListener('change', (e) => {
+      formatState.textColor = e.target.value;
+      updatePreview();
+    });
+    
+    document.getElementById('fmt-bgcolor')?.addEventListener('change', (e) => {
+      formatState.bgColor = e.target.value;
+      updatePreview();
+    });
+    
+    document.getElementById('fmt-size')?.addEventListener('change', (e) => {
+      formatState.fontSize = e.target.value;
+      updatePreview();
+    });
+    
+    document.getElementById('fmt-font')?.addEventListener('change', (e) => {
+      formatState.fontFamily = e.target.value;
+      updatePreview();
+    });
+    
+    document.getElementById('fmt-emoji')?.addEventListener('click', () => {
+      const emojis = ['✓', '✓✓', '★', '●', '→', '⚡', '🎯', '✨', '🔥', '💯', '🚀', '⭐'];
+      const selected = emojis[Math.floor(Math.random() * emojis.length)];
+      const ta = document.getElementById('feat-text-rich');
+      ta.value += selected;
+      updatePreview();
+      ta.focus();
+    });
+    
+    document.getElementById('fmt-clear')?.addEventListener('click', () => {
+      formatState.bold = false;
+      formatState.italic = false;
+      formatState.underline = false;
+      formatState.textColor = '#000000';
+      formatState.bgColor = '#ffffff';
+      formatState.fontSize = '14';
+      updateFormatButtons();
+      updatePreview();
+    });
+    
+    function updateFormatButtons() {
+      const boldBtn = document.getElementById('fmt-bold');
+      const italicBtn = document.getElementById('fmt-italic');
+      const underlineBtn = document.getElementById('fmt-underline');
+      
+      if (boldBtn) {
+        boldBtn.style.background = formatState.bold ? 'var(--primary)' : 'var(--surface)';
+        boldBtn.style.color = formatState.bold ? 'white' : 'var(--text-main)';
+      }
+      if (italicBtn) {
+        italicBtn.style.background = formatState.italic ? 'var(--primary)' : 'var(--surface)';
+        italicBtn.style.color = formatState.italic ? 'white' : 'var(--text-main)';
+      }
+      if (underlineBtn) {
+        underlineBtn.style.background = formatState.underline ? 'var(--primary)' : 'var(--surface)';
+        underlineBtn.style.color = formatState.underline ? 'white' : 'var(--text-main)';
+      }
+    }
+    
+    function updatePreview() {
+      const ta = document.getElementById('feat-text-rich');
+      const preview = document.getElementById('feat-preview-text');
+      if (!ta || !preview) return;
+      
+      let text = ta.value;
+      if (!text) {
+        preview.innerHTML = '<span style="color:var(--text-muted);">سيظهر النص المنسق هنا...</span>';
+        return;
+      }
+      
+      let style = `
+        font-weight: ${formatState.bold ? 'bold' : 'normal'};
+        font-style: ${formatState.italic ? 'italic' : 'normal'};
+        text-decoration: ${formatState.underline ? 'underline' : 'none'};
+        color: ${formatState.textColor};
+        background-color: ${formatState.bgColor};
+        font-size: ${formatState.fontSize}px;
+        font-family: ${formatState.fontFamily};
+        padding: 4px 6px;
+        border-radius: 3px;
+      `;
+      
+      preview.innerHTML = `<span style="${style}">${text}</span>`;
+    }
+    
+    // تحديث المعاينة عند الكتابة
+    document.getElementById('feat-text-rich')?.addEventListener('input', updatePreview);
+    
+    function renderFeaturesPreview() {
+      const preview = document.getElementById('featuresPreview');
+      if (!preview) return;
+      if (featuresData.length === 0) {
+        preview.innerHTML = '<p class="muted" style="margin:0;text-align:center;">معاينة الميزات</p>';
+        return;
+      }
+      preview.innerHTML = featuresData.map((feat, idx) => {
+        const styleStr = feat.style || 'font-weight:normal;font-style:normal;text-decoration:none;';
+        const color = feat.color ? `border-left:4px solid ${feat.color};background-color:${feat.color}15;` : 'background:var(--bg-hover);border-left:4px solid var(--primary);';
+        const link = feat.link ? `<a href="${feat.link}" target="_blank" style="color:var(--primary);margin-left:8px;text-decoration:none;font-size:12px;">🔗</a>` : '';
+        return `
+          <div style="padding:8px;margin-bottom:4px;border-radius:4px;${color}display:flex;justify-content:space-between;align-items:center;">
+            <span style="${styleStr}">${feat.text} ${link}</span>
+            <button data-idx="${idx}" class="btn-remove-feat" style="border:none;background:rgba(255,0,0,0.1);color:red;cursor:pointer;padding:2px 6px;border-radius:3px;font-size:12px;">حذف</button>
+          </div>
+        `;
+      }).join('');
+      
+      document.querySelectorAll('.btn-remove-feat').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const idx = parseInt(btn.getAttribute('data-idx'));
+          featuresData.splice(idx, 1);
+          renderFeaturesPreview();
+          updateFeaturesTextarea();
+        });
+      });
+    }
+
+    function updateFeaturesTextarea() {
+      const ta = document.getElementById('p_features');
+      if (ta) ta.value = featuresData.map(f => f.text).join('; ');
+    }
+
+    document.getElementById('btnAddFeature')?.addEventListener('click', () => {
+      const text = (document.getElementById('feat-text-rich')?.value || '').trim();
+      if (!text) { alert('أدخل نص الميزة أولاً'); return; }
+      const link = (document.getElementById('feat-link')?.value || '').trim();
+      const color = (document.getElementById('feat-color')?.value || '');
+      
+      const styleStr = `
+        font-weight: ${formatState.bold ? 'bold' : 'normal'};
+        font-style: ${formatState.italic ? 'italic' : 'normal'};
+        text-decoration: ${formatState.underline ? 'underline' : 'none'};
+        color: ${formatState.textColor};
+        background-color: ${formatState.bgColor === '#ffffff' ? 'transparent' : formatState.bgColor};
+        font-size: ${formatState.fontSize}px;
+        font-family: ${formatState.fontFamily};
+      `;
+      
+      featuresData.push({ text, link: link || null, color: color || null, style: styleStr });
+      
+      // إعادة تعيين
+      document.getElementById('feat-text-rich').value = '';
+      document.getElementById('feat-link').value = '';
+      document.getElementById('feat-color').value = '';
+      formatState.bold = false;
+      formatState.italic = false;
+      formatState.underline = false;
+      formatState.textColor = '#000000';
+      formatState.bgColor = '#ffffff';
+      formatState.fontSize = '14';
+      document.getElementById('fmt-size').value = '14';
+      
+      updateFormatButtons();
+      updatePreview();
+      renderFeaturesPreview();
+      updateFeaturesTextarea();
+      document.getElementById('feat-text-rich').focus();
+    });
+
+    // مفتاح Enter
+    document.getElementById('feat-text-rich')?.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter' && e.ctrlKey) document.getElementById('btnAddFeature').click();
+    });
+    
+    function setPgStatus(msg, color){
+      const statusEl = document.getElementById('programPublishStatus');
+      if (!statusEl) return; statusEl.textContent = msg; statusEl.style.color = color || 'var(--text-muted)';
+      statusEl.style.display = 'block'; statusEl.style.padding = '10px';
+      statusEl.style.border = '1px solid ' + (color || '#ddd'); statusEl.style.borderRadius = '5px';
+      statusEl.style.backgroundColor = color === 'green' ? '#d4edda' : color === 'red' ? '#f8d7da' : '#d1ecf1';
+    }
+
+    function renderFeaturesPreview() {
+      const preview = document.getElementById('featuresPreview');
+      if (!preview) return;
+      if (featuresData.length === 0) {
+        preview.innerHTML = '<p class="muted" style="margin:0;text-align:center;">معاينة الميزات</p>';
+        return;
+      }
+      preview.innerHTML = featuresData.map((feat, idx) => {
+        const style = feat.color ? `background-color:${feat.color}15;border-left:4px solid ${feat.color};` : 'background:var(--bg-hover);border-left:4px solid var(--primary);';
+        const link = feat.link ? `<a href="${feat.link}" target="_blank" style="color:var(--primary);margin-left:8px;text-decoration:none;">🔗</a>` : '';
+        const bold = feat.bold ? 'font-weight:700;' : '';
+        return `
+          <div style="padding:8px;margin-bottom:4px;border-radius:4px;${style}${bold}display:flex;justify-content:space-between;align-items:center;">
+            <span>${feat.text} ${link}</span>
+            <button data-idx="${idx}" class="btn-remove-feat" style="border:none;background:rgba(255,0,0,0.1);color:red;cursor:pointer;padding:2px 6px;border-radius:3px;font-size:12px;">حذف</button>
+          </div>
+        `;
+      }).join('');
+      
+      // إضافة مستمعات الحذف
+      document.querySelectorAll('.btn-remove-feat').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const idx = parseInt(btn.getAttribute('data-idx'));
+          featuresData.splice(idx, 1);
+          renderFeaturesPreview();
+          updateFeaturesTextarea();
+        });
+      });
+    }
+
+    function updateFeaturesTextarea() {
+      const ta = document.getElementById('p_features');
+      if (ta) ta.value = featuresData.map(f => f.text).join('; ');
+    }
+
+    document.getElementById('btnAddFeature')?.addEventListener('click', () => {
+      const text = (document.getElementById('feat-text')?.value || '').trim();
+      if (!text) { alert('أدخل نص الميزة أولاً'); return; }
+      const link = (document.getElementById('feat-link')?.value || '').trim();
+      const color = (document.getElementById('feat-color')?.value || '');
+      featuresData.push({ text, link: link || null, color: color || null, bold: false });
+      document.getElementById('feat-text').value = '';
+      document.getElementById('feat-link').value = '';
+      document.getElementById('feat-color').value = '';
+      renderFeaturesPreview();
+      updateFeaturesTextarea();
+    });
+
+    // معالجة مفتاح Enter في حقل النص
+    document.getElementById('feat-text')?.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') document.getElementById('btnAddFeature').click();
+    });
+
+    function setPgStatus(msg, color){
+      const statusEl = document.getElementById('programPublishStatus');
+      if (!statusEl) return; statusEl.textContent = msg; statusEl.style.color = color || 'var(--text-muted)';
+      statusEl.style.display = 'block'; statusEl.style.padding = '10px';
+      statusEl.style.border = '1px solid ' + (color || '#ddd'); statusEl.style.borderRadius = '5px';
+      statusEl.style.backgroundColor = color === 'green' ? '#d4edda' : color === 'red' ? '#f8d7da' : '#d1ecf1';
+    }
+
     function buildProgramItem(){
       const name = (document.getElementById('p_name').value||'').trim();
       const desc = (document.getElementById('p_desc').value||'').trim();
@@ -275,10 +640,13 @@
       for(let i=1;i<=2;i++){ const v = (document.getElementById('p_vid'+i).value||'').trim(); if (v) vids.push(v); }
       const existingId = (document.getElementById('p_id').value||'').trim();
       const id = existingId || ((name ? name.replace(/\s+/g,'-').toLowerCase() : 'program') + '-' + Date.now());
-      const features = (document.getElementById('p_features').value||'')
-        .split(';')
-        .map(s=>s.trim())
-        .filter(Boolean);
+      // استخدم البيانات من محرر الميزات أو اقرأ من textarea
+      const features = featuresData.length > 0 
+        ? featuresData.map(f => f.text) 
+        : (document.getElementById('p_features').value||'')
+            .split(';')
+            .map(s=>s.trim())
+            .filter(Boolean);
       return {
         id,
         name,
@@ -322,7 +690,28 @@
               document.getElementById('p_image').value = item.image||'';
               document.getElementById('p_price').value = item.price!=null?String(item.price):'';
               document.getElementById('p_currency').value = item.currency||'IQD';
-              document.getElementById('p_features').value = Array.isArray(item.features)? item.features.join('; ') : '';
+              
+              // تحميل الميزات إلى محرر الميزات
+              featuresData.length = 0;
+              if (Array.isArray(item.features)) {
+                item.features.forEach(f => {
+                  featuresData.push({ text: f, link: null, color: null, style: '' });
+                });
+              }
+              renderFeaturesPreview();
+              
+              // إعادة تعيين شريط التنسيق
+              formatState.bold = false;
+              formatState.italic = false;
+              formatState.underline = false;
+              formatState.textColor = '#000000';
+              formatState.bgColor = '#ffffff';
+              formatState.fontSize = '14';
+              document.getElementById('feat-text-rich').value = '';
+              document.getElementById('fmt-size').value = '14';
+              updateFormatButtons();
+              updatePreview();
+              
               // fill images/videos
               for(let i=1;i<=10;i++){
                 const val = (Array.isArray(item.images) && item.images[i-1]) ? item.images[i-1] : '';
@@ -429,6 +818,23 @@
         try {
           ['p_name','p_desc','p_logo','p_image','p_price','p_currency','p_vid1','p_vid2','p_id','p_features'].forEach(id=>{ const el=document.getElementById(id); if (el) el.value=''; });
           for(let i=1;i<=10;i++){ const el=document.getElementById('p_img'+i); if (el) el.value=''; }
+          
+          // مسح محرر الميزات والتنسيق
+          featuresData.length = 0;
+          document.getElementById('feat-text-rich').value = '';
+          document.getElementById('feat-link').value = '';
+          document.getElementById('feat-color').value = '';
+          formatState.bold = false;
+          formatState.italic = false;
+          formatState.underline = false;
+          formatState.textColor = '#000000';
+          formatState.bgColor = '#ffffff';
+          formatState.fontSize = '14';
+          document.getElementById('fmt-size').value = '14';
+          
+          renderFeaturesPreview();
+          updateFormatButtons();
+          updatePreview();
         } catch {}
 
         // refresh admin list

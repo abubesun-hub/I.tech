@@ -727,6 +727,33 @@ async function loadProgramsData() {
     .catch(() => { container.innerHTML = '<p class="under-construction">تعذر تحميل التفاصيل.</p>'; });
 })();
 
+// Image Modal Global Setup
+window.ITECH_IMAGE_MODAL = (() => {
+  const modal = document.createElement('div');
+  modal.id = 'itech-image-modal';
+  modal.innerHTML = `
+    <div style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.9);z-index:10000;display:none;align-items:center;justify-content:center;backdrop-filter:blur(4px)" id="modal-bg">
+      <div style="position:relative;max-width:90%;max-height:90%;">
+        <img id="modal-img" src="" alt="صورة مكبرة" style="width:100%;height:auto;max-height:85vh;object-fit:contain;border-radius:8px;">
+        <button id="modal-close" style="position:absolute;top:10px;right:10px;width:40px;height:40px;border:none;background:rgba(255,255,255,0.9);border-radius:50%;cursor:pointer;font-size:24px;display:flex;align-items:center;justify-content:center;color:#333;">✕</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+  const bg = modal.querySelector('#modal-bg');
+  const img = modal.querySelector('#modal-img');
+  const closeBtn = modal.querySelector('#modal-close');
+  const show = (src) => {
+    img.src = src;
+    bg.style.display = 'flex';
+  };
+  const hide = () => { bg.style.display = 'none'; };
+  closeBtn.addEventListener('click', hide);
+  bg.addEventListener('click', (e) => { if (e.target === bg) hide(); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && bg.style.display === 'flex') hide(); });
+  return { show, hide };
+})();
+
 // Programs page: render from assets/data/programs.json if available
 (function(){
   const grid = document.getElementById('programs');
@@ -736,7 +763,6 @@ async function loadProgramsData() {
     grid.innerHTML = '';
     items.forEach(p => {
       const card = document.createElement('article');
-      // اجعل البطاقات ظاهرة فوراً حتى لا تعتمد على الـ IntersectionObserver
       card.className = 'card program-card reveal active';
       const features = Array.isArray(p.features) ? p.features.slice(0, 3) : [];
       const images = Array.isArray(p.images)
@@ -750,65 +776,40 @@ async function loadProgramsData() {
             .slice(0, 2)
         : [];
       const fmtCur = (c) => (c==='USD' ? 'دولار' : c==='IQD' ? 'دينار' : (c||''));
-      const priceBadge = (p.price!=null) ? `<div class="badge" style="background:#fff7ed;border:1px solid #fed7aa;color:var(--primary);display:inline-block;margin-top:6px;">سعر البرنامج: ${p.price} ${fmtCur(p.currency||'IQD')}</div>` : '';
-
-      const makeVideoEmbed = (u) => {
-        try {
-          const url = new URL(u);
-          const host = url.hostname.replace('www.', '');
-          if (host === 'youtu.be') {
-            const id = url.pathname.split('/').filter(Boolean)[0];
-            if (id) return `<div class="video-embed" style="margin-top:10px"><iframe src="https://www.youtube.com/embed/${id}" title="YouTube video" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen style="width:100%;height:220px;border:0;border-radius:8px"></iframe></div>`;
-          }
-          if (host === 'youtube.com' || host === 'm.youtube.com') {
-            const id = url.searchParams.get('v');
-            if (id) return `<div class="video-embed" style="margin-top:10px"><iframe src="https://www.youtube.com/embed/${id}" title="YouTube video" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen style="width:100%;height:220px;border:0;border-radius:8px"></iframe></div>`;
-          }
-          if (host === 'vimeo.com') {
-            const id = url.pathname.split('/').filter(Boolean)[0];
-            if (id) return `<div class="video-embed" style="margin-top:10px"><iframe src="https://player.vimeo.com/video/${id}" title="Vimeo video" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen style="width:100%;height:220px;border:0;border-radius:8px"></iframe></div>`;
-          }
-          return '';
-        } catch { return ''; }
-      };
-      const firstVideoEmbed = videos.length ? makeVideoEmbed(videos[0]) : '';
+      
+      // تنسيق محسّن: السعر في سطر منفصل بدون badge
+      const priceRow = (p.price!=null) ? `<div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);font-weight:600;color:var(--primary);">السعر: ${p.price} ${fmtCur(p.currency||'IQD')}</div>` : '';
 
       const gallery = images.length
-        ? `<div class="files-list">${images.map(u=>`<img src="${u}" alt="صورة البرنامج" style="width:120px;height:90px;object-fit:cover;border-radius:8px;border:1px solid var(--border)" loading="lazy" onerror="this.remove()">`).join(' ')}</div>`
-        : '';
-      const videoLinks = videos.length > 1
-        ? `<div class="files-list">${videos.slice(1).map(u=>`<a class="btn" href="${u}" target="_blank" rel="noopener">مشاهدة فيديو</a>`).join(' ')}</div>`
+        ? `<div class="files-list">${images.map(u=>`<img class="gallery-img" src="${u}" alt="صورة البرنامج" style="width:120px;height:90px;object-fit:cover;border-radius:8px;border:1px solid var(--border);cursor:pointer;transition:transform 0.2s" loading="lazy" onerror="this.remove()">`).join(' ')}</div>`
         : '';
 
-      const videoBadge = videos.length ? `<span class="badge" style="margin-right:6px;background:#e6f0ff;border:1px solid #bcd3ff;color:#1e40af">فيديو</span>` : '';
       card.innerHTML = `
-        ${p.image ? `<img src="${p.image}" alt="${p.name}" class="card-img" loading="lazy" onerror="this.remove()" />` : ''}
-        <h2>${p.logo ? `<img src="${p.logo}" alt="لوغو ${p.name}" style="width:32px;height:32px;object-fit:contain;margin-left:8px;vertical-align:middle">` : ''}${p.name||'برنامج'} ${videoBadge}</h2>
-        ${priceBadge}
-        ${p.shortDescription ? `<p class="tender-desc">${p.shortDescription}</p>` : ''}
-        ${features.length ? `<ul>${features.map(f=>`<li>${f}</li>`).join('')}</ul>` : ''}
+        ${p.image ? `<img src="${p.image}" alt="${p.name}" class="card-img gallery-img" style="cursor:pointer;" loading="lazy" onerror="this.remove()" />` : ''}
+        <h2 style="margin-bottom:8px;">${p.logo ? `<img src="${p.logo}" alt="لوغو ${p.name}" style="width:32px;height:32px;object-fit:contain;margin-left:8px;vertical-align:middle">` : ''}${p.name||'برنامج'}</h2>
+        ${p.shortDescription ? `<p class="tender-desc" style="margin-bottom:8px;color:var(--text-muted);">${p.shortDescription}</p>` : ''}
+        ${priceRow}
+        ${features.length ? `<ul style="margin-top:8px;">${features.map(f=>`<li>${f}</li>`).join('')}</ul>` : ''}
         ${gallery}
-        ${firstVideoEmbed ? firstVideoEmbed.replace('<div class="video-embed"', `<div class="video-embed" id="vid-${p.id}" style="display:none"`) : ''}
-        ${videoLinks}
         <div class="actions">
-          <a class="btn link" href="program.html?id=${encodeURIComponent(p.id)}">تفاصيل</a>
-          ${videos.length ? `<button class="btn" data-vid="vid-${p.id}">مشاهدة فيديو</button>` : ''}
+          <a class="btn link" href="program.html?id=${encodeURIComponent(p.id)}">تفاصيل المزيد</a>
         </div>
       `;
       grid.appendChild(card);
-      // زر إظهار/إخفاء الفيديو المضمن
-      const vbtn = card.querySelector('[data-vid]');
-      if (vbtn) {
-        vbtn.addEventListener('click', () => {
-          const targetId = vbtn.getAttribute('data-vid');
-          const el = card.querySelector('#'+CSS.escape(targetId));
-          if (el) {
-            const isHidden = el.style.display === 'none' || !el.style.display;
-            el.style.display = isHidden ? 'block' : 'none';
-            if (isHidden) { try { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch {} }
-          }
+      
+      // إضافة مستمعات الصور للـ modal
+      const galleryImgs = card.querySelectorAll('.gallery-img');
+      galleryImgs.forEach(img => {
+        img.addEventListener('click', () => {
+          window.ITECH_IMAGE_MODAL.show(img.src);
         });
-      }
+        img.addEventListener('mouseover', () => {
+          img.style.transform = 'scale(1.05)';
+        });
+        img.addEventListener('mouseout', () => {
+          img.style.transform = 'scale(1)';
+        });
+      });
     });
   }
 
@@ -831,13 +832,14 @@ async function loadProgramsData() {
     });
 })();
 
-// Program details page
+// Program details page with improved layout
 (function(){
   const container = document.getElementById('programDetail');
   if (!container) return;
   const params = new URLSearchParams(location.search);
   const id = params.get('id');
   const fmtCur = (c) => (c==='USD' ? 'دولار' : c==='IQD' ? 'دينار' : (c||''));
+  
   const makeVideoEmbed = (u) => {
     try {
       const url = new URL(u);
@@ -848,29 +850,81 @@ async function loadProgramsData() {
       return '';
     } catch { return ''; }
   };
+  
   loadProgramsData()
     .then(arr => {
       const item = Array.isArray(arr) ? arr.find(x => String(x.id||'') === String(id||'')) : null;
       if (!item) { container.innerHTML = '<p class="under-construction">لم يتم العثور على البرنامج المطلوب.</p>'; return; }
       const images = Array.isArray(item.images) ? item.images.filter(u=>typeof u==='string'&&u.trim()).slice(0,20) : [];
       const videos = Array.isArray(item.videos) ? item.videos.filter(u=>typeof u==='string'&&/^https?:\/\//i.test(u.trim())).slice(0,5) : [];
-      const priceBadge = (item.price!=null) ? `<div class="badge" style="background:#fff7ed;border:1px solid #fed7aa;color:var(--primary);display:inline-block;margin-top:6px;">سعر البرنامج: ${item.price} ${fmtCur(item.currency||'IQD')}</div>` : '';
-      const gallery = images.length ? `<div class="files-list">${images.map(u=>`<img src="${u}" alt="صورة البرنامج" style="width:160px;height:120px;object-fit:cover;border-radius:8px;border:1px solid var(--border)" loading="lazy" onerror="this.remove()">`).join(' ')}</div>` : '';
+      const priceBadge = (item.price!=null) ? `<div style="margin-top:12px;margin-bottom:12px;padding:12px;background:linear-gradient(135deg, #fff7ed 0%, #ffe4cc 100%);border:2px solid var(--primary);border-radius:8px;color:var(--primary);font-weight:700;font-size:18px;">💰 السعر: ${item.price} ${fmtCur(item.currency||'IQD')}</div>` : '';
+      
+      // معرض الصور بتنسيق محسّن
+      const gallery = images.length ? `
+        <section style="margin-top:20px;padding-top:20px;border-top:1px solid var(--border);">
+          <h3>معرض الصور</h3>
+          <div class="files-list" style="display:grid;grid-template-columns:repeat(auto-fill, minmax(180px, 1fr));gap:12px;">
+            ${images.map(u=>`<img class="gallery-img" src="${u}" alt="صورة البرنامج" style="width:100%;height:150px;object-fit:cover;border-radius:8px;border:2px solid var(--border);cursor:pointer;transition:all 0.3s;box-shadow:0 2px 8px rgba(0,0,0,0.1)" loading="lazy" onerror="this.remove()">`).join('')}
+          </div>
+        </section>
+      ` : '';
+      
       const embeds = videos.map(makeVideoEmbed).filter(Boolean).join('');
-      const links = videos.filter(u=>!makeVideoEmbed(u)).map(u=>`<a class="btn" href="${u}" target="_blank" rel="noopener">مشاهدة فيديو</a>`).join(' ');
-      const features = Array.isArray(item.features) ? `<ul>${item.features.map(f=>`<li>${f}</li>`).join('')}</ul>` : '';
+      const videoSection = embeds ? `
+        <section style="margin-top:20px;padding-top:20px;border-top:1px solid var(--border);">
+          <h3>الفيديوهات التوضيحية</h3>
+          <div>${embeds}</div>
+        </section>
+      ` : '';
+      
+      const features = Array.isArray(item.features) && item.features.length ? `
+        <section style="margin-top:12px;">
+          <h3>الميزات الرئيسية</h3>
+          <ul style="display:grid;grid-template-columns:repeat(auto-fill, minmax(200px, 1fr));gap:8px;list-style:none;padding:0;">
+            ${item.features.map(f=>`<li style="padding:10px;background:var(--bg-hover);border-radius:6px;border-left:4px solid var(--primary);padding-left:12px;">✓ ${f}</li>`).join('')}
+          </ul>
+        </section>
+      ` : '';
+      
       container.innerHTML = `
-        <h1>${item.name||'برنامج'}</h1>
-        ${priceBadge}
-        ${item.shortDescription ? `<p class="tender-desc">${item.shortDescription}</p>` : ''}
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px;" class="responsive-detail">
+          <div>
+            ${item.image ? `<img src="${item.image}" alt="${item.name}" class="gallery-img" style="width:100%;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.15);cursor:pointer;" loading="lazy" onerror="this.remove()" />` : ''}
+          </div>
+          <div>
+            <h1 style="margin-top:0;">${item.name||'برنامج'}</h1>
+            ${item.logo ? `<img src="${item.logo}" alt="لوغو" style="width:60px;height:60px;object-fit:contain;margin-bottom:12px;">` : ''}
+            ${item.shortDescription ? `<p style="font-size:18px;line-height:1.6;color:var(--text-muted);margin-bottom:12px;">${item.shortDescription}</p>` : ''}
+            ${priceBadge}
+          </div>
+        </div>
         ${features}
         ${gallery}
-        ${embeds}
-        ${links ? `<div class="files-list">${links}</div>` : ''}
-        <div class="actions" style="margin-top:12px;">
-          <a class="btn" href="programs.html">العودة إلى البرامج</a>
+        ${videoSection}
+        <div class="actions" style="margin-top:24px;padding-top:20px;border-top:1px solid var(--border);">
+          <a class="btn" href="programs.html">← العودة إلى البرامج</a>
         </div>
       `;
+      
+      // إضافة مستمعات الصور للـ modal
+      const galleryImgs = container.querySelectorAll('.gallery-img');
+      galleryImgs.forEach(img => {
+        img.addEventListener('click', () => {
+          window.ITECH_IMAGE_MODAL.show(img.src);
+        });
+        img.addEventListener('mouseover', () => {
+          img.style.transform = 'scale(1.05)';
+        });
+        img.addEventListener('mouseout', () => {
+          img.style.transform = 'scale(1)';
+        });
+      });
+      
+      // إضافة responsive للتصميم
+      if (window.innerWidth < 768) {
+        const grid = container.querySelector('.responsive-detail');
+        if (grid) grid.style.gridTemplateColumns = '1fr';
+      }
     })
     .catch(()=>{ container.innerHTML = '<p class="under-construction">تعذر تحميل تفاصيل البرنامج.</p>'; });
 })();
