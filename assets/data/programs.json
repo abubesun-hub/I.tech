@@ -1,27 +1,5 @@
 [
   {
-    "id": "inventory-system",
-    "name": "برنامج إدارة المخزون",
-    "logo": "./assets/images/I-Tech logo.png",
-    "image": "https://images.unsplash.com/photo-1556157382-97eda2d62296?w=900&auto=format&fit=crop",
-    "shortDescription": "تتبع الأصناف والحركات مع تقارير شهرية وصلاحيات متعددة.",
-    "features": [
-      "صلاحيات مستخدمين متعددة",
-      "تكامل مع الباركود",
-      "تصدير تقارير XLS/PDF"
-    ],
-    "price": 250,
-    "currency": "IQD",
-    "images": [
-      "https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=600&auto=format&fit=crop",
-      "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=600&auto=format&fit=crop"
-    ],
-    "videos": [
-      "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
-    ],
-    "link": "#"
-  },
-  {
     "id": "billing-accounting",
     "name": "نظام الفواتير والمحاسبة",
     "logo": "./assets/images/I-Tech logo.png",
@@ -56,30 +34,6 @@
     "images": [],
     "videos": [
       "https://vimeo.com/76979871"
-    ],
-    "link": "#"
-  },
-  {
-    "id": "جدولي-/-jadwaly-1768985464322",
-    "name": "جدولي / Jadwaly",
-    "logo": "https://www.facebook.com/photo?fbid=122094256251071020&set=a.122094256287071020",
-    "image": "https://www.facebook.com/photo/?fbid=122094389457071020&set=a.122094256293071020",
-    "shortDescription": "تنظيم وإدارة الجداول المدرسية",
-    "price": 75000,
-    "currency": "IQD",
-    "images": [
-      "https://www.facebook.com/photo.php?fbid=122118651033071020&set=pb.61582130605201.-2207520000&type=3",
-      "https://www.facebook.com/photo/?fbid=122118651045071020&set=pb.61582130605201.-2207520000",
-      "https://www.facebook.com/photo/?fbid=122118651057071020&set=pb.61582130605201.-2207520000",
-      "https://www.facebook.com/photo/?fbid=122118651165071020&set=pb.61582130605201.-2207520000",
-      "https://www.facebook.com/photo/?fbid=122118651189071020&set=pb.61582130605201.-2207520000",
-      "https://www.facebook.com/photo/?fbid=122094256251071020&set=pb.61582130605201.-2207520000"
-    ],
-    "videos": [
-      "https://www.facebook.com/61582130605201/videos/pcb.122108040039071020/1540078447015352"
-    ],
-    "features": [
-      "#جدولي\n#جدول_تنظيم_المهام \nهل أنت إداري في مدرسة تبحث عن طريقة سهلة وفعالة لإنشاء الجدول المدرسي!\nلدينا الحل المثالي لك:\nبرنامج #جدولي هو الأداة التي تحتاجها لتسهيل تنظيم الدروس والحوارات في مدرستك. \nمميزات البرنامج\n- واجهة بسيطة وسهلة الاستخدام تناسب جميع المستخدمين.\n- تصميم يتماشى مع الاحتياجات الخاصة للمدارس العراقية.\n- إمكانية تخصيص المواعيد والفصول الدراسية بما يتناسب مع نظامك التعليمي.\n- دعم فني متواصل لضمان تجربتك المثلى.\n**اجعل تنظيم جدولك المدرسي أسهل وأسرع مع برنامج #جدولي !**\nاطلبه من i-techأيتكــــ\nhttps://www.facebook.com/Jadawl\nhttps://www.instagram.com/i.tech02/\nhttps://www.facebook.com/transh2016\nhttps://www.facebook.com/I.tech025"
     ],
     "link": "#"
   }
