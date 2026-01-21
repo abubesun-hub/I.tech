@@ -802,7 +802,7 @@ window.ITECH_IMAGE_MODAL = (() => {
           if (typeof f === 'object' && f.text) {
             text = f.text;
           }
-          const summary = summarize(text, 140);
+          const summary = summarize(text, 50);
           return `<li style="padding:4px 0;white-space:pre-wrap;color:var(--text-main);font-size:0.95rem;">${summary}</li>`;
         }).join('')}</ul>` : ''}
         ${gallery}
