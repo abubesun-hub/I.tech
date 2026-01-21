@@ -759,14 +759,6 @@ window.ITECH_IMAGE_MODAL = (() => {
   const grid = document.getElementById('programs');
   if (!grid) return;
 
-  // Helpers لتلخيص النص للبطاقات
-  const stripTags = (s) => (s || '').toString().replace(/<[^>]*>/g, '');
-  const summarize = (s, max) => {
-    const plain = stripTags(s).trim();
-    if (plain.length <= max) return plain;
-    return plain.slice(0, max).trim() + '…';
-  };
-
   function render(items) {
     grid.innerHTML = '';
     items.forEach(p => {
@@ -800,15 +792,16 @@ window.ITECH_IMAGE_MODAL = (() => {
         ${features.length ? `<ul style="margin-top:8px;">${features.map(f=>{
           let text = f;
           let style = '';
+          let link = null;
           if (typeof f === 'object' && f.text) {
             text = f.text;
             style = f.style || '';
+            link = f.link;
           }
-          const summary = summarize(text, 140);
+          const txt = (text || '').toString();
           const safeStyle = (style || '').replace(/color\s*:[^;]+;?/gi, '');
-          return `<li style="padding:4px 0;white-space:pre-wrap;">
-            <span style="${safeStyle};color:inherit;">${summary}</span>
-          </li>`;
+          const content = `<span style="${safeStyle};white-space:pre-wrap;color:inherit;">${txt}</span>`;
+          return `<li style="padding:4px 0;white-space:pre-wrap;">${link ? `<a href="${link}" target="_blank" rel="noopener" style="color:inherit;text-decoration:none;">${content}</a>` : content}</li>`;
         }).join('')}</ul>` : ''}
         ${gallery}
         <div class="actions">
