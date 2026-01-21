@@ -885,7 +885,7 @@ window.ITECH_IMAGE_MODAL = (() => {
       const features = Array.isArray(item.features) && item.features.length ? `
         <section style="margin-top:12px;">
           <h3>الميزات الرئيسية</h3>
-          <ul style="display:grid;grid-template-columns:repeat(auto-fill, minmax(200px, 1fr));gap:8px;list-style:none;padding:0;">
+          <ul style="display:flex;flex-direction:column;gap:8px;list-style:none;padding:0;margin:0;width:100%;">
             ${item.features.map(f=>{
               let text = f;
               let style = '';
