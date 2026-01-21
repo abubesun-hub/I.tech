@@ -772,6 +772,7 @@ window.ITECH_IMAGE_MODAL = (() => {
     items.forEach(p => {
       const card = document.createElement('article');
       card.className = 'card program-card reveal active';
+      card.style.fontFamily = "'Tjawal', sans-serif";
       const features = Array.isArray(p.features) ? p.features.slice(0, 3) : [];
       const images = Array.isArray(p.images)
         ? p.images
