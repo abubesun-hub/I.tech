@@ -896,7 +896,8 @@ window.ITECH_IMAGE_MODAL = (() => {
                 link = f.link;
               }
               const txt = (text || '').toString();
-              const content = `<span style="${style};white-space:pre-wrap;">✓ ${txt}</span>`;
+              const safeStyle = (style || '').replace(/color\s*:[^;]+;?/gi, '');
+              const content = `<span style="${safeStyle};white-space:pre-wrap;color:inherit;">✓ ${txt}</span>`;
               return `<li style="padding:10px;background:var(--bg-hover);border-radius:6px;border-left:4px solid var(--primary);padding-left:12px;">${link ? `<a href="${link}" target="_blank" rel="noopener" style="color:inherit;text-decoration:none;">${content}</a>` : content}</li>`;
             }).join('')}
           </ul>
