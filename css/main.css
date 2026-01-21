@@ -40,6 +40,13 @@ body {
   min-height: 100vh;
 }
 
+/* صفحات البرامج وتفاصيلها ولوحة التحكم تستخدم خط Tjawal ثابت */
+body.page-programs,
+body.page-program-detail,
+body.page-controll {
+  font-family: 'Tjawal', system-ui, -apple-system, sans-serif;
+}
+
 /* خلفيات الصفحات */
 body.page-home {
   background: linear-gradient(var(--bg-overlay), var(--bg-overlay)), url('../assets/images/bg-home.jpg');

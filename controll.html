@@ -164,17 +164,7 @@
                 <!-- فاصل -->
                 <div style="width:1px;height:20px;background:var(--border);margin:0 4px;"></div>
                 
-                <!-- الخطوط -->
-                <select id="fmt-font" title="نوع الخط" style="padding:6px;border:1px solid var(--border);border-radius:4px;font-size:12px;background:var(--surface);color:var(--text-main);">
-                  <option value="'Tjawal', sans-serif" selected>Tjawal</option>
-                  <option value="'Cairo', sans-serif">Cairo</option>
-                  <option value="'Arial', sans-serif">Arial</option>
-                  <option value="'Times New Roman', serif">Times</option>
-                  <option value="'Courier New', monospace">Courier</option>
-                </select>
-
-                <!-- فاصل -->
-                <div style="width:1px;height:20px;background:var(--border);margin:0 4px;"></div>
+                <!-- تم تثبيت نوع الخط على Tjawal، لذا أزيلت قائمة اختيار الخط -->
 
                 <!-- محاذاة الفقرة -->
                 <button id="fmt-align-right" class="fmt-btn" title="محاذاة يمين" style="padding:6px 8px;background:var(--surface);border:1px solid var(--border);border-radius:4px;cursor:pointer;color:var(--text-main);">يمين</button>
@@ -388,7 +378,6 @@
       underline: false,
       bgColor: '#ffffff',
       fontSize: '14',
-      fontFamily: "'Tjawal', sans-serif",
       lineHeight: '1.6',
       align: 'right'
     };
@@ -493,14 +482,6 @@
       formatState.lineHeight = e.target.value || '1.6';
       updatePreview();
     });
-    
-    document.getElementById('fmt-font')?.addEventListener('change', (e) => {
-      const font = e.target.value;
-      if (!applySpanStyle(`font-family:${font}`)) {
-        formatState.fontFamily = font;
-        updatePreview();
-      }
-    });
 
     // محاذاة الفقرة
     document.getElementById('fmt-align-right')?.addEventListener('click', () => {
@@ -595,7 +576,6 @@
       preview.style.textDecoration = formatState.underline ? 'underline' : 'none';
       preview.style.backgroundColor = formatState.bgColor;
       preview.style.fontSize = formatState.fontSize + 'px';
-      preview.style.fontFamily = formatState.fontFamily;
       preview.style.lineHeight = formatState.lineHeight;
       preview.style.textAlign = formatState.align;
       preview.style.padding = '4px 6px';
@@ -652,7 +632,6 @@
         text-decoration: ${formatState.underline ? 'underline' : 'none'};
         background-color: ${formatState.bgColor === '#ffffff' ? 'transparent' : formatState.bgColor};
         font-size: ${formatState.fontSize}px;
-        font-family: ${formatState.fontFamily};
         line-height: ${formatState.lineHeight};
         text-align: ${formatState.align};
       `;
@@ -733,7 +712,6 @@
         text-decoration: ${formatState.underline ? 'underline' : 'none'};
         background-color: ${formatState.bgColor === '#ffffff' ? 'transparent' : formatState.bgColor};
         font-size: ${formatState.fontSize}px;
-        font-family: ${formatState.fontFamily};
         line-height: ${formatState.lineHeight};
         text-align: ${formatState.align};
       `;
