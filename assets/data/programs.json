@@ -1,24 +1,5 @@
 [
   {
-    "id": "tasks-platform",
-    "name": "منصة إدارة المهام",
-    "logo": "./assets/images/I-Tech logo.png",
-    "image": "https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=900&auto=format&fit=crop",
-    "shortDescription": "تنظيم المهام والفرق مع لوحات كانبان وإشعارات.",
-    "features": [
-      "لوحات كانبان",
-      "تنبيهات وإشعارات",
-      "واجهة عربية متجاوبة"
-    ],
-    "price": 220,
-    "currency": "IQD",
-    "images": [],
-    "videos": [
-      "https://vimeo.com/76979871"
-    ],
-    "link": "#"
-  },
-  {
     "id": "جدولي-/-jadwaly-1768989270183",
     "name": "جدولي / Jadwaly",
     "logo": "https://scontent-ist1-1.xx.fbcdn.net/v/t39.30808-6/559741350_1592205088611056_8859552699627885752_n.jpg?_nc_cat=101&ccb=1-7&_nc_sid=6ee11a&_nc_ohc=u-7kNEKKYmYQ7kNvwEdoiAB&_nc_oc=AdlP_9s_NcHeyjOFV1YjKYxW2Pj2Nm7phWexc3AAOv3DNoPC_ArhHyMsItGdJSBAbYM&_nc_zt=23&_nc_ht=scontent-ist1-1.xx&_nc_gid=zIz72ieijpCcRjazdR6NTA&oh=00_AfqS5_TRtvLYYSIlGwSdxZPCXxxxe9nwqLtzy1akKTekLQ&oe=69766768",
