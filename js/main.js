@@ -168,6 +168,14 @@ try {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   });
 
+  // 1.5 تحديث سنة الحقوق تلقائياً في التذييل
+  try {
+    const currentYear = new Date().getFullYear().toString();
+    document.querySelectorAll('[data-current-year]').forEach(el => {
+      el.textContent = currentYear;
+    });
+  } catch {}
+
   // 2. أنيميشن الظهور عند التمرير (Scroll Reveal)
   // إضافة كلاس reveal للعناصر الرئيسية تلقائياً
   const sections = document.querySelectorAll('section, .card, .hero-content, .hero-image');
