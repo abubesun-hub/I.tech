@@ -40,7 +40,7 @@ body {
   min-height: 100vh;
 }
 
-/* صفحات البرامج وتفاصيلها ولوحة التحكم تستخدم خط Tjawal ثابت */
+/* صفحات البرامج وتفاصيلها ولوحة التحكم تستخدم خط Tajawal ثابت */
 body.page-programs,
 body.page-program-detail,
 body.page-controll {
