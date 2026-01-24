@@ -83,5 +83,31 @@
       "phone": "07817823680",
       "email": "itechanbar@gmail.com"
     }
+  },
+  {
+    "id": "010",
+    "title": "شراء جهاز كمبيوتر محمول وكاميرا رقمية وجهاز تحديد المواقع العالمي (GPS)",
+    "entity": "@",
+    "category": "منظمات",
+    "city": "@",
+    "adNumber": "NGO-TN-2026-001",
+    "deadline": "2026-02-01",
+    "postedDate": "2026-01-24",
+    "status": "مفتوح",
+    "link": "https://www.facebook.com/IraqsTenders",
+    "description": "شراء جهاز كمبيوتر محمول وكاميرا رقمية وجهاز تحديد المواقع العالمي (GPS)",
+    "documentPrice": 0,
+    "currency": "IQD",
+    "pickupLocation": "ايتك",
+    "submissionPlace": "@",
+    "submissionRequirements": [
+      "شراء جهاز كمبيوتر محمول وكاميرا رقمية وجهاز تحديد المواقع العالمي (GPS)"
+    ],
+    "notes": "شراء جهاز كمبيوتر محمول وكاميرا رقمية وجهاز تحديد المواقع العالمي (GPS)",
+    "files": [],
+    "contact": {
+      "phone": "07817823680",
+      "email": "itechanbar@gmail.com"
+    }
   }
 ]
