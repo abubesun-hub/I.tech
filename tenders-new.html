@@ -57,6 +57,20 @@
       display: flex;
       gap: 10px;
     }
+    .media-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 10px;
+      margin: 10px 0 6px;
+    }
+    .media-grid img {
+      width: 100%;
+      height: 120px;
+      object-fit: cover;
+      border-radius: 6px;
+      border: 1px solid #e5e7eb;
+      background: #fff;
+    }
     .badge {
       display: inline-block;
       padding: 4px 8px;
@@ -378,6 +392,9 @@
     const container = document.getElementById('tendersContainer');
     const searchInput = document.getElementById('searchInput');
     const statsDiv = document.getElementById('stats');
+    const favKey = 'itech_tenders_favorites';
+    const getFavs = () => { try { return JSON.parse(localStorage.getItem(favKey)||'[]'); } catch { return []; } };
+    const setFavs = (arr) => localStorage.setItem(favKey, JSON.stringify(arr));
 
     // وظائف البحث والفلترة الجديدة
     function performSearch() {
@@ -772,15 +789,55 @@
           ${priceBadge}
           ${meta.length ? `<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0 16px;">${meta.join('')}${contactHTML}</div>` : contactHTML}
           ${item.description ? `<div class="tender-description">${item.description}</div>` : ''}
+          ${(() => {
+            const imgs = Array.isArray(item.images) ? item.images : (item.image ? [item.image] : []);
+            if (!imgs.length) return '';
+            const items = imgs.map(img => {
+              const src = (typeof img === 'string') ? img : (img.url || '');
+              const alt = (typeof img === 'string') ? 'صورة المناقصة' : (img.alt || 'صورة المناقصة');
+              if (!src) return '';
+              return `<a href="${src}" target="_blank" rel="noopener"><img src="${src}" alt="${alt}"></a>`;
+            }).join('');
+            return `<div class="media-grid">${items}</div>`;
+          })()}
           ${reqsHTML ? `<h3 style="margin-top:15px;">شروط ومتطلبات التقديم</h3>${reqsHTML}` : ''}
           ${filesHTML}
           ${item.notes ? `<div class="tender-description"><strong>ملاحظات:</strong> ${item.notes}</div>` : ''}
           <div class="tender-actions" style="margin-top:12px;">
             ${item.link ? `<a href="${item.link}" target="_blank" class="btn-secondary">المصدر / التفاصيل</a>` : ''}
+            ${item.deadline ? (() => {
+              const d = new Date(item.deadline);
+              const y = d.getUTCFullYear();
+              const m = String(d.getUTCMonth()+1).padStart(2,'0');
+              const day = String(d.getUTCDate()).padStart(2,'0');
+              const dateStr = `${y}${m}${day}`;
+              const title = encodeURIComponent(`موعد مناقصة: ${item.title}`);
+              const details = encodeURIComponent(`${item.entity||''} · ${item.city||''} · رقم الإعلان: ${item.adNumber||''}`);
+              const calUrl = `https://calendar.google.com/calendar/u/0/r/eventedit?text=${title}&details=${details}&dates=${dateStr}/${dateStr}`;
+              return `<a href="${calUrl}" target="_blank" class="btn-secondary">إضافة إلى التقويم</a>`;
+            })() : ''}
+            ${(() => {
+              const favs = getFavs();
+              const isFav = favs.includes(item.id);
+              const label = isFav ? 'إزالة من المفضلة ★' : 'إضافة إلى المفضلة ★';
+              return `<button id="fav-toggle" class="btn-primary" type="button">${label}</button>`;
+            })()}
             <a href="tenders-new.html" class="btn-primary">العودة إلى المناقصات</a>
           </div>
         </div>
       `;
+
+      // تفعيل زر المفضلة
+      const btn = document.getElementById('fav-toggle');
+      if (btn) {
+        btn.addEventListener('click', () => {
+          const arr = getFavs();
+          const i = arr.indexOf(item.id);
+          if (i === -1) arr.push(item.id); else arr.splice(i,1);
+          setFavs(arr);
+          btn.textContent = arr.includes(item.id) ? 'إزالة من المفضلة ★' : 'إضافة إلى المفضلة ★';
+        });
+      }
     }
 
     // عرض خطأ
