@@ -487,7 +487,7 @@ async function loadProgramsData() {
         <div class="title">${t.title || 'بدون عنوان'}</div>
         ${metaStr ? `<div class="meta">${metaStr}</div>` : ''}
         <div class="actions" style="margin-top:12px;">
-          <a class="btn link" href="tender.html?id=${encodeURIComponent(t.id)}">عرض التفاصيل</a>
+          <a class="btn link" href="tenders-new.html?id=${encodeURIComponent(t.id)}">عرض التفاصيل</a>
         </div>
       `;
       const star = card.querySelector('.star-btn');
