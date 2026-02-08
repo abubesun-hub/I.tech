@@ -69,6 +69,9 @@ body.page-tenders {
 body.page-tender-details { /* reuse tenders background */
   background: linear-gradient(var(--bg-overlay), var(--bg-overlay)), url('../assets/images/bg-tenders.jpg');
 }
+body.page-program-detail {
+  background: linear-gradient(var(--bg-overlay), var(--bg-overlay)), url('../assets/images/bg-dashboard.jpg');
+}
 
 body[class*="page-"] {
   background-size: cover;
@@ -84,6 +87,7 @@ body[class*="page-"] {
 [data-theme="dark"] body.page-contact { background-image: linear-gradient(rgba(15, 23, 42, 0.95), rgba(15, 23, 42, 0.95)), url('../assets/images/bg-contact.jpg'); }
 [data-theme="dark"] body.page-controll { background-image: linear-gradient(rgba(15, 23, 42, 0.95), rgba(15, 23, 42, 0.95)), url('../assets/images/bg-dashboard.jpg'); }
 [data-theme="dark"] body.page-tenders { background-image: linear-gradient(rgba(15, 23, 42, 0.95), rgba(15, 23, 42, 0.95)), url('../assets/images/bg-tenders.jpg'); }
+[data-theme="dark"] body.page-program-detail { background-image: linear-gradient(rgba(15, 23, 42, 0.95), rgba(15, 23, 42, 0.95)), url('../assets/images/bg-dashboard.jpg'); }
 
 /* شريط التنقل - Navbar */
 .nav {
