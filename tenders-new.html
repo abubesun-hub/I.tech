@@ -361,6 +361,8 @@
     let currentFilter = 'all';
     let searchQuery = '';
     let currentSort = 'deadline';
+    let displayMode = 'list';
+    let viewId = null;
 
     // العناصر
     const container = document.getElementById('tendersContainer');
@@ -537,6 +539,19 @@
         console.log(`تم تحميل ${allTenders.length} مناقصة بنجاح`);
         
         setupFilters();
+
+        // إذا كنا في وضع التفاصيل، اعرض المناقصة المحددة مباشرة
+        if (displayMode === 'detail' && viewId) {
+          const tender = allTenders.find(t => String(t.id) === String(viewId));
+          if (tender) {
+            renderTenderDetail(tender);
+            return;
+          } else {
+            showError('لم يتم العثور على المناقصة المطلوبة');
+          }
+        }
+
+        // الوضع الافتراضي: عرض القائمة
         sortTenders(); // تطبيق الترتيب الافتراضي
         updateStats();
         renderTenders();
@@ -684,6 +699,46 @@
       `;
     }
 
+    // عرض تفاصيل مناقصة واحدة
+    function renderTenderDetail(item) {
+      const formatDate = (dateStr) => {
+        if (!dateStr) return 'غير محدد';
+        try {
+          return new Date(dateStr).toLocaleDateString('ar-IQ', { year: 'numeric', month: 'long', day: 'numeric' });
+        } catch {
+          return dateStr;
+        }
+      };
+      const daysLeft = (deadline) => {
+        if (!deadline) return NaN;
+        const d = new Date(deadline).getTime();
+        const now = Date.now();
+        return Math.ceil((d - now) / (1000*60*60*24));
+      };
+
+      const dleft = daysLeft(item.deadline);
+      const deadlineBadge = isNaN(dleft) ? '' : (dleft < 0 ? '<span class="badge" style="background:#fee2e2;color:#b91c1c;border:1px solid #fecaca">منتهي</span>' : `<span class="badge" style="background:#e0f2fe;color:#0369a1;border:1px solid #bae6fd">متبقٍ ${dleft} يوم</span>`);
+      const meta = [];
+      if (item.entity) meta.push(`<div><strong>الجهة:</strong> ${item.entity}</div>`);
+      if (item.category) meta.push(`<div><strong>التصنيف:</strong> ${item.category}</div>`);
+      if (item.city) meta.push(`<div><strong>المدينة:</strong> ${item.city}</div>`);
+      if (item.adNumber) meta.push(`<div><strong>رقم الإعلان:</strong> ${item.adNumber}</div>`);
+      if (item.postedDate) meta.push(`<div><strong>نشر في:</strong> ${formatDate(item.postedDate)}</div>`);
+      if (item.deadline) meta.push(`<div><strong>الموعد النهائي:</strong> ${formatDate(item.deadline)} ${deadlineBadge}</div>`);
+
+      container.innerHTML = `
+        <div class="tender-item">
+          <div class="tender-title">${item.title || 'بدون عنوان'}</div>
+          ${meta.length ? `<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:15px;">${meta.join('')}</div>` : ''}
+          ${item.description ? `<div class="tender-description">${item.description}</div>` : ''}
+          <div class="tender-actions">
+            ${item.link ? `<a href="${item.link}" target="_blank" class="btn-secondary">المصدر / التفاصيل</a>` : ''}
+            <a href="tenders-new.html" class="btn-primary">العودة إلى المناقصات</a>
+          </div>
+        </div>
+      `;
+    }
+
     // عرض خطأ
     function showError(message) {
       const isDataIssue = message.includes('ليست مصفوفة') || message.includes('localStorage');
@@ -758,6 +813,9 @@
     
     // تحميل البيانات عند تحميل الصفحة
     document.addEventListener('DOMContentLoaded', () => {
+      const params = new URLSearchParams(location.search);
+      const idParam = params.get('id');
+      if (idParam) { displayMode = 'detail'; viewId = idParam; }
       initializeTheme();
       loadTenders();
     });
