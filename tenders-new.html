@@ -57,6 +57,16 @@
       display: flex;
       gap: 10px;
     }
+    .badge {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 12px;
+      font-size: 12px;
+      border: 1px solid #ddd;
+      background: #f1f5f9;
+      color: #0f172a;
+      margin-left: 8px;
+    }
     .btn-primary {
       background: #3498db;
       color: white;
@@ -709,6 +719,7 @@
           return dateStr;
         }
       };
+
       const daysLeft = (deadline) => {
         if (!deadline) return NaN;
         const d = new Date(deadline).getTime();
@@ -716,8 +727,18 @@
         return Math.ceil((d - now) / (1000*60*60*24));
       };
 
+      // شارات الحالة
       const dleft = daysLeft(item.deadline);
-      const deadlineBadge = isNaN(dleft) ? '' : (dleft < 0 ? '<span class="badge" style="background:#fee2e2;color:#b91c1c;border:1px solid #fecaca">منتهي</span>' : `<span class="badge" style="background:#e0f2fe;color:#0369a1;border:1px solid #bae6fd">متبقٍ ${dleft} يوم</span>`);
+      const deadlineBadge = isNaN(dleft)
+        ? ''
+        : (dleft < 0
+            ? '<span class="badge" style="background:#fee2e2;color:#b91c1c;border-color:#fecaca">منتهي</span>'
+            : `<span class="badge" style="background:#e0f2fe;color:#0369a1;border-color:#bae6fd">متبقٍ ${dleft} يوم</span>`);
+      const priceBadge = (item.documentPrice!=null)
+        ? `<span class="badge" style="background:#fff7ed;color:#9a3412;border-color:#fed7aa">سعر الكراس: ${item.documentPrice} ${item.currency||'IQD'}</span>`
+        : '';
+
+      // معلومات أساسية
       const meta = [];
       if (item.entity) meta.push(`<div><strong>الجهة:</strong> ${item.entity}</div>`);
       if (item.category) meta.push(`<div><strong>التصنيف:</strong> ${item.category}</div>`);
@@ -725,13 +746,36 @@
       if (item.adNumber) meta.push(`<div><strong>رقم الإعلان:</strong> ${item.adNumber}</div>`);
       if (item.postedDate) meta.push(`<div><strong>نشر في:</strong> ${formatDate(item.postedDate)}</div>`);
       if (item.deadline) meta.push(`<div><strong>الموعد النهائي:</strong> ${formatDate(item.deadline)} ${deadlineBadge}</div>`);
+      if (item.pickupLocation) meta.push(`<div><strong>مكان استلام الكراس:</strong> ${item.pickupLocation}</div>`);
+      if (item.submissionPlace) meta.push(`<div><strong>مكان التقديم:</strong> ${item.submissionPlace}</div>`);
+
+      // التواصل
+      let contactHTML = '';
+      if (item.contact && (item.contact.phone || item.contact.email)) {
+        const parts = [];
+        if (item.contact.phone) parts.push(`الهاتف: ${item.contact.phone}`);
+        if (item.contact.email) parts.push(`البريد: ${item.contact.email}`);
+        contactHTML = `<div><strong>الاتصال:</strong> ${parts.join(' · ')}</div>`;
+      }
+
+      // الملفات والمتطلبات
+      const filesHTML = Array.isArray(item.files) && item.files.length
+        ? `<div style="margin-top:10px;">${item.files.map(f => `<a class="btn-secondary" href="${f.url}" target="_blank" rel="noopener" style="margin-right:8px;">${f.label||'ملف'}</a>`).join('')}</div>`
+        : '';
+      const reqsHTML = Array.isArray(item.submissionRequirements) && item.submissionRequirements.length
+        ? `<ul style="margin:10px 0;padding-inline-start:20px;">${item.submissionRequirements.map(r => `<li>${r}</li>`).join('')}</ul>`
+        : '';
 
       container.innerHTML = `
         <div class="tender-item">
           <div class="tender-title">${item.title || 'بدون عنوان'}</div>
-          ${meta.length ? `<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:15px;">${meta.join('')}</div>` : ''}
+          ${priceBadge}
+          ${meta.length ? `<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0 16px;">${meta.join('')}${contactHTML}</div>` : contactHTML}
           ${item.description ? `<div class="tender-description">${item.description}</div>` : ''}
-          <div class="tender-actions">
+          ${reqsHTML ? `<h3 style="margin-top:15px;">شروط ومتطلبات التقديم</h3>${reqsHTML}` : ''}
+          ${filesHTML}
+          ${item.notes ? `<div class="tender-description"><strong>ملاحظات:</strong> ${item.notes}</div>` : ''}
+          <div class="tender-actions" style="margin-top:12px;">
             ${item.link ? `<a href="${item.link}" target="_blank" class="btn-secondary">المصدر / التفاصيل</a>` : ''}
             <a href="tenders-new.html" class="btn-primary">العودة إلى المناقصات</a>
           </div>
