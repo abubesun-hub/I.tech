@@ -194,6 +194,173 @@ try {
 
 })();
 
+// Logistics page: render catalog from assets/data/logistics.json with filters
+(function(){
+  const list = document.getElementById('logisticsList');
+  if (!list) return; // only run on logistics page
+
+  const filters = {
+    category: document.getElementById('categoryFilter'),
+    payloadType: document.getElementById('payloadTypeFilter'),
+    capacityMin: document.getElementById('capacityMin'),
+    capacityMax: document.getElementById('capacityMax'),
+    region: document.getElementById('regionFilter'),
+    search: document.getElementById('logisticsSearch'),
+    applyBtn: document.getElementById('applyLogisticsFilter')
+  };
+
+  const state = { data: [], categories: new Set(), regions: new Set() };
+
+  const fmtCap = (c) => {
+    if (!c || c.value == null) return '';
+    const u = c.unit || '';
+    const v = c.value;
+    return `${v} ${u === 'liters' ? 'لتر' : u === 'tons' ? 'طن' : u === 'cylinders' ? 'اسطوانة' : u}`;
+  };
+
+  function renderOptions() {
+    // categories
+    if (filters.category) {
+      const map = {
+        tanker_large: 'صهريج كبير',
+        tanker_small: 'صهريج صغير',
+        box_truck: 'شاحنة صندوقية',
+        flatbed: 'سطحة',
+        refrigerated: 'مبرّدة',
+        gas_cylinder_carrier: 'ناقلة اسطوانات غاز'
+      };
+      const cats = Array.from(state.categories).sort();
+      filters.category.innerHTML = '<option value="all">كل الأنواع</option>' + cats.map(c => `<option value="${c}">${map[c]||c}</option>`).join('');
+    }
+    // regions
+    if (filters.region) {
+      const regs = Array.from(state.regions).sort();
+      filters.region.innerHTML = '<option value="all">كل المحافظات</option>' + regs.map(r => `<option value="${r}">${r}</option>`).join('');
+      // also populate request form region select
+      const reqRegion = document.getElementById('region');
+      if (reqRegion) reqRegion.innerHTML = '<option value="">اختر المحافظة</option>' + regs.map(r => `<option value="${r}">${r}</option>`).join('');
+    }
+  }
+
+  function render(items) {
+    list.innerHTML = '';
+    if (!items || items.length === 0) {
+      const empty = document.createElement('div');
+      empty.className = 'card';
+      empty.style.textAlign = 'center';
+      empty.innerHTML = '<h3>لا توجد مركبات مطابقة</h3><p>عدّل الفلاتر أو جرّب بحثاً آخر.</p>';
+      list.appendChild(empty);
+      return;
+    }
+    const fallbackFor = () => './assets/images/logistics/1.jpeg';
+    items.forEach(v => {
+      const card = document.createElement('article');
+      card.className = 'card reveal active logistics-card';
+      const meta = [];
+      if (v.payloadType) meta.push('نوع الحمولة: ' + (v.payloadType==='liquid'?'سائل':v.payloadType==='solid'?'صلب':v.payloadType==='gas'?'غاز':v.payloadType));
+      if (v.capacity) meta.push('السعة: ' + fmtCap(v.capacity));
+      if (Array.isArray(v.regions) && v.regions.length) meta.push('المناطق: ' + v.regions.slice(0,5).join('، '));
+      const features = v.features || {};
+      const badges = [
+        features.hazardous ? '<span class="badge" style="background:#fee2e2;border:1px solid #fecaca;color:#991b1b">مواد خطرة</span>' : '',
+        features.refrigerated ? '<span class="badge" style="background:#dcfce7;border:1px solid #86efac;color:#166534">تبريد</span>' : ''
+      ].filter(Boolean).join(' ');
+      card.innerHTML = `
+        ${v.image ? `<img src="${v.image}" alt="${v.name}" class="card-img" loading="lazy" onerror="this.onerror=null;this.src='${fallbackFor()}'">` : ''}
+        <h2 style="margin-bottom:8px;">${v.name||'مركبة'}</h2>
+        ${badges ? `<div style="display:flex;gap:8px;flex-wrap:wrap;margin:8px 0;">${badges}</div>` : ''}
+        ${meta.length ? `<div class="tender-desc" style="margin:8px 0;">${meta.join(' · ')}</div>` : ''}
+        ${Array.isArray(v.supportedMaterials) && v.supportedMaterials.length ? `<div class="tender-desc"><strong>مواد مدعومة:</strong> ${v.supportedMaterials.join('، ')}</div>` : ''}
+        ${v.notes ? `<p class="tender-desc">${v.notes}</p>` : ''}
+        <div class="actions">
+          <a class="btn link" href="#request">طلب خدمة لهذه المركبة</a>
+        </div>
+      `;
+      list.appendChild(card);
+    });
+  }
+
+  function applyFilter() {
+    const q = (filters.search && filters.search.value || '').trim().toLowerCase();
+    const cat = filters.category ? filters.category.value : 'all';
+    const pt = filters.payloadType ? filters.payloadType.value : 'all';
+    const rgn = filters.region ? filters.region.value : 'all';
+    const min = parseFloat(filters.capacityMin && filters.capacityMin.value || '');
+    const max = parseFloat(filters.capacityMax && filters.capacityMax.value || '');
+
+    let items = state.data.slice();
+    items = items.filter(v => {
+      const matchesQ = !q || [v.name, ...(v.supportedMaterials||[])].some(s => (s||'').toString().toLowerCase().includes(q));
+      const matchesCat = cat==='all' || v.category===cat;
+      const matchesPt = pt==='all' || v.payloadType===pt;
+      const matchesR = rgn==='all' || (Array.isArray(v.regions) && v.regions.includes(rgn));
+      const capVal = v.capacity && typeof v.capacity.value==='number' ? v.capacity.value : NaN;
+      const matchesMin = isNaN(min) || (!isNaN(capVal) && capVal >= min);
+      const matchesMax = isNaN(max) || (!isNaN(capVal) && capVal <= max);
+      return matchesQ && matchesCat && matchesPt && matchesR && matchesMin && matchesMax;
+    });
+    render(items);
+  }
+
+  async function loadLogistics() {
+    try {
+      const r = await fetch('./assets/data/logistics.json?v=' + Date.now(), { cache: 'no-store' });
+      const j = await r.json();
+      if (!Array.isArray(j)) throw new Error('invalid logistics data');
+      state.data = j;
+      state.categories = new Set(j.map(x=>x.category).filter(Boolean));
+      j.forEach(x => (Array.isArray(x.regions)? x.regions: []).forEach(r=>state.regions.add(r)));
+      renderOptions();
+      applyFilter();
+    } catch (e) {
+      list.innerHTML = '<p class="under-construction">تعذر تحميل بيانات اللوجستيات.</p>';
+    }
+  }
+
+  // Form send (pluggable later via Apps Script)
+  (function(){
+    const form = document.getElementById('logisticsForm');
+    const status = document.getElementById('logisticsFormStatus');
+    if (!form) return;
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const fd = new FormData(form);
+      const name = fd.get('name');
+      if (status) { status.textContent = 'جاري معالجة الطلب...'; status.style.color = 'var(--text-muted)'; }
+      const scriptUrl = window.ITECH_LOGISTICS_SCRIPT_URL; // set this to your deployed Apps Script URL
+      try {
+        if (scriptUrl && /^https?:\/\//i.test(scriptUrl)) {
+          const params = new URLSearchParams();
+          params.set('action', 'logistics_append');
+          ['name','company','phone','region','payloadType','payloadSize','notes'].forEach(k=>params.set(k, String(fd.get(k)||'')));
+          const r = await fetch(scriptUrl + '?' + params.toString(), { method: 'GET' });
+          const j = await r.json().catch(()=>({ ok:false }));
+          if (j && j.ok) {
+            if (status) { status.textContent = 'تم إرسال طلبك بنجاح. شكراً يا ' + name + '!'; status.style.color = 'green'; }
+            form.reset();
+          } else {
+            throw new Error('send_failed');
+          }
+        } else {
+          // Fallback: simulate success until script URL is configured
+          await new Promise(res => setTimeout(res, 800));
+          if (status) { status.textContent = 'تم استلام طلبك. سنعاود الاتصال قريباً، شكراً يا ' + name + '!'; status.style.color = 'green'; }
+          form.reset();
+        }
+      } catch {
+        if (status) { status.textContent = 'حدث خطأ أثناء الإرسال.'; status.style.color = 'red'; }
+      }
+    });
+  })();
+
+  // Events
+  if (filters.applyBtn) filters.applyBtn.addEventListener('click', applyFilter);
+  if (filters.search) { let t; filters.search.addEventListener('input', () => { clearTimeout(t); t = setTimeout(applyFilter, 250); }); }
+  ['category','payloadType','region'].forEach(k => { const el = filters[k]; if (el) el.addEventListener('change', applyFilter); });
+
+  loadLogistics();
+})();
+
 // --- Shared helpers for tenders data (used by multiple pages) ---
 function normalizeDate(str) {
   const s = (str||'').trim();

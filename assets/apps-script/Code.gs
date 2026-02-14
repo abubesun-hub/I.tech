@@ -2,6 +2,7 @@
 // Fill these constants, then deploy as a Web App (execute as you, accessible to anyone).
 const SHEET_ID = '1BQHnfvDajpaewzDFf6AAlrSFcReXyIyaSTf3xETqT4M';
 const SHEET_NAME = 'Tenders'; // or the name of your sheet tab
+const LOGISTICS_SHEET_NAME = 'Logistics'; // logistics requests sheet tab
 // Secrets are read from Script Properties so they are NOT exposed in this repo
 function getSecret_(key, fallback){
   try { var v = PropertiesService.getScriptProperties().getProperty(key); return v != null ? String(v) : fallback; } catch(e) { return fallback; }
@@ -12,6 +13,10 @@ var ADMIN_PASS = getSecret_('ADMIN_PASS', ''); // e.g. set in Script Properties
 
 function getSheet() {
   return SpreadsheetApp.openById(SHEET_ID).getSheetByName(SHEET_NAME);
+}
+
+function getLogisticsSheet() {
+  return SpreadsheetApp.openById(SHEET_ID).getSheetByName(LOGISTICS_SHEET_NAME);
 }
 
 function normalizeDate(str) {
@@ -132,6 +137,8 @@ function doGet(e) {
   try {
     var action = (e && e.parameter && e.parameter.action) ? String(e.parameter.action).toLowerCase() : 'list';
     var resp = (action === 'append') ? handleAppend(e)
+             : (action === 'logistics_append') ? handleLogisticsAppend(e)
+             : (action === 'logistics_list') ? handleLogisticsList(e)
              : (action === 'login') ? handleLogin(e)
              : handleList(e);
     return asOutput(resp, e);
@@ -143,4 +150,49 @@ function doGet(e) {
 function doPost(e) {
   // Accept form posts with same parameters; reuse same handlers
   return doGet(e);
+}
+
+// --- Logistics handlers ---
+function handleLogisticsAppend(e) {
+  if (!hasAccess(e)) return { ok: false, error: 'unauthorized' };
+  var sh = getLogisticsSheet();
+  if (!sh) return { ok: false, error: 'sheet_not_found' };
+  var headers = readHeaders(sh);
+  var row = headers.map(function (h) {
+    var v = e.parameter[h] != null ? String(e.parameter[h]) : '';
+    if (h === 'ts') v = new Date();
+    return v;
+  });
+  // If sheet is empty or headers missing, use default order
+  if (!headers || headers.length === 0) {
+    row = [
+      String(e.parameter.name||''),
+      String(e.parameter.company||''),
+      String(e.parameter.phone||''),
+      String(e.parameter.region||''),
+      String(e.parameter.payloadType||''),
+      String(e.parameter.payloadSize||''),
+      String(e.parameter.notes||''),
+      new Date()
+    ];
+    sh.appendRow(['name','company','phone','region','payloadType','payloadSize','notes','ts']);
+  }
+  sh.appendRow(row);
+  return { ok: true };
+}
+
+function handleLogisticsList(e) {
+  if (!hasAccess(e)) return { ok: false, error: 'unauthorized' };
+  var sh = getLogisticsSheet();
+  if (!sh) return { ok: false, error: 'sheet_not_found' };
+  var lastRow = sh.getLastRow();
+  var headers = readHeaders(sh);
+  if (lastRow < 2) return { ok: true, data: [] };
+  var values = sh.getRange(2, 1, lastRow - 1, headers.length).getValues();
+  var data = values.map(function (r) {
+    var o = {};
+    headers.forEach(function (h, i) { o[h] = r[i]; });
+    return o;
+  });
+  return { ok: true, data: data };
 }

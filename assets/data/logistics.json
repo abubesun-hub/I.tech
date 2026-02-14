@@ -1,0 +1,72 @@
+[
+  {
+    "id": "tanker-20000l",
+    "name": "صهريج كبير 20,000 لتر",
+    "category": "tanker_large",
+    "payloadType": "liquid",
+    "capacity": { "value": 20000, "unit": "liters" },
+    "features": { "hazardous": true, "refrigerated": false },
+    "dimensions": { "length": 10.5, "width": 2.5, "height": 3.6 },
+    "regions": ["Baghdad", "Basra", "Erbil", "Nineveh", "Anbar", "Dhi Qar", "Maysan", "Karbala"],
+    "supportedMaterials": ["وقود", "ماء", "مواد كيميائية"],
+    "image": "./assets/images/logistics/2.jpg",
+    "notes": "مجهّز بصمامات أمان وشهادات نقل مواد خطرة."
+  },
+  {
+    "id": "tanker-8000l",
+    "name": "صهريج صغير 8,000 لتر",
+    "category": "tanker_small",
+    "payloadType": "liquid",
+    "capacity": { "value": 8000, "unit": "liters" },
+    "features": { "hazardous": false, "refrigerated": false },
+    "regions": ["Baghdad", "Babylon", "Karbala", "Najaf", "Wasit"],
+    "supportedMaterials": ["ماء", "زيوت"],
+    "image": "./assets/images/logistics/3.jpg"
+  },
+  {
+    "id": "box-20t",
+    "name": "شاحنة صندوقية 20 طن",
+    "category": "box_truck",
+    "payloadType": "solid",
+    "capacity": { "value": 20, "unit": "tons" },
+    "features": { "hazardous": false, "refrigerated": false },
+    "regions": ["Baghdad", "Basra", "Kirkuk", "Salah al-Din", "Diyala"],
+    "supportedMaterials": ["مواد بناء", "معدات", "سكاكر مغلفة"],
+    "image": "./assets/images/logistics/4.jpg"
+  },
+  {
+    "id": "flatbed-25t",
+    "name": "سطحة 25 طن",
+    "category": "flatbed",
+    "payloadType": "solid",
+    "capacity": { "value": 25, "unit": "tons" },
+    "features": { "hazardous": false, "refrigerated": false },
+    "regions": ["Basra", "Muthanna", "Dhi Qar", "Anbar"],
+    "supportedMaterials": ["آليات ثقيلة", "هياكل معدنية"],
+    "image": "./assets/images/logistics/5.jpg"
+  },
+  {
+    "id": "reefer-12t",
+    "name": "شاحنة مبرّدة 12 طن",
+    "category": "refrigerated",
+    "payloadType": "solid",
+    "capacity": { "value": 12, "unit": "tons" },
+    "features": { "hazardous": false, "refrigerated": true },
+    "temperatureRange": { "min": -20, "max": 5 },
+    "regions": ["Baghdad", "Basra", "Erbil", "Sulaymaniyah"],
+    "supportedMaterials": ["أغذية", "أدوية"],
+    "image": "./assets/images/logistics/3.jpg"
+  },
+  {
+    "id": "gas-40cyl",
+    "name": "ناقلة اسطوانات غاز (40 اسطوانة)",
+    "category": "gas_cylinder_carrier",
+    "payloadType": "gas",
+    "capacity": { "value": 40, "unit": "cylinders" },
+    "features": { "hazardous": true, "refrigerated": false },
+    "regions": ["Baghdad", "Diyala", "Kirkuk", "Nineveh"],
+    "supportedMaterials": ["غاز صناعي", "غاز طبي"],
+    "image": "./assets/images/logistics/2.jpg",
+    "notes": "قيود إضافية للسلامة والتحميل."
+  }
+]

@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>الدعم اللوجستي | I.TECH</title>
+  <meta name="description" content="خدمات نقل البضائع السائلة والصلبة والغازية عبر صهاريج وشاحنات متنوعة داخل العراق." />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;800&display=swap" rel="preload" as="style" onload="this.rel='stylesheet'">
+  <noscript><link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;800&display=swap" rel="stylesheet"></noscript>
+  <link rel="stylesheet" href="./css/main.css" />
+  <link rel="icon" type="image/png" href="./assets/images/I-Tech logo.png" />
+</head>
+<body class="page-logistics">
+  <header class="nav">
+    <div class="brand">
+      <div class="logo-circle">
+        <img src="./assets/images/I-Tech logo.png" alt="شعار ايتك I.TECH" />
+      </div>
+      <div class="names">
+        <div class="ar">ايتك</div>
+        <div class="en">I.TECH</div>
+      </div>
+    </div>
+    <nav class="menu" aria-label="التنقل الرئيسي">
+      <a href="index.html">الرئيسية</a>
+      <a href="tenders-new.html">مناقصات العراق</a>
+      <a href="about.html">من نحن</a>
+      <a href="services.html">الخدمات</a>
+      <a href="programs.html">البرامج</a>
+      <a href="logistics.html" class="active pill">الدعم اللوجستي</a>
+      <a href="contact.html">تواصل معنا</a>
+    </nav>
+    <button class="burger" aria-label="فتح القائمة" aria-expanded="false">☰</button>
+  </header>
+
+  <main class="container">
+    <section class="card hero">
+      <div class="hero-content">
+        <h1>الدعم اللوجستي للشركات والتصدير</h1>
+        <div class="logistics-hero-badges">
+          <span class="badge">سائل</span>
+          <span class="badge">صلب</span>
+          <span class="badge">غاز</span>
+          <span class="badge">مواد خطرة</span>
+          <span class="badge">تبريد</span>
+        </div>
+        <p>نوفّر أسطولاً متنوعاً لنقل البضائع السائلة والصلبة والغازية عبر العراق. اختر المركبة المناسبة حسب نوع الحمولة والسعة والمنطقة.</p>
+        <div class="actions">
+          <a class="btn primary" href="#request">طلب خدمة الآن</a>
+          <a class="btn" href="#catalog">استعراض الأسطول</a>
+        </div>
+      </div>
+      <div class="hero-image">
+        <img src="./assets/images/logistics/1.jpeg" alt="نقل ولوجستيات" loading="lazy" onerror="this.onerror=null;this.src='./assets/images/logistics/hero-logistics.svg'" />
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>ميزات الدعم اللوجستي</h2>
+      <div class="feature-grid">
+        <div class="feature-item reveal active">
+          <span class="icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><line x1="12" y1="2" x2="12" y2="22"/><line x1="2" y1="12" x2="22" y2="12"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/><line x1="19.07" y1="4.93" x2="4.93" y2="19.07"/></svg>
+          </span>
+          <h3>تبريد للأغذية والأدوية</h3>
+          <p class="tender-desc">شاحنات مبرّدة ضمن نطاق حرارة مضبوط للشحن الحساس.</p>
+        </div>
+        <div class="feature-item reveal active">
+          <span class="icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path d="M12 2 C 15 7 18 9 12 20 C 6 9 9 7 12 2 Z"/></svg>
+          </span>
+          <h3>نقل السوائل</h3>
+          <p class="tender-desc">صهاريج كبيرة وصغيرة مجهّزة لصمامات أمان ونقل آمن.</p>
+        </div>
+        <div class="feature-item reveal active">
+          <span class="icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><polyline points="3,9 12,3 21,9 21,21 3,21 3,9"/><line x1="3" y1="9" x2="12" y2="15"/><line x1="12" y1="15" x2="21" y2="9"/></svg>
+          </span>
+          <h3>نقل المواد الصلبة</h3>
+          <p class="tender-desc">شاحنات صندوقية وسطحات لآليات ومعدات ومواد البناء.</p>
+        </div>
+        <div class="feature-item reveal active">
+          <span class="icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><rect x="9" y="2" width="6" height="14" rx="2"/><circle cx="12" cy="8" r="1"/><circle cx="12" cy="11" r="1"/></svg>
+          </span>
+          <h3>نقل الغاز والمواد الخطرة</h3>
+          <p class="tender-desc">حاملة اسطوانات بمعايير أمان مع قيود سلامة إضافية.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="catalog" class="card">
+      <h2>الأسطول المتاح</h2>
+      <div class="filters" id="logisticsFilters">
+        <select id="categoryFilter" class="sort-select" aria-label="نوع المركبة">
+          <option value="all">كل الأنواع</option>
+        </select>
+        <select id="payloadTypeFilter" class="sort-select" aria-label="نوع الحمولة">
+          <option value="all">كل الحمولة</option>
+          <option value="liquid">سائل</option>
+          <option value="solid">صلب</option>
+          <option value="gas">غاز</option>
+        </select>
+        <input id="capacityMin" type="number" placeholder="سعة دنيا" aria-label="سعة دنيا" />
+        <input id="capacityMax" type="number" placeholder="سعة قصوى" aria-label="سعة قصوى" />
+        <select id="regionFilter" class="sort-select" aria-label="المحافظة">
+          <option value="all">كل المحافظات</option>
+        </select>
+        <input id="logisticsSearch" type="text" placeholder="بحث بالاسم/المواد" aria-label="بحث" />
+        <button id="applyLogisticsFilter" class="btn">تطبيق الفلاتر</button>
+      </div>
+
+      <div class="tenders-list" id="logisticsList"></div>
+    </section>
+
+    <section class="card">
+      <h2>خطوات الخدمة</h2>
+      <div class="steps">
+        <div class="step reveal active">
+          <h3>1. تحديد الطلب</h3>
+          <p class="tender-desc">اختر نوع الحمولة والسعة والمنطقة، ثم أرسل تفاصيلك.</p>
+        </div>
+        <div class="step reveal active">
+          <h3>2. التأكيد والجدولة</h3>
+          <p class="tender-desc">نؤكد التوفر وننسّق المواعيد مع الفريق الميداني.</p>
+        </div>
+        <div class="step reveal active">
+          <h3>3. التنفيذ والمتابعة</h3>
+          <p class="tender-desc">ننفّذ النقل وفق المعايير ونقدّم تحديثات حتى التسليم.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>معرض لوجستي</h2>
+      <div class="gallery">
+        <img class="gallery-img" src="./assets/images/logistics/2.jpg" alt="شاحنات" loading="lazy" onerror="this.onerror=null;this.src='./assets/images/logistics/gallery-trucks.svg'">
+        <img class="gallery-img" src="./assets/images/logistics/3.jpg" alt="مستودع" loading="lazy" onerror="this.onerror=null;this.src='./assets/images/logistics/gallery-warehouse.svg'">
+        <img class="gallery-img" src="./assets/images/logistics/4.jpg" alt="تبريد" loading="lazy" onerror="this.onerror=null;this.src='./assets/images/logistics/gallery-cold.svg'">
+      </div>
+    </section>
+
+    <section id="request" class="card">
+      <h2>طلب خدمة</h2>
+      <form id="logisticsForm" class="form" method="POST" action="#">
+        <div class="grid-2">
+          <div>
+            <label for="name">الاسم</label>
+            <input id="name" name="name" required />
+          </div>
+          <div>
+            <label for="company">الشركة (اختياري)</label>
+            <input id="company" name="company" />
+          </div>
+          <div>
+            <label for="phone">هاتف / واتساب</label>
+            <input id="phone" name="phone" required />
+          </div>
+          <div>
+            <label for="region">المحافظة</label>
+            <select id="region" name="region" required>
+              <option value="">اختر المحافظة</option>
+            </select>
+          </div>
+          <div>
+            <label for="payloadType">نوع الحمولة</label>
+            <select id="payloadType" name="payloadType" required>
+              <option value="liquid">سائل</option>
+              <option value="solid">صلب</option>
+              <option value="gas">غاز</option>
+            </select>
+          </div>
+          <div>
+            <label for="payloadSize">الكمية/السعة (لتر/طن/أسطوانات)</label>
+            <input id="payloadSize" name="payloadSize" required />
+          </div>
+        </div>
+        <div>
+          <label for="notes">تفاصيل إضافية</label>
+          <textarea id="notes" name="notes" rows="4" placeholder="وصف الحمولة، التاريخ المقترح، ملاحظات السلامة..."></textarea>
+        </div>
+        <div class="actions">
+          <button class="btn primary" type="submit">إرسال الطلب</button>
+          <span id="logisticsFormStatus" class="status"></span>
+        </div>
+      </form>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <small>© <span data-current-year>2026</span> I.TECH - جميع الحقوق محفوظة</small>
+  </footer>
+  <script>
+    // ضع هنا رابط تطبيق Google Apps Script بعد النشر
+    // مثال: window.ITECH_LOGISTICS_SCRIPT_URL = 'https://script.google.com/macros/s/XXXXX/exec';
+    window.ITECH_LOGISTICS_SCRIPT_URL = '';
+  </script>
+  <script src="./js/main.js" defer></script>
+</body>
+</html>

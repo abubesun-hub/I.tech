@@ -43,7 +43,8 @@ body {
 /* صفحات البرامج وتفاصيلها ولوحة التحكم تستخدم خط Tajawal ثابت */
 body.page-programs,
 body.page-program-detail,
-body.page-controll {
+body.page-controll,
+body.page-logistics {
   font-family: 'Tajawal', system-ui, -apple-system, sans-serif;
 }
 
@@ -72,6 +73,9 @@ body.page-tender-details { /* reuse tenders background */
 body.page-program-detail {
   background: linear-gradient(var(--bg-overlay), var(--bg-overlay)), url('../assets/images/bg-dashboard.jpg');
 }
+body.page-logistics {
+  background: linear-gradient(var(--bg-overlay), var(--bg-overlay)), url('../assets/images/bg-logistics.svg');
+}
 
 body[class*="page-"] {
   background-size: cover;
@@ -88,6 +92,7 @@ body[class*="page-"] {
 [data-theme="dark"] body.page-controll { background-image: linear-gradient(rgba(15, 23, 42, 0.95), rgba(15, 23, 42, 0.95)), url('../assets/images/bg-dashboard.jpg'); }
 [data-theme="dark"] body.page-tenders { background-image: linear-gradient(rgba(15, 23, 42, 0.95), rgba(15, 23, 42, 0.95)), url('../assets/images/bg-tenders.jpg'); }
 [data-theme="dark"] body.page-program-detail { background-image: linear-gradient(rgba(15, 23, 42, 0.95), rgba(15, 23, 42, 0.95)), url('../assets/images/bg-dashboard.jpg'); }
+[data-theme="dark"] body.page-logistics { background-image: linear-gradient(rgba(15, 23, 42, 0.95), rgba(15, 23, 42, 0.95)), url('../assets/images/bg-logistics.svg'); }
 
 /* شريط التنقل - Navbar */
 .nav {
@@ -288,6 +293,17 @@ body[class*="page-"] {
   box-shadow: var(--shadow-sm);
 }
 
+/* Generic Badge */
+.badge {
+  display: inline-block;
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: #e2e8f0;
+  color: #0f172a;
+  font-size: 12px;
+  border: 1px solid var(--border);
+}
+
 /* الأزرار - Buttons */
 .btn { 
   display: inline-flex; align-items: center; justify-content: center;
@@ -468,6 +484,23 @@ input:focus, textarea:focus, select:focus {
   transform: translateY(-5px);
   box-shadow: var(--shadow-lg);
 }
+
+/* Logistics page customizations */
+.logistics-hero-badges { display:flex; gap:8px; flex-wrap:wrap; margin:8px 0; }
+.feature-grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
+.feature-item { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px; text-align: center; }
+.feature-item .icon { width: 40px; height: 40px; display: inline-block; margin-bottom: 8px; color: var(--primary); }
+.feature-item .icon svg { width: 100%; height: 100%; }
+.feature-item .icon svg line,
+.feature-item .icon svg path,
+.feature-item .icon svg rect,
+.feature-item .icon svg polyline,
+.feature-item .icon svg circle { stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.steps { display:grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; }
+.step { background: var(--bg); border: 1px solid var(--border); border-radius: 12px; padding: 16px; }
+.gallery { display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
+.gallery img { width:100%; height:160px; object-fit:cover; border-radius:12px; border:1px solid var(--border); cursor:pointer; transition:transform .2s; }
+.gallery img:hover { transform: scale(1.03); }
 
 /* تجاوب الموبايل */
 @media (max-width: 768px) {
