@@ -59,10 +59,10 @@
     "videos": [],
     "features": [
       {
-        "text": "<strong>للدخول على موقع النظام والاطلاع على كافة التفاصيل اضغط هنـــا</strong>",
-        "link": "https://abubesun-hub.github.io/nitaq/",
+        "text": "للدخول على موقع النظام والاطلاع على كافة التفاصيل اضغط هنـــا",
+        "link": "https://nitaqos.netlify.app/",
         "color": "#4ade80",
-        "style": "\n        font-weight: normal;\n        font-style: normal;\n        text-decoration: none;\n        background-color: transparent;\n        font-size: 14px;\n        line-height: 1.6;\n        text-align: center;\n      "
+        "style": "\n        font-weight: normal;\n        font-style: normal;\n        text-decoration: none;\n        background-color: transparent;\n        font-size: 14px;\n        line-height: 1.6;\n        text-align: right;\n      "
       }
     ],
     "link": "#"
