@@ -46,5 +46,18 @@
       }
     ],
     "link": "#"
+  },
+  {
+    "id": "نِطاق|nitaq-1781785269852",
+    "name": "نِطاق|NITAQ",
+    "logo": "https://raw.githubusercontent.com/abubesun-hub/mypic/refs/heads/main/nitaq.jpeg",
+    "image": "https://raw.githubusercontent.com/abubesun-hub/mypic/refs/heads/main/nitaq1.jpeg",
+    "shortDescription": "نِطاق Nitaq هو نظام عربي حديث يجمع البيع والمخزون والمشتريات والعملاء والتقارير والطباعة الحرارية ضمن تجربة تشغيلية متماسكة، واضحة، وسريعة، ومناسبة لبيئة العمل اليومية داخل الماركت والسوبر ماركت.",
+    "price": 300,
+    "currency": "USD",
+    "images": [],
+    "videos": [],
+    "features": [],
+    "link": "#"
   }
 ]
